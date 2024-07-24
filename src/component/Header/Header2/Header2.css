@@ -1,0 +1,20 @@
+.Header2__wrap {
+  height: 44px;
+  position: relative;
+}
+
+.Header2__wrap > * {
+  position: absolute;
+  top: 20px;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.Header2__wrap > .Header2__back {
+  left: 5px;
+  cursor: pointer;
+}
+.Header2__wrap > .Header2__text {
+  left: 50%;
+  transform: translateX(-50%);
+}

@@ -1,13 +1,288 @@
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+/* http://meyerweb.com/eric/tools/css/reset/ 
+   v2.0 | 20110126
+   License: none (public domain)
+
+   Reset.css
+*/
+@import url(https://cdn.jsdelivr.net/gh/moonspam/NanumSquare@1.0/nanumsquare.css);
+/* 화면별 스타일 */
+html {
+  max-width: 100vw;
+  min-width: 100vw;
+  min-height: 100vh;
+  font-family: "NanumSquare", sans-serif;
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+/* 라이브러리 시작 */
+.flex {
+  display: flex;
+}
+
+.flex-jc-c {
+  justify-content: center;
+}
+
+.flex-ai-c {
+  align-items: center;
+}
+
+.flex-jc-sb {
+  justify-content: space-between;
+}
+
+.flex-ac-sb {
+  align-content: space-between;
+}
+
+.flex-ac-sa {
+  align-content: space-around;
+}
+/* 라이브러리 끝 */
+
+.div-page {
+  /* 네비게이션바 height만큼 padding을 줘서 네비게이션바 밑으로 페이지가 가려주는 걸 막아줌 */
+  padding: 5vw;
+  padding-bottom: 12vh;
+}
+
+/* header 스타일 */
+.mainHeader {
+  max-width: 100vw;
+  min-width: 100vw;
+  height: 56px;
+  display: grid;
+  text-align: center;
+  place-items: center;
+  background-color: var(--color-point-applegreen);
+  font-family: "Cafe24Moyamoya-Face-v1.0" !important;
+  font-size: 24px;
+}
+
+.menuHeader {
+  max-width: 100vw;
+  min-width: 100vw;
+  height: 56px;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  text-align: center;
+  place-items: center;
+  background-color: var(--color-point-applegreen);
+  font-family: "Cafe24Moyamoya-Face-v1.0" !important;
+  font-size: 24px;
+}
+
+/* navigationbar 스타일 */
+.navigationbar {
+  position: fixed;
+  bottom: 0;
+  min-width: 100vw;
+  height: 92px;
+  background-color: #d8d8d8;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  align-items: center;
+  justify-content: space-around;
+  z-index: 100;
+}
+
+.naviIcon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* link 검정색 글씨 */
+.link {
+  text-decoration: none;
+  color: var(--color-normal9);
+}
+
+/* link 흰색 글씨 */
+.link_white {
+  text-decoration: none;
+  color: var(--color-normal1);
+}
+
+html,
+body,
+div,
+span,
+applet,
+object,
+iframe,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+blockquote,
+pre,
+a,
+abbr,
+acronym,
+address,
+big,
+cite,
+code,
+del,
+dfn,
+em,
+img,
+ins,
+kbd,
+q,
+s,
+samp,
+small,
+strike,
+strong,
+sub,
+sup,
+tt,
+var,
+b,
+u,
+i,
+center,
+dl,
+dt,
+dd,
+ol,
+ul,
+li,
+fieldset,
+form,
+label,
+legend,
+table,
+caption,
+tbody,
+tfoot,
+thead,
+tr,
+th,
+td,
+article,
+aside,
+canvas,
+details,
+embed,
+figure,
+figcaption,
+footer,
+header,
+hgroup,
+menu,
+nav,
+output,
+ruby,
+section,
+summary,
+time,
+mark,
+audio,
+video {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font-size: 100%;
+  font: inherit;
+  vertical-align: baseline;
+}
+
+/* HTML5 display-role reset for older browsers */
+article,
+aside,
+details,
+figcaption,
+figure,
+footer,
+header,
+hgroup,
+menu,
+nav,
+section {
+  display: block;
+  font-family: "NanumSquare", sans-serif;
+}
+body {
+  line-height: 1;
+  font-family: "NanumSquare", sans-serif;
+}
+ol,
+ul {
+  list-style: none;
+}
+blockquote,
+q {
+  quotes: none;
+}
+blockquote:before,
+blockquote:after,
+q:before,
+q:after {
+  content: "";
+  content: none;
+}
+table {
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+input:focus {
+  border-color: black;
+}
+
+/* 추가 세팅 */
+:root {
+  --vh: 100%;
+
+  /*기본 흰~검 팔레트*/
+  --color-normal1: #f8f9fa;
+  --color-normal2: #e9ecef;
+  --color-normal3: #dee2e6;
+  --color-normal4: #ced4da;
+  --color-normal5: #adb5bd;
+  --color-normal6: #6c757d;
+  --color-normal7: #495057;
+  --color-normal8: #343a40;
+  --color-normal9: #212529;
+
+  /* 공지 빨강 */
+  --color-error: #ff3838;
+
+  /* 포인트 색상 */
+  --color-point-darkturquoise: #004e64;
+  --color-point-cyan: #00a5cf;
+  --color-point-lightgreen: #9fffcb;
+  --color-point-applegreen: #7ae582;
+  --color-point-green: #25a18e;
+}
+
+.normal {
+  font-weight: 400;
+}
+.bold {
+  font-weight: 700;
+}
+.bolder {
+  font-weight: 800;
+}
+.light {
+  font-weight: 300;
+}
+button {
+  font-family: "NanumSquare", sans-serif;
+}
+input {
+  font-family: "NanumSquare", sans-serif;
+}
+/* 폰트 스타일 */
+@font-face {
+  font-family: "Cafe24Moyamoya-Face-v1.0";
+  src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_231029@1.1/Cafe24Moyamoya-Face-v1.0.woff2")
+    format("woff2");
+  font-weight: normal;
+  font-style: normal;
 }
