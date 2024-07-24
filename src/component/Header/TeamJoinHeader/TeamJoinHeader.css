@@ -1,11 +1,11 @@
 .team-join-card {
   display: flex;
   align-items: center;
+  justify-content: center;
   background-color: #0e6244; /* 녹색 배경 */
-  padding: 15px;
-  border-radius: 10px;
+  padding: 10px;
   color: white;
-  margin: 20px 0;
+  margin: 10px -5.5%;
 }
 
 .profile-image {
@@ -16,17 +16,19 @@
   margin-right: 15px;
 }
 
-.user-info {
+.text-container {
   display: flex;
-  flex-direction: column;
+  align-items: center;
 }
 
 .user-name {
+  display: inline-block;
   font-size: 1.2em;
-  font-weight: bold;
+  margin-right: 10px;
 }
 
 .application-title {
-  font-size: 1em;
-  margin-top: 5px;
+  display: inline-block;
+  font-size: 1.2em;
+  font-weight: bold;
 }

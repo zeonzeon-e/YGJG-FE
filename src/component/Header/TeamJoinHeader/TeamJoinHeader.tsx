@@ -1,6 +1,15 @@
 import React from "react";
 import "./TeamJoinHeader.css";
 
+// 사용 예시
+{
+  /* <TeamJoinHeader
+        profileImage="https://via.placeholder.com/50"
+        userName="거북이"
+        applicationTitle="팀 가입 신청서"
+  /> */
+}
+
 interface TeamJoinHeaderProps {
   profileImage: string;
   userName: string;

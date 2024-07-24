@@ -1,0 +1,93 @@
+/* src/Calendar.css */
+.calendar {
+  width: 320px;
+  margin: 0 auto;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  overflow: hidden;
+  font-family: Arial, sans-serif;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  padding: 1rem;
+  background: #f7f7f7;
+  border-bottom: 1px solid #ddd;
+}
+
+.row {
+  display: flex;
+  justify-content: space-around;
+}
+
+.days,
+.body {
+  background: #fff;
+}
+
+.col {
+  text-align: center;
+  padding: 10px 0;
+  width: 40px;
+}
+
+.col-center {
+  flex-grow: 1;
+}
+
+.icon {
+  cursor: pointer;
+  user-select: none;
+}
+
+.cell {
+  min-height: 60px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  position: relative;
+}
+
+.cell.selected {
+  background-color: #1d9bf0;
+  color: white;
+  border-radius: 50%;
+}
+
+.cell.disabled {
+  color: #ccc;
+  pointer-events: none;
+}
+
+.number {
+  font-size: 14px;
+}
+
+.cell .dots {
+  position: absolute;
+  bottom: 5px;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.cell .dots .dot {
+  height: 4px;
+  width: 4px;
+  border-radius: 50%;
+  margin: 0 1px;
+}
+
+.cell .dots .dot.green {
+  background-color: #00c853;
+}
+
+.cell .dots .dot.blue {
+  background-color: #304ffe;
+}
+
+.cell .dots .dot.purple {
+  background-color: #d500f9;
+}
