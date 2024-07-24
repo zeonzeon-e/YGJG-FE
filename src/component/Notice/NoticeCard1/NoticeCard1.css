@@ -1,0 +1,36 @@
+.notice-card {
+  background-color: #fff;
+  margin: 20px 0;
+}
+
+.notice-card-header {
+  align-items: center;
+  margin: 10px;
+}
+
+.notice-card-title {
+  display: flex;
+  align-items: center;
+  font-weight: bold;
+  font-size: 1.2em;
+}
+
+.notice-card-icon {
+  margin-right: 10px;
+}
+
+.notice-card-date {
+  font-size: 0.5em;
+  margin: 3px;
+  color: #888;
+  text-align: end;
+}
+
+.notice-card-content {
+  border: 1px solid #eee;
+  border-radius: 10px;
+  padding: 20px;
+  height: 300px; /* 적절한 높이 설정 */
+
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}

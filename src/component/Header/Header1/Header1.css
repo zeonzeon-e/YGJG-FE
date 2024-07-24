@@ -1,6 +1,7 @@
 .Header1__wrap {
   height: 44px;
   position: relative;
+  margin-bottom: 5px;
 }
 
 .Header1__wrap > * {
