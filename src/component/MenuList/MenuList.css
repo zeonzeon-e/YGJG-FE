@@ -1,0 +1,25 @@
+.menu-list {
+  margin-bottom: 20px;
+}
+
+.menu-title {
+  font-size: 0.5em;
+  color: gray;
+  margin-bottom: 10px;
+}
+
+.menu-items {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+.menu-item {
+  font-size: 1.1em;
+  margin: 5px 0;
+  cursor: pointer;
+}
+
+.menu-item:hover {
+  text-decoration: underline;
+}

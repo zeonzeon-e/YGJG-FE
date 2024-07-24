@@ -1,0 +1,32 @@
+.team-join-card {
+  display: flex;
+  align-items: center;
+  background-color: #0e6244; /* 녹색 배경 */
+  padding: 15px;
+  border-radius: 10px;
+  color: white;
+  margin: 20px 0;
+}
+
+.profile-image {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  border: 2px solid white;
+  margin-right: 15px;
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.user-name {
+  font-size: 1.2em;
+  font-weight: bold;
+}
+
+.application-title {
+  font-size: 1em;
+  margin-top: 5px;
+}

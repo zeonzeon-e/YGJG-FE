@@ -1,6 +1,5 @@
 import React from "react";
 import Header2 from "../../component/Header/Header2/Header2";
-import Header1 from "../../component/Header/Header1/Header1";
 import NoticeCard1 from "../../component/Notice/NoticeCard1/NoticeCard1";
 import BottomNavBar from "../../component/Nevigation/BottomNavBar";
 

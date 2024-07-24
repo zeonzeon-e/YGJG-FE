@@ -1,0 +1,21 @@
+.match-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #aaffe1, #003925); /* 그라디언트 배경 */
+  padding: 5%;
+  color: black;
+  margin: 0 -5.5%;
+}
+
+.match-date {
+  font-size: 1.5em;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.match-teams {
+  font-size: 1.2em;
+  font-weight: bold;
+}
