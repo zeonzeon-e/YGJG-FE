@@ -2,15 +2,12 @@ import React from "react";
 import "./App.css";
 import Calendar from "./component/Calendar/Calendar";
 import TeamJoinHeader from "./component/Header/TeamJoinHeader/TeamJoinHeader";
+import Header2 from "./component/Header/Header2/Header2";
 
 function App() {
   return (
     <div className="App">
-      <TeamJoinHeader
-        profileImage="https://via.placeholder.com/50"
-        userName="거북이"
-        applicationTitle="팀 가입 신청서"
-      />
+      <Header2 text="팀 경기 일정" line={true} />
       <Calendar />
     </div>
   );

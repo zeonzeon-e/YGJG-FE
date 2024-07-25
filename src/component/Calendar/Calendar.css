@@ -1,8 +1,7 @@
 /* src/Calendar.css */
 .calendar {
-  width: 320px;
+  /* width: 320px; */
   margin: 0 auto;
-  border: 1px solid #ddd;
   border-radius: 5px;
   overflow: hidden;
   font-family: Arial, sans-serif;
@@ -11,9 +10,8 @@
 .header {
   display: flex;
   justify-content: space-between;
-  padding: 1rem;
-  background: #f7f7f7;
-  border-bottom: 1px solid #ddd;
+  padding: 10px;
+  /* border-bottom: 1px solid #ddd; */
 }
 
 .row {
@@ -29,31 +27,66 @@
 .col {
   text-align: center;
   padding: 10px 0;
-  width: 40px;
+  width: 2.5em;
 }
 
 .col-center {
   flex-grow: 1;
+  user-select: none;
+}
+
+.col-center > .month {
+  font-size: 1.2em;
+  font-weight: 600;
+}
+
+.col-center > .year {
+  margin-top: 3px;
+  font-size: 0.7em;
+  color: #999;
+}
+
+.col-center.week {
+  font-size: 0.75em;
+  color: #999;
 }
 
 .icon {
   cursor: pointer;
   user-select: none;
+  border: 1.5px solid #ddd;
+  border-radius: 20%;
+  padding: calc(20% - 1.5px) 20%;
+}
+
+.col.col-start,
+.col.col-end {
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .cell {
-  min-height: 60px;
+  min-height: 30px;
   display: flex;
   justify-content: center;
   align-items: center;
   cursor: pointer;
+  user-select: none;
   position: relative;
+  font-weight: 600;
 }
 
 .cell.selected {
-  background-color: #1d9bf0;
   color: white;
-  border-radius: 50%;
+  border-radius: 15%;
+  box-sizing:initial;
+}
+
+.cell.selected > .number {
+  background-color: #0e6244;
+  padding: 18% 16%;
+  border-radius: 30%;
 }
 
 .cell.disabled {
@@ -62,7 +95,7 @@
 }
 
 .number {
-  font-size: 14px;
+  font-size: 0.9rem;
 }
 
 .cell .dots {
