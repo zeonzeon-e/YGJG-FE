@@ -19,8 +19,8 @@ const StyledDiv = styled.div<HorizontalLineProps>`
 /**
  * props가 적용된 HorizontalLine 컴포넌트 생성
  * @param {HorizontalLineProps} props - 컴포넌트 props
- * @param {string} [props.color] - 선의 색상
- * @param {number} [props.height] - 선의 세로 두께
+ * @param {string} [props.color] - 선의 색상 (선택적)
+ * @param {number} [props.height] - 선의 세로 두께 (선택적)
  * @returns {JSX.Element} HorizontalLine 컴포넌트
  */
 const HorizontalLine: React.FC<HorizontalLineProps> = ({ color, height }) => {
