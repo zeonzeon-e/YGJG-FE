@@ -1,24 +1,14 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React from "react";
+import "./App.css";
+import Calendar from "./component/Calendar/Calendar";
+import TeamJoinHeader from "./component/Header/TeamJoinHeader/TeamJoinHeader";
+import Header2 from "./component/Header/Header2/Header2";
 
 function App() {
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      <Header2 text="팀 경기 일정" line={true} />
+      <Calendar />
     </div>
   );
 }

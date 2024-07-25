@@ -1,0 +1,158 @@
+.calendar {
+  margin: 0 auto;
+  border-radius: 5px;
+  overflow: hidden;
+  font-family: Arial, sans-serif;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px;
+}
+
+.row {
+  display: flex;
+  justify-content: space-around;
+}
+
+.days,
+.body {
+  background: #fff;
+}
+
+.col {
+  text-align: center;
+  padding: 10px 0;
+  /* width: 2.5em; */
+}
+
+.col-center {
+  flex-grow: 1;
+  user-select: none;
+}
+
+.col-center > .month {
+  font-size: 20px;
+  font-weight: 500;
+}
+
+.col-center > .year {
+  margin-top: 3px;
+  font-size: 16px;
+  color: #999;
+}
+
+.col-center.week {
+  font-size: 16px;
+  color: #999;
+}
+
+.icon-wrap {
+  position: relative;
+  cursor: pointer;
+  user-select: none;
+  border: 1px solid #ced3de;
+  border-radius: 20%;
+  padding: 20px;
+  box-shadow: 0 0.2px 0.3px rgba(0, 0, 0, 0.3);
+}
+
+.icon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.col.col-start,
+.col.col-end {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.cell {
+  min-height: 30px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+  font-weight: 500;
+  flex-grow: 1;
+}
+
+.cell .number-wrap {
+  position: relative;
+  padding: 30%;
+  border-radius: 30%;
+}
+.cell:hover .number-wrap {
+  background-color: #ccc;
+}
+
+.cell.today {
+  color: white;
+  border-radius: 15%;
+  box-sizing: initial;
+}
+
+.cell.today .number-wrap {
+  background-color: #0e6244;
+}
+.cell.selected .number-wrap {
+  background-color: #bbb;
+}
+
+.cell.disabled {
+  color: #ccc;
+  pointer-events: none;
+}
+
+.number {
+  position: absolute;
+  font-size: 16px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.cell .dots {
+  position: absolute;
+  bottom: 5px;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.cell .dots .dot {
+  height: 4px;
+  width: 4px;
+  border-radius: 50%;
+  margin: 0 1px;
+}
+
+.cell .dots .dot.green {
+  background-color: #00c853;
+}
+
+.cell .dots .dot.blue {
+  background-color: #304ffe;
+}
+
+.cell .dots .dot.purple {
+  background-color: #d500f9;
+}
+
+.calendar-underline {
+  position: absolute;
+  background-color: #ced3de;
+  height: 3px;
+  width: 7%;
+  border-radius: 1px;
+  margin: 10px auto;
+  left: 50%;
+  transform: translateX(-50%);
+}
