@@ -23,12 +23,12 @@
 
 .user-name {
   display: inline-block;
-  font-size: 1.2em;
+  font-size: 20px;
   margin-right: 10px;
 }
 
 .application-title {
   display: inline-block;
-  font-size: 1.2em;
+  font-size: 20px;
   font-weight: bold;
 }

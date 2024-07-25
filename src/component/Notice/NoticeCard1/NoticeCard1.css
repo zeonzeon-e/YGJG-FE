@@ -12,7 +12,7 @@
   display: flex;
   align-items: center;
   font-weight: bold;
-  font-size: 1.2em;
+  font-size: 16px;
 }
 
 .notice-card-icon {
@@ -20,7 +20,7 @@
 }
 
 .notice-card-date {
-  font-size: 0.5em;
+  font-size: 12px;
   margin: 3px;
   color: #888;
   text-align: end;

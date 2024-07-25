@@ -34,8 +34,10 @@ const Calendar: React.FC = () => {
     return (
       <div className="header row flex-middle">
         <div className="col col-start">
-          <div className="icon" onClick={prevMonth}>
-            <FaChevronLeft />
+          <div className="icon-wrap">
+            <div className="icon" onClick={prevMonth}>
+              <FaChevronLeft />
+            </div>
           </div>
         </div>
         <div className="col col-center">
@@ -43,8 +45,10 @@ const Calendar: React.FC = () => {
           <div className="year">{format(currentDate, yearFormat)}</div>
         </div>
         <div className="col col-end" onClick={nextMonth}>
-          <div className="icon">
-            <FaChevronRight />
+          <div className="icon-wrap">
+            <div className="icon">
+              <FaChevronRight />
+            </div>
           </div>
         </div>
       </div>
@@ -99,6 +103,8 @@ const Calendar: React.FC = () => {
                 ? "disabled"
                 : isSameDay(day, new Date())
                 ? "today"
+                : isSameDay(day, currentDate)
+                ? "selected"
                 : ""
             }`}
             key={day.toString()}
