@@ -6,7 +6,12 @@ interface NavItemType {
   value: "home" | "users" | "profile";
 }
 
+/**
+ * BottomNavBar 컴포넌트 - 하단 네비게이션 바를 표시
+ * @returns {JSX.Element} BottomNavBar 컴포넌트
+ */
 const BottomNavBar: React.FC = () => {
+  // 현재 선택된 네비게이션 항목 (기본값: "home")
   const [selected, setSelected] = useState<NavItemType["value"]>("home");
 
   return (

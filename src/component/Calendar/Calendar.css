@@ -1,6 +1,5 @@
 /* src/Calendar.css */
 .calendar {
-  /* width: 320px; */
   margin: 0 auto;
   border-radius: 5px;
   overflow: hidden;
@@ -11,7 +10,6 @@
   display: flex;
   justify-content: space-between;
   padding: 10px;
-  /* border-bottom: 1px solid #ddd; */
 }
 
 .row {
@@ -75,18 +73,26 @@
   user-select: none;
   position: relative;
   font-weight: 600;
+  flex-grow: 1;
 }
 
-.cell.selected {
+.cell .number-wrap {
+  padding: 18% 16%;
+  min-width: 32%;
+  border-radius: 30%;
+}
+.cell:hover .number-wrap {
+  background-color: #ccc;
+}
+
+.cell.today {
   color: white;
   border-radius: 15%;
-  box-sizing:initial;
+  box-sizing: initial;
 }
 
-.cell.selected > .number {
+.cell.today .number-wrap {
   background-color: #0e6244;
-  padding: 18% 16%;
-  border-radius: 30%;
 }
 
 .cell.disabled {
@@ -123,4 +129,15 @@
 
 .cell .dots .dot.purple {
   background-color: #d500f9;
+}
+
+.calendar-underline {
+  position: absolute;
+  background-color: #ced3de;
+  height: 3px;
+  width: 7%;
+  border-radius: 1px;
+  margin: 10px auto;
+  left: 50%;
+  transform: translateX(-50%);
 }

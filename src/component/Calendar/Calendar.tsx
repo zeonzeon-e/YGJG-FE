@@ -15,13 +15,21 @@ import {
 import { ko } from "date-fns/locale";
 import "./Calendar.css";
 
+/**
+ * Calendar 컴포넌트 - 달력을 표시
+ * @returns {JSX.Element} Calendar 컴포넌트
+ */
 const Calendar: React.FC = () => {
-  const [currentMonth, setCurrentMonth] = useState(new Date());
+  // 현재 선택한 날짜 (기본값: today)
+  const [currentDate, setCurrentDate] = useState(new Date());
 
-  // 헤더를 렌더링하는 함수
+  /**
+   * 헤더를 렌더링하는 함수
+   * @returns {JSX.Element} 헤더 컴포넌트
+   */
   const renderHeader = () => {
     const monthFormat = "MMMM"; // 월 형식
-    const yearFormat = "yyyy";  // 년도 형식
+    const yearFormat = "yyyy"; // 년도 형식
 
     return (
       <div className="header row flex-middle">
@@ -31,22 +39,27 @@ const Calendar: React.FC = () => {
           </div>
         </div>
         <div className="col col-center">
-          <div className="month">{format(currentMonth, monthFormat)}</div>
-          <div className="year">{format(currentMonth, yearFormat)}</div>
+          <div className="month">{format(currentDate, monthFormat)}</div>
+          <div className="year">{format(currentDate, yearFormat)}</div>
         </div>
         <div className="col col-end" onClick={nextMonth}>
-          <div className="icon"><FaChevronRight /></div>
+          <div className="icon">
+            <FaChevronRight />
+          </div>
         </div>
       </div>
     );
   };
 
-  // 요일 헤더를 렌더링하는 함수
+  /**
+   * 요일 헤더를 렌더링하는 함수
+   * @returns {JSX.Element} 요일 헤더 컴포넌트
+   */
   const renderDays = () => {
     const dateFormat = "EEEE"; // 요일 형식
     const days = [];
 
-    let startDate = startOfWeek(currentMonth, { locale: ko }); // 한 주의 시작일 설정
+    let startDate = startOfWeek(currentDate, { locale: ko }); // 한 주의 시작일 설정
 
     // 요일을 한글로 렌더링
     for (let i = 0; i < 7; i++) {
@@ -60,9 +73,12 @@ const Calendar: React.FC = () => {
     return <div className="days row">{days}</div>;
   };
 
-  // 달력의 날짜 셀을 렌더링하는 함수
+  /**
+   * 달력의 날짜 셀을 렌더링하는 함수
+   * @returns {JSX.Element} 날짜 셀 컴포넌트
+   */
   const renderCells = () => {
-    const monthStart = startOfMonth(currentMonth); // 현재 월의 시작일
+    const monthStart = startOfMonth(currentDate); // 현재 월의 시작일
     const monthEnd = endOfMonth(monthStart); // 현재 월의 마지막일
     const startDate = startOfWeek(monthStart, { locale: ko }); // 현재 월의 시작일이 포함된 주의 시작일
     const endDate = endOfWeek(monthEnd, { locale: ko }); // 현재 월의 마지막일이 포함된 주의 마지막일
@@ -82,13 +98,15 @@ const Calendar: React.FC = () => {
               isDisabled
                 ? "disabled"
                 : isSameDay(day, new Date())
-                ? "selected"
+                ? "today"
                 : ""
             }`}
             key={day.toString()}
             onClick={() => !isDisabled && onDateClick(cloneDay)}
           >
-            <span className="number">{format(day, "d")}</span>
+            <div className="number-wrap">
+              <span className="number">{format(day, "d")}</span>
+            </div>
             {!isDisabled && (
               <div className="dots">
                 {/* 조건에 따라 점 표시 */}
@@ -111,19 +129,26 @@ const Calendar: React.FC = () => {
     return <div className="body">{rows}</div>;
   };
 
-  // 날짜 클릭 시 현재 월을 해당 날짜로 변경하는 함수
+  /**
+   * 날짜 클릭 시 현재 월을 해당 날짜로 변경하는 함수
+   * @param {Date} day - 클릭한 날짜
+   */
   const onDateClick = (day: Date) => {
-    setCurrentMonth(day);
+    setCurrentDate(day);
   };
 
-  // 다음 달로 이동하는 함수
+  /**
+   * 다음 달로 이동하는 함수
+   */
   const nextMonth = () => {
-    setCurrentMonth(addMonths(currentMonth, 1));
+    setCurrentDate(addMonths(currentDate, 1));
   };
 
-  // 이전 달로 이동하는 함수
+  /**
+   * 이전 달로 이동하는 함수
+   */
   const prevMonth = () => {
-    setCurrentMonth(subMonths(currentMonth, 1));
+    setCurrentDate(subMonths(currentDate, 1));
   };
 
   return (
@@ -131,6 +156,7 @@ const Calendar: React.FC = () => {
       {renderHeader()}
       {renderDays()}
       {renderCells()}
+      <div className="calendar-underline"></div>
     </div>
   );
 };
