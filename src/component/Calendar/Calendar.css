@@ -30,6 +30,7 @@
 .col-center {
   flex-grow: 1;
   user-select: none;
+  position: relative;
 }
 
 .col-center > .month {
@@ -41,6 +42,17 @@
   margin-top: 3px;
   font-size: 16px;
   color: #999;
+}
+
+.selected-today-btn {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(calc(100% + 10px), -50%);
+  border: 1.5px solid #1ceda4;
+  border-radius: 5px;
+  padding: 3px 6px;
+  font-size: 14px;
 }
 
 .col-center.week {
@@ -144,15 +156,4 @@
 
 .cell .dots .dot.purple {
   background-color: #d500f9;
-}
-
-.calendar-underline {
-  position: absolute;
-  background-color: #ced3de;
-  height: 3px;
-  width: 7%;
-  border-radius: 1px;
-  margin: 10px auto;
-  left: 50%;
-  transform: translateX(-50%);
 }
