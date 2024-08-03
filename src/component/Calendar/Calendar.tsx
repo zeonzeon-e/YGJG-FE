@@ -51,6 +51,7 @@ interface CalendarProps {
 const Calendar: React.FC<CalendarProps> = ({ matches, onDateSelect }) => {
   // 현재 날짜를 저장하는 state
   const [currentDate, setCurrentDate] = useState(new Date());
+  onDateSelect(format(currentDate, "yyyy-MM-dd"));
 
   /**
    * renderHeader - 달력 헤더를 렌더링하는 함수
@@ -75,9 +76,7 @@ const Calendar: React.FC<CalendarProps> = ({ matches, onDateSelect }) => {
           <div
             className="selected-today-btn"
             onClick={() => {
-              const today = new Date();
-              setCurrentDate(today);
-              onDateSelect(format(today, "yyyy-MM-dd"));
+              setCurrentDate(new Date());
             }}
           >
             오늘
