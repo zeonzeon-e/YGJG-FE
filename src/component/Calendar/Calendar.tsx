@@ -16,15 +16,44 @@ import { ko } from "date-fns/locale";
 import "./Calendar.css";
 
 /**
- * Calendar 컴포넌트 - 달력을 표시
+ * Match 인터페이스 - 경기 정보를 나타내는 타입
+ * @interface Match
+ * @property {string} date - 경기 날짜 (형식: YYYY-MM-DD)
+ * @property {string} time - 경기 시간
+ * @property {string} teams - 팀 정보
+ * @property {string} color - 색상 (경기 유형을 나타냄)
+ */
+interface Match {
+  date: string;
+  time: string;
+  teams: string;
+  color: string;
+}
+
+/**
+ * CalendarProps 인터페이스 - Calendar 컴포넌트의 props
+ * @interface CalendarProps
+ * @property {Match[]} matches - 경기 목록
+ * @property {function} onDateSelect - 날짜 선택 시 호출되는 함수
+ */
+interface CalendarProps {
+  matches: Match[];
+  onDateSelect: (date: string) => void;
+}
+
+/**
+ * Calendar 컴포넌트 - 달력을 표시하고 경기 정보를 관리
+ * @param {CalendarProps} props - Calendar 컴포넌트에 전달되는 props
+ * @param {Match[]} props.matches - 경기 목록
+ * @param {function} props.onDateSelect - 날짜 선택 시 호출되는 함수
  * @returns {JSX.Element} Calendar 컴포넌트
  */
-const Calendar: React.FC = () => {
-  // 현재 선택한 날짜 (기본값: today)
+const Calendar: React.FC<CalendarProps> = ({ matches, onDateSelect }) => {
+  // 현재 날짜를 저장하는 state
   const [currentDate, setCurrentDate] = useState(new Date());
 
   /**
-   * 헤더를 렌더링하는 함수
+   * renderHeader - 달력 헤더를 렌더링하는 함수
    * @returns {JSX.Element} 헤더 컴포넌트
    */
   const renderHeader = () => {
@@ -45,7 +74,11 @@ const Calendar: React.FC = () => {
           <div className="year">{format(currentDate, yearFormat)}</div>
           <div
             className="selected-today-btn"
-            onClick={() => setCurrentDate(new Date())}
+            onClick={() => {
+              const today = new Date();
+              setCurrentDate(today);
+              onDateSelect(format(today, "yyyy-MM-dd"));
+            }}
           >
             오늘
           </div>
@@ -62,7 +95,7 @@ const Calendar: React.FC = () => {
   };
 
   /**
-   * 요일 헤더를 렌더링하는 함수
+   * renderDays - 요일 헤더를 렌더링하는 함수
    * @returns {JSX.Element} 요일 헤더 컴포넌트
    */
   const renderDays = () => {
@@ -84,7 +117,7 @@ const Calendar: React.FC = () => {
   };
 
   /**
-   * 달력의 날짜 셀을 렌더링하는 함수
+   * renderCells - 달력의 날짜 셀을 렌더링하는 함수
    * @returns {JSX.Element} 날짜 셀 컴포넌트
    */
   const renderCells = () => {
@@ -102,6 +135,11 @@ const Calendar: React.FC = () => {
       for (let i = 0; i < 7; i++) {
         const cloneDay = day;
         const isDisabled = !isSameMonth(day, monthStart); // 현재 월이 아닌 날짜는 비활성화
+        const dateString = format(day, "yyyy-MM-dd");
+
+        // 현재 날짜에 맞는 경기를 찾음
+        const dayMatches = matches.filter((match) => match.date === dateString);
+
         days.push(
           <div
             className={`col cell ${
@@ -114,17 +152,26 @@ const Calendar: React.FC = () => {
                 : ""
             }`}
             key={day.toString()}
-            onClick={() => !isDisabled && onDateClick(cloneDay)}
+            onClick={() => {
+              if (!isDisabled) {
+                onDateClick(cloneDay);
+                onDateSelect(dateString);
+              }
+            }}
           >
             <div className="number-wrap">
               <span className="number">{format(day, "d")}</span>
             </div>
-            {!isDisabled && (
+            {/* 조건에 따라 점 표시 */}
+            {!isDisabled && dayMatches.length > 0 && (
               <div className="dots">
-                {/* 조건에 따라 점 표시 */}
-                <div className="dot green"></div>
-                <div className="dot blue"></div>
-                <div className="dot purple"></div>
+                {dayMatches.map((match, idx) => (
+                  <div
+                    key={idx}
+                    className="dot"
+                    style={{ backgroundColor: match.color }}
+                  ></div>
+                ))}
               </div>
             )}
           </div>
@@ -142,7 +189,7 @@ const Calendar: React.FC = () => {
   };
 
   /**
-   * 날짜 클릭 시 현재 월을 해당 날짜로 변경하는 함수
+   * onDateClick - 날짜 클릭 시 현재 월을 해당 날짜로 변경하는 함수
    * @param {Date} day - 클릭한 날짜
    */
   const onDateClick = (day: Date) => {
@@ -150,14 +197,14 @@ const Calendar: React.FC = () => {
   };
 
   /**
-   * 다음 달로 이동하는 함수
+   * nextMonth - 다음 달로 이동하는 함수
    */
   const nextMonth = () => {
     setCurrentDate(addMonths(currentDate, 1));
   };
 
   /**
-   * 이전 달로 이동하는 함수
+   * prevMonth - 이전 달로 이동하는 함수
    */
   const prevMonth = () => {
     setCurrentDate(subMonths(currentDate, 1));
@@ -168,6 +215,7 @@ const Calendar: React.FC = () => {
       {renderHeader()}
       {renderDays()}
       {renderCells()}
+      <div className="calendar-underline" />
     </div>
   );
 };
