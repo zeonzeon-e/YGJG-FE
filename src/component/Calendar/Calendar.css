@@ -146,14 +146,10 @@
   margin: 0 1px;
 }
 
-.cell .dots .dot.green {
-  background-color: #00c853;
-}
-
-.cell .dots .dot.blue {
-  background-color: #304ffe;
-}
-
-.cell .dots .dot.purple {
-  background-color: #d500f9;
+.calendar-underline {
+  height: 4px;
+  width: 26px;
+  background-color: #ced3de;
+  margin: 10px auto;
+  border-radius: 2px;
 }
