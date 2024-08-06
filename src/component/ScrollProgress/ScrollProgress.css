@@ -1,0 +1,12 @@
+.ScrollProgress {
+  width: 100%;
+  height: 10px;
+  background-color: var(--color-light2);
+  border-radius: 10px;
+}
+
+.Progress {
+  background-color: var(--color-sub);
+  height: 10px;
+  border-radius: 10px;
+}
