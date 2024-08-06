@@ -4,13 +4,12 @@
 
    Reset.css
 */
-@import url(https://cdn.jsdelivr.net/gh/moonspam/NanumSquare@1.0/nanumsquare.css);
 /* 화면별 스타일 */
 html {
   max-width: 100vw;
   min-width: 100vw;
   min-height: 100vh;
-  font-family: "NanumSquare", sans-serif;
+  font-family: "Pretendard-Regular";
 }
 
 /* 라이브러리 시작 */
@@ -43,46 +42,6 @@ html {
   /* 네비게이션바 height만큼 padding을 줘서 네비게이션바 밑으로 페이지가 가려주는 걸 막아줌 */
   padding: 5vw;
   padding-bottom: 12vh;
-}
-
-/* header 스타일 */
-.mainHeader {
-  max-width: 100vw;
-  min-width: 100vw;
-  height: 56px;
-  display: grid;
-  text-align: center;
-  place-items: center;
-  background-color: var(--color-point-applegreen);
-  font-family: "Cafe24Moyamoya-Face-v1.0" !important;
-  font-size: 24px;
-}
-
-.menuHeader {
-  max-width: 100vw;
-  min-width: 100vw;
-  height: 56px;
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  text-align: center;
-  place-items: center;
-  background-color: var(--color-point-applegreen);
-  font-family: "Cafe24Moyamoya-Face-v1.0" !important;
-  font-size: 24px;
-}
-
-/* navigationbar 스타일 */
-.navigationbar {
-  position: fixed;
-  bottom: 0;
-  min-width: 100vw;
-  height: 92px;
-  background-color: #d8d8d8;
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  align-items: center;
-  justify-content: space-around;
-  z-index: 100;
 }
 
 .naviIcon {
@@ -203,13 +162,10 @@ header,
 hgroup,
 menu,
 nav,
-section {
-  display: block;
-  font-family: "NanumSquare", sans-serif;
-}
+section,
 body {
   line-height: 1;
-  font-family: "NanumSquare", sans-serif;
+  font-family: "Pretendard-Regular";
 }
 ol,
 ul {
@@ -239,25 +195,24 @@ input:focus {
   --vh: 100%;
 
   /*기본 흰~검 팔레트*/
-  --color-normal1: #f8f9fa;
-  --color-normal2: #e9ecef;
-  --color-normal3: #dee2e6;
-  --color-normal4: #ced4da;
-  --color-normal5: #adb5bd;
-  --color-normal6: #6c757d;
-  --color-normal7: #495057;
-  --color-normal8: #343a40;
-  --color-normal9: #212529;
+  --color-light1: #f2f2f2;
+  --color-light2: #ededed;
+  --color-dark1: #bebebe;
+  --color-dark2: #333333;
 
   /* 공지 빨강 */
   --color-error: #ff3838;
 
-  /* 포인트 색상 */
-  --color-point-darkturquoise: #004e64;
-  --color-point-cyan: #00a5cf;
-  --color-point-lightgreen: #9fffcb;
-  --color-point-applegreen: #7ae582;
-  --color-point-green: #25a18e;
+  /**포지션 컬러**/
+  --color-gk: #ff9500;
+  --color-dp: #007aff;
+  --color-mf: #34c759;
+  --color-sk: #e5350c;
+
+  /**공식 컬러**/
+  --color-subtle: #aaffe1;
+  --color-sub: #1ceda4;
+  --color-main: #0e6244;
 }
 
 .normal {
@@ -272,12 +227,6 @@ input:focus {
 .light {
   font-weight: 300;
 }
-button {
-  font-family: "NanumSquare", sans-serif;
-}
-input {
-  font-family: "NanumSquare", sans-serif;
-}
 /* 폰트 스타일 */
 @font-face {
   font-family: "Cafe24Moyamoya-Face-v1.0";
@@ -285,4 +234,50 @@ input {
     format("woff2");
   font-weight: normal;
   font-style: normal;
+}
+
+@font-face {
+  font-family: "Pretendard-Black";
+  src: url("./Fonts/Pretendard-Black.woff") format("woff");
+}
+
+@font-face {
+  font-family: "Pretendard-ExtraBold";
+  src: url("./Fonts/Pretendard-ExtraBold.woff") format("woff");
+}
+
+@font-face {
+  font-family: "Pretendard-Bold";
+  src: url("./Fonts/Pretendard-Bold.woff") format("woff");
+}
+
+@font-face {
+  font-family: "Pretendard-SemiBold";
+  src: url("./Fonts/Pretendard-SemiBold.woff") format("woff");
+}
+
+@font-face {
+  font-family: "Pretendard-Medium";
+  src: url("./Fonts/Pretendard-Medium.woff") format("woff");
+}
+
+@font-face {
+  font-family: "Pretendard-Regular";
+  src: local("Pretendard-Regular"),
+    url("./Fonts/Pretendard-Regular.woff") format("woff");
+}
+
+@font-face {
+  font-family: "Pretendard-Light";
+  src: url("./Fonts/Pretendard-Light.woff") format("woff");
+}
+
+@font-face {
+  font-family: "Pretendard-ExtraLight";
+  src: url("./Fonts/Pretendard-ExtraLight.woff") format("woff");
+}
+
+@font-face {
+  font-family: "Pretendard-Thin";
+  src: url("./Fonts/Pretendard-Thin.woff") format("woff");
 }
