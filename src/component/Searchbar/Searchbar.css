@@ -1,0 +1,16 @@
+.Searchbar {
+  border: 1px solid var(--color-light2);
+  border-radius: 10px;
+  display: flex;
+}
+
+.Searchbar_text {
+  width: 100%;
+  border: 0px;
+  outline: none;
+  font-size: 18px;
+}
+
+.Searchbar_text:focus {
+  border: 0px;
+}

@@ -2,19 +2,20 @@ import React, { useEffect, useState } from "react";
 import "./ScrollProgress.css";
 
 interface ScrollProgressProps {
-  targetWidth?: number; //진행율
-  duration: number; //애니메이션 지속 시간(ms)
+  targetWidth: number; //진행율
+  duration?: number; //애니메이션 지속 시간(ms)
 }
 
 /**
  * ScrollProgress 컴포넌트 - 진행과정 렌더링
  * @param {ScrollProgressProps} props - 컴포넌트에 전달되는 props
- * @param {React.ReactNode} [props.targetWidth] - 컴포넌트 진행도
+ * @param {React.ReactNode} [props.targetWidth] - 컴포넌트 진행율
+ * @param {React.ReactNode} [props.duration] - 컴포넌트 애니메이션 지속 시간(선택적)
  * @returns {JSX.Element} ScrollProgress 컴포넌트
  */
 const ScrollProgress: React.FC<ScrollProgressProps> = ({
   targetWidth = 0,
-  duration,
+  duration = 1,
 }) => {
   const [width, setWidth] = useState<number>(0);
 

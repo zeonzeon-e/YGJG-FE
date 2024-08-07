@@ -36,6 +36,10 @@ html {
 .flex-ac-sa {
   align-content: space-around;
 }
+
+.icon-pd {
+  padding: 2%;
+}
 /* 라이브러리 끝 */
 
 .div-page {
@@ -69,13 +73,6 @@ span,
 applet,
 object,
 iframe,
-h1,
-h2,
-h3,
-h4,
-h5,
-h6,
-p,
 blockquote,
 pre,
 a,
@@ -151,6 +148,20 @@ video {
   vertical-align: baseline;
 }
 
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font: inherit;
+  vertical-align: baseline;
+}
+
 /* HTML5 display-role reset for older browsers */
 article,
 aside,
@@ -188,6 +199,29 @@ table {
 }
 input:focus {
   border-color: black;
+}
+
+/*텍스트 크기 별*/
+h1 {
+  font-size: 24px;
+  font-family: Pretendard-Black;
+}
+h2 {
+  font-size: 20px;
+  font-family: Pretendard-Bold;
+}
+h3 {
+  font-size: 18px;
+  font-family: Pretendard-Medium;
+}
+h4 {
+  font-size: 16px;
+}
+h5 {
+  font-size: 14px;
+}
+p {
+  font-size: 12px;
 }
 
 /* 추가 세팅 */
