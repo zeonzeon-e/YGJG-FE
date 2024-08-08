@@ -37,7 +37,11 @@ html {
   align-content: space-around;
 }
 
-.icon-pd {
+.flex-fd-c {
+  flex-direction: column;
+}
+
+.pd {
   padding: 2%;
 }
 /* 라이브러리 끝 */

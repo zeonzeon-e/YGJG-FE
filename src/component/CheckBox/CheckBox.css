@@ -1,0 +1,30 @@
+.CheckBox {
+  width: 100%;
+}
+
+.CheckBox_main-div {
+  padding: 5px;
+}
+.CheckBox_content {
+  width: fit-content;
+}
+
+.CheckBox_input {
+  margin-right: 10px;
+  width: 25px;
+  height: 25px;
+  border: 1px solid var(--color-dark2);
+  border-radius: 5px;
+}
+
+.CheckBox_input:checked {
+  background-color: var(--color-main);
+}
+
+.CheckBox_detail {
+  box-sizing: border-box;
+  padding: 10px;
+  width: 100%;
+  background-color: var(--color-light2);
+  border-radius: 5px;
+}
