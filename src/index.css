@@ -37,7 +37,11 @@ html {
   align-content: space-around;
 }
 
-.icon-pd {
+.flex-fd-c {
+  flex-direction: column;
+}
+
+.pd {
   padding: 2%;
 }
 /* 라이브러리 끝 */
@@ -177,6 +181,12 @@ section,
 body {
   line-height: 1;
   font-family: "Pretendard-Regular";
+
+  /*드래그 방지*/
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 ol,
 ul {

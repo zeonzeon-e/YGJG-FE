@@ -23,14 +23,14 @@ const Searchbar: React.FC<SearchbarProps> = ({ SearchText = "" }) => {
   };
   return (
     <div className="Searchbar flex-jc-sb">
-      <FaMagnifyingGlass size={"1.5em"} className="icon-pd" />
+      <FaMagnifyingGlass size={"1.5em"} className="pd" />
       <input
         type="text"
         className="Searchbar_text"
         value={search}
         onChange={handleSearchChange}
       />
-      <div onClick={searchClick} className="icon-pd">
+      <div onClick={searchClick} className="pd">
         <RiSendPlane2Fill size={"1.5em"} />
       </div>
     </div>
