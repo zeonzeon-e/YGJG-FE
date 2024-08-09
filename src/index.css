@@ -181,6 +181,12 @@ section,
 body {
   line-height: 1;
   font-family: "Pretendard-Regular";
+
+  /*드래그 방지*/
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 ol,
 ul {

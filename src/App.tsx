@@ -9,7 +9,7 @@ const App = () => {
     <>
       <GlobalStyles />
       <div className="App">
-        <CheckBox content="제목이다" isToggle={false} detail="내용이다" />
+        <CheckBox title="제목이다" isToggle={false} detail="내용이다" />
       </div>
     </>
   );
