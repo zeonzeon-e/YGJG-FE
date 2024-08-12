@@ -2,6 +2,7 @@ import { FaAngleDown, FaAngleUp, FaCheck } from "react-icons/fa6";
 
 import React, { useState } from "react";
 import "./CheckBox.css";
+import styled from "styled-components";
 
 interface CheckBoxProps {
   title?: string; //체크박스 제목
@@ -26,46 +27,102 @@ const CheckBox: React.FC<CheckBoxProps> = ({
   isChecked,
 }) => {
   const [toggle, setToggle] = useState<boolean>(false);
-  const [check, setCheck] = useState<boolean>(false);
+  // const [check, setCheck] = useState<boolean>(false);
+  const [allCheck, setAllCheck] = useState<boolean>(false);
+  const [checks, setChecks] = useState<boolean[]>([false, false, false]);
+  const [toggles, setToggles] = useState<boolean[]>([false, false, false]);
 
   //체크 여부에 따라 useState 상태 변경
-  const CheckChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
-    setCheck(!check);
+  const allClick = (e: React.MouseEvent<HTMLDivElement>): void => {
+    setAllCheck(!allCheck);
+    const newAllCheck = !allCheck;
+    console.log("all");
+    setChecks(checks.map(() => newAllCheck));
+    console.log("all selelcted", newAllCheck);
   };
 
   //제목 눌렀을 때도 체크 되는 click 이벤트
-  const titleClick = (e: React.MouseEvent<HTMLInputElement>): void => {
-    setCheck(!check);
+  // const titleClick = (e: React.MouseEvent<HTMLLabelElement>): void => {
+  //   setCheck(!check);
+  //   console.log(check);
+  // };
+
+  const checkboxClick = (index: number) => {
+    const newChecks = [...checks];
+    newChecks[index] = !newChecks[index];
+    setChecks(newChecks);
+    setAllCheck(newChecks.every((check) => check));
+    console.log("individual checkbox states: ", newChecks);
   };
+
   //설명 상세보기
-  const toggleClick = (e: React.MouseEvent<HTMLInputElement>): void => {
-    setToggle(!toggle);
+  const toggleClick = (index: number) => {
+    const newToggles = [...toggles];
+    newToggles[index] = !newToggles[index];
+    setToggles(newToggles);
   };
 
   return (
-    <div className="CheckBox flex flex-fd-c">
-      <div className="CheckBox_main-div flex flex-jc-sb flex-ai-c">
-        <div className="CheckBox_content flex flex-ai-c" onClick={titleClick}>
-          <label className="Checkbox-container">
-            <input
-              checked={check}
-              onChange={CheckChange}
-              type="checkbox"
-              className="CheckBox_input"
-            />
-            <span className="checkmark">
-              {check ? <FaCheck size={20} /> : ""}
-            </span>
-          </label>
-          <h3 className="CheckBox_title">{title}</h3>
-        </div>
-        <div onClick={toggleClick}>
-          {toggle ? <FaAngleUp size={30} /> : <FaAngleDown size={30} />}
-        </div>
-      </div>
-      <div>{toggle ? <p className="CheckBox_detail">{detail}</p> : ""}</div>
+    <div>
+      <CheckBox_all onClick={allClick}>
+        <FaCheck
+          className={allCheck ? "CheckBox-icon" : "CheckBox-icon icon"}
+        />
+        전체선택
+      </CheckBox_all>
+      {checks.map((check, index) => (
+        <CheckBox_wrapper key={index}>
+          <CheckBox_content>
+            <CheckBox_title onClick={() => checkboxClick(index)}>
+              <FaCheck
+                className={check ? "CheckBox-icon" : "CheckBox-icon icon"}
+              />
+              약관 동의를 {index + 1}을 선택하세요
+            </CheckBox_title>
+            <div onClick={() => toggleClick(index)}>
+              {toggles[index] ? (
+                <FaAngleDown size={20} />
+              ) : (
+                <FaAngleUp size={20} />
+              )}
+            </div>
+          </CheckBox_content>
+          {toggles[index] && (
+            <CheckBox_detail>안녕하세요 {index + 1} 설명입니다</CheckBox_detail>
+          )}
+        </CheckBox_wrapper>
+      ))}
     </div>
   );
 };
 
 export default CheckBox;
+
+const CheckBox_wrapper = styled.div`
+  width: 100%;
+  align-items: center;
+  padding: 5px;
+`;
+const CheckBox_content = styled.div`
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+`;
+const CheckBox_title = styled.label`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+`;
+const CheckBox_detail = styled.div`
+  background-color: var(--color-light2);
+  padding: 10px;
+  border-radius: 5px;
+  margin-top: 5px;
+`;
+const CheckBox_all = styled.div`
+  display: flex;
+  padding: 5px;
+  align-items: center;
+  border-radius: 5px;
+  width: 100%;
+`;
