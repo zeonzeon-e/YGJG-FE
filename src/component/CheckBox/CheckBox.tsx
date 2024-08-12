@@ -1,12 +1,11 @@
 import { FaAngleDown, FaAngleUp, FaCheck } from "react-icons/fa6";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import "./CheckBox.css";
 import styled from "styled-components";
 
 interface CheckBoxProps {
-  title?: string; //체크박스 제목
-  detail?: string; //체크박스 토글 안에 설명문
+ content:  [string, string][]; //이중 배열: [제목, 내용]
   isToggle: boolean; //드롭다운 사용 여부
   isChecked?: boolean; //강제 체크 설정
 }
@@ -14,24 +13,24 @@ interface CheckBoxProps {
 /**
  * ScrollProgress 컴포넌트 - 진행과정 렌더링
  * @param {CheckBoxProps} props - 컴포넌트에 전달되는 props
- * @param {React.ReactNode} [props.content] - 체크박스 옆에 올 제목
- * @param {React.ReactNode} [props.detail] - 체크박스 드롭다운 안에 들어갈 내용
+ * @param {React.ReactNode} [props.content] - 제목, 드롭다운 내용
  * @param {React.ReactNode} [props.isToggle] - 체크박스 드롭다운 여부
  * @param {React.ReactNode} [props.isChecked] - 강제 체크 설정
  * @returns {JSX.Element} ScrollProgress 컴포넌트
  */
 const CheckBox: React.FC<CheckBoxProps> = ({
-  title = "",
-  detail,
+  content = [],
   isToggle = false,
   isChecked,
 }) => {
-  const [toggle, setToggle] = useState<boolean>(false);
-  // const [check, setCheck] = useState<boolean>(false);
   const [allCheck, setAllCheck] = useState<boolean>(false);
-  const [checks, setChecks] = useState<boolean[]>([false, false, false]);
-  const [toggles, setToggles] = useState<boolean[]>([false, false, false]);
+  const [checks, setChecks] = useState<boolean[]>(()=>Array(content.length).fill(false));
+  const [toggles, setToggles] = useState<boolean[]>(()=>Array(content.length).fill(false));
 
+  useEffect(() => {
+    setAllCheck(false);
+    setChecks(()=>Array(content.length).fill(false));
+  }, [content])
   //체크 여부에 따라 useState 상태 변경
   const allClick = (e: React.MouseEvent<HTMLDivElement>): void => {
     setAllCheck(!allCheck);
@@ -66,29 +65,29 @@ const CheckBox: React.FC<CheckBoxProps> = ({
     <div>
       <CheckBox_all onClick={allClick}>
         <FaCheck
-          className={allCheck ? "CheckBox-icon" : "CheckBox-icon icon"}
+          className={allCheck ? "CheckBox-icon icon" : "CheckBox-icon"}
         />
         전체선택
       </CheckBox_all>
-      {checks.map((check, index) => (
+      {content.map(([title, detail], index) => (
         <CheckBox_wrapper key={index}>
           <CheckBox_content>
             <CheckBox_title onClick={() => checkboxClick(index)}>
               <FaCheck
-                className={check ? "CheckBox-icon" : "CheckBox-icon icon"}
+                className={checks[index] ? "CheckBox-icon icon" : "CheckBox-icon"}
               />
-              약관 동의를 {index + 1}을 선택하세요
+              {title}
             </CheckBox_title>
-            <div onClick={() => toggleClick(index)}>
+            {isToggle && <div onClick={() => toggleClick(index)}>
               {toggles[index] ? (
                 <FaAngleDown size={20} />
               ) : (
                 <FaAngleUp size={20} />
               )}
-            </div>
+            </div>}
           </CheckBox_content>
-          {toggles[index] && (
-            <CheckBox_detail>안녕하세요 {index + 1} 설명입니다</CheckBox_detail>
+          {isToggle && toggles[index] && (
+            <CheckBox_detail>{detail}</CheckBox_detail>
           )}
         </CheckBox_wrapper>
       ))}
