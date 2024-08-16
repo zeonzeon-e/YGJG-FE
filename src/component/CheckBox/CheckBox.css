@@ -1,51 +1,15 @@
-.CheckBox {
-  width: 100%;
-}
-
-.CheckBox_main-div {
-  padding: 5px;
-}
-.CheckBox_title {
-  width: fit-content;
-}
-.CheckBox_content {
-  padding-right: 10px;
-}
-.CheckBox_input {
-  margin-right: 10px;
-  width: 25px;
-  height: 25px;
-  border: 1px solid var(--color-dark2);
-  border-radius: 5px;
-  display: none;
-}
-
-.CheckBox_detail {
-  box-sizing: border-box;
-  padding: 10px;
-  width: 100%;
+.CheckBox-icon {
   background-color: var(--color-light2);
-  border-radius: 5px;
+  color: var(--color-light2);
+  margin-right: 5px;
+  border-radius: 3px;
+  padding: 0.5px;
+  border: 1px solid var(--color-dark1);
 }
 
-.Checkbox-container {
-  display: flex;
-  align-items: center;
-  cursor: pointer;
-  font-size: 18px;
-  user-select: none;
-}
-
-.CheckBox_input:checked + .checkmark {
-  background-color: #4caf50; /* 기본 배경색 */
-}
-
-.checkmark {
-  height: 20px;
-  width: 20px;
-  background-color: #ccc;
-  border-radius: 4px;
-  margin-right: 8px;
-  transition: background-color 0.1s;
-  color: var(--color-light1);
+.icon {
+  border: 1px solid var(--color-dark1);
+  background-color: var(--color-subtle);
+  color: var(--color-dark2);
+  margin-right: 5px;
 }
