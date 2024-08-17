@@ -23,36 +23,28 @@ const LoginPage: React.FC = () => {
 
   return (
     <div>
-      {/* 페이지 상단에 있는 헤더 컴포넌트 */}
       <Header1 text="요기조기" line={false} />
       <Container>
         <Title>로그인</Title>
-        {/* 사용자 이메일 또는 휴대폰 번호 입력 필드 */}
         <StyledInput placeholder="휴대폰 번호 또는 이메일" />
-        {/* 비밀번호 입력 필드와 비밀번호 보이기/숨기기 아이콘을 포함하는 래퍼 */}
         <PasswordWrapper>
           <StyledInput
             type={showPassword ? "text" : "password"}
             placeholder="비밀번호"
           />
           <ShowPasswordIcon onClick={togglePasswordVisibility}>
-            {/* 비밀번호 보이기/숨기기 아이콘 - 상태에 따라 아이콘이 변경됨 */}
             {showPassword ? <FaEye /> : <FaEyeSlash />}
           </ShowPasswordIcon>
         </PasswordWrapper>
-        {/* 로그인 버튼 */}
         <StyledButton primary>로그인</StyledButton>
-        {/* 카카오 로그인 버튼 */}
         <StyledButton kakao>
           <RiKakaoTalkFill size={24} />
           &nbsp;카카오로 3초 만에 시작하기
         </StyledButton>
-        {/* 구글 로그인 버튼 */}
         <StyledButton google>
           <FcGoogle size={24} />
           &nbsp;구글 로그인
         </StyledButton>
-        {/* 비밀번호 찾기와 회원가입 링크 */}
         <Links>
           <StyledLink to="/forgot-password">비밀번호 찾기</StyledLink>
           <Divider>|</Divider>
