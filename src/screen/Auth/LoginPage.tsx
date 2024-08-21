@@ -14,6 +14,10 @@ const LoginPage: React.FC = () => {
   const [password, setPassword] = useState<string>("");
   const [showPassword, setShowPassword] = useState<boolean>(false);
 
+  // 카카오와 구글의 OAuth 엔드포인트 및 클라이언트 ID를 설정
+  const KAKAO_AUTH_URL = `https://kauth.kakao.com/oauth/authorize?response_type=code&client_id=YOUR_KAKAO_CLIENT_ID&redirect_uri=YOUR_REDIRECT_URI`;
+  const GOOGLE_AUTH_URL = `https://accounts.google.com/o/oauth2/v2/auth?response_type=code&client_id=YOUR_GOOGLE_CLIENT_ID&redirect_uri=YOUR_REDIRECT_URI&scope=email%20profile`;
+
   /**
    * 비밀번호 보이기/숨기기 상태를 토글하는 함수
    */
@@ -68,6 +72,20 @@ const LoginPage: React.FC = () => {
     }
   };
 
+  /**
+   * 카카오 로그인 버튼 클릭 시 OAuth 인증 페이지로 이동
+   */
+  const handleKakaoLogin = () => {
+    window.location.href = KAKAO_AUTH_URL;
+  };
+
+  /**
+   * 구글 로그인 버튼 클릭 시 OAuth 인증 페이지로 이동
+   */
+  const handleGoogleLogin = () => {
+    window.location.href = GOOGLE_AUTH_URL;
+  };
+
   return (
     <div>
       <Header1 text="요기조기" line={false} />
@@ -109,11 +127,11 @@ const LoginPage: React.FC = () => {
             로그인
           </StyledButton>
         </Form>
-        <StyledButton kakao>
+        <StyledButton kakao onClick={handleKakaoLogin}>
           <RiKakaoTalkFill size={24} />
           &nbsp;카카오로 3초 만에 시작하기
         </StyledButton>
-        <StyledButton google>
+        <StyledButton google onClick={handleGoogleLogin}>
           <FcGoogle size={24} />
           &nbsp;구글 로그인
         </StyledButton>
@@ -128,8 +146,6 @@ const LoginPage: React.FC = () => {
 };
 
 export default LoginPage;
-
-// 스타일 컴포넌트들
 
 const Container = styled.div`
   display: flex;
