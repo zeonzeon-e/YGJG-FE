@@ -33,11 +33,10 @@ const StyledInput = styled.input<InputProps>`
  * @param {InputProps} props - 컴포넌트 props
  * @param {string} [props.color] - 인풋 배경 색상 (선택적)
  * @param {number} [props.height] - 인풋 높이 (선택적)
- * * @param {number} [porps.width] - 인풋 너비 (선택적)
+ * @param {number} [porps.width] - 인풋 너비 (선택적)
  * @param {string} [props.type] - 인풋 타입 정하기
  * @param {string} [porps.placeholder] - 인풋 설명 (선택적)
  * @param {number} [porps.fontSize] - 인풋 안에 있는 설명 텍스트 사이즈
- 
  * @returns {JSX.Element} Input 컴포넌트
  */
 const Input: React.FC<InputProps> = ({

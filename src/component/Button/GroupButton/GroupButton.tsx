@@ -1,12 +1,12 @@
 import React, { useState } from "react";
-import "./GroupButton.css";
+import styled from "styled-components";
 
 // props 타입 정의
 interface GroupButtonProps {
   items: string[];
   textColor?: string;
   fontSize?: number;
-  type: string;
+  type: "multi" | "single";
 }
 
 /**
@@ -14,56 +14,81 @@ interface GroupButtonProps {
  * @param {GroupButtonProps} props - 컴포넌트 props
  * @param {string} [props.items] - 그룹 버튼으로 묶일 요소들
  * @param {string} [props.textColor] - 글씨 색상 (선택적)
- * @param {number} [porps.fontSize] - 텍스트 사이즈
- * @param {number} [porps.type] - multi:다중선택, single:단일선택
- *
+ * @param {number} [props.fontSize] - 텍스트 사이즈
+ * @param {string} [props.type] - multi:다중선택, single:단일선택\
  * @returns {JSX.Element} button 컴포넌트
  */
-
 const GroupButton: React.FC<GroupButtonProps> = ({
-  textColor,
+  textColor = "#333",
   items,
-  fontSize,
+  fontSize = 16,
   type,
 }) => {
   const [isIndexSelect, setIsIndexSelect] = useState(
     Array(items.length).fill(false)
   );
-  console.log(isIndexSelect);
-  //클릭했을 때 이벤트
-  const MutihandleClick = (idx: number) => {
-    // const newArr: boolean[] = Array(items.length).fill(false);
-    const newArr: boolean[] = [...isIndexSelect];
+
+  const handleMultiClick = (idx: number) => {
+    const newArr = [...isIndexSelect];
     newArr[idx] = !isIndexSelect[idx];
     setIsIndexSelect(newArr);
   };
 
-  const SinglehandleClick = (idx: number) => {
-    const newArr: boolean[] = Array(items.length).fill(false);
+  const handleSingleClick = (idx: number) => {
+    const newArr = Array(items.length).fill(false);
     newArr[idx] = true;
     setIsIndexSelect(newArr);
   };
 
-  const ChoosehandleClick = (index: number) => {
-    if (type === "multi") MutihandleClick(index);
-    if (type === "single") SinglehandleClick(index);
+  const handleClick = (index: number) => {
+    if (type === "multi") handleMultiClick(index);
+    if (type === "single") handleSingleClick(index);
   };
 
   return (
-    <div className="flex flex-jc-sb">
+    <ButtonGroup>
       {items.map((item, index) => (
-        <button
+        <StyledButton
           key={index}
-          onClick={() => ChoosehandleClick(index)}
-          className={
-            isIndexSelect[index] ? "GroupButton_el click" : "GroupButton_el"
-          }
+          onClick={() => handleClick(index)}
+          selected={isIndexSelect[index]}
+          textColor={textColor}
+          fontSize={fontSize}
         >
           {item}
-        </button>
+        </StyledButton>
       ))}
-    </div>
+    </ButtonGroup>
   );
 };
 
 export default GroupButton;
+
+// 스타일 컴포넌트 정의
+const ButtonGroup = styled.div`
+  display: flex;
+  justify-content: space-between;
+`;
+
+const StyledButton = styled.button<{
+  selected: boolean;
+  textColor: string;
+  fontSize: number;
+}>`
+  border: 1px solid var(--color-dark1);
+  box-sizing: border-box;
+  padding: 10px;
+  width: 90%;
+  margin: 2px;
+  border-radius: 8px;
+  color: ${({ selected, textColor }) =>
+    selected ? "var(--color-light1)" : textColor};
+  background-color: ${({ selected }) =>
+    selected ? "var(--color-main)" : "transparent"};
+  font-size: ${({ fontSize }) => fontSize}px;
+  cursor: pointer;
+
+  &:hover {
+    opacity: 0.8;
+  }
+`;
