@@ -10,15 +10,17 @@ import CheckBox from "./component/CheckBox/CheckBox";
 import GroupButton from "./component/Button/GroupButton/GroupButton";
 import CheckButton from "./component/Button/CheckButton";
 import RadioButton from "./component/Button/RadioButton";
+import ActivityDaysSelector from "./component/Button/ActivityDaysSelector";
 
 const App = () => {
   return (
     <>
       <GlobalStyles />
       <div className="App">
-        <GroupButton items={["월", "화","수", "목"]} type="multi" />
-        <CheckButton items={["월", "화","수", "목"]} />
-        <RadioButton items={["월", "화","수", "목"]} />
+        <GroupButton items={["월", "화", "수", "목"]} type="multi" />
+        <CheckButton items={["월", "화", "수", "목"]} title="체크버튼" />
+        <RadioButton items={["월", "화", "수", "목"]} title="라디오버튼" />
+        <ActivityDaysSelector />
       </div>
     </>
   );
