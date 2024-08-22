@@ -18,23 +18,14 @@ const LoginPage: React.FC = () => {
   const KAKAO_AUTH_URL = `https://kauth.kakao.com/oauth/authorize?response_type=code&client_id=YOUR_KAKAO_CLIENT_ID&redirect_uri=YOUR_REDIRECT_URI`;
   const GOOGLE_AUTH_URL = `https://accounts.google.com/o/oauth2/v2/auth?response_type=code&client_id=YOUR_GOOGLE_CLIENT_ID&redirect_uri=YOUR_REDIRECT_URI&scope=email%20profile`;
 
-  /**
-   * 비밀번호 보이기/숨기기 상태를 토글하는 함수
-   */
   const togglePasswordVisibility = (): void => {
     setShowPassword(!showPassword);
   };
 
-  /**
-   * 이메일/휴대폰 입력 필드를 비우는 함수
-   */
   const clearEmail = (): void => {
     setEmail("");
   };
 
-  /**
-   * 비밀번호 입력 필드를 비우는 함수
-   */
   const clearPassword = (): void => {
     setPassword("");
   };
