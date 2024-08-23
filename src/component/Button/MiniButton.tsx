@@ -2,13 +2,13 @@ import React from "react";
 import styled from "styled-components";
 
 // props 타입 정의
-interface MainButtonProps {
+interface MiniButtonProps {
   children?: React.ReactNode;
   onClick?: () => void;
 }
 
 // StyledDiv 컴포넌트 정의
-const StyledButton = styled.button<MainButtonProps>`
+const StyledButton = styled.button<MiniButtonProps>`
   position: absolute;
   top: 50%;
   left: 50%;
@@ -27,7 +27,7 @@ const StyledButton = styled.button<MainButtonProps>`
  * @param {() => void} [props.onClick] - 버튼 클릭 시 호출되는 함수 (선택적)
  * @returns {JSX.Element} button 컴포넌트
  */
-const MiniButton: React.FC<MainButtonProps> = ({
+const MiniButton: React.FC<MiniButtonProps> = ({
   children = "확인",
   onClick,
 }) => {
