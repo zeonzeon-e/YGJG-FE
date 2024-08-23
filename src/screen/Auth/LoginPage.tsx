@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import styled from "styled-components";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { FaEye, FaEyeSlash } from "react-icons/fa6";
 import { CgCloseO } from "react-icons/cg";
 import { RiKakaoTalkFill } from "react-icons/ri";
@@ -13,6 +13,7 @@ const LoginPage: React.FC = () => {
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [showPassword, setShowPassword] = useState<boolean>(false);
+  const navigate = useNavigate();
 
   // 카카오와 구글의 OAuth 엔드포인트 및 클라이언트 ID를 설정
   const KAKAO_AUTH_URL = `https://kauth.kakao.com/oauth/authorize?response_type=code&client_id=YOUR_KAKAO_CLIENT_ID&redirect_uri=YOUR_REDIRECT_URI`;
@@ -28,6 +29,10 @@ const LoginPage: React.FC = () => {
 
   const clearPassword = (): void => {
     setPassword("");
+  };
+
+  const goToMainPage = () => {
+    navigate("/");
   };
 
   /**
@@ -51,7 +56,7 @@ const LoginPage: React.FC = () => {
       );
 
       if (response.status === 200 || response.status === 201) {
-        // 요청이 성공한 경우 처리 (예: 사용자 대시보드로 리디렉션)
+        // 요청이 성공한 경우 처리 (예: 사용자 대시보드로 리디렉션 및 토큰 저장)
         console.log("로그인 성공", response.data);
       } else {
         // 요청이 실패한 경우 처리 (예: 오류 메시지 표시)
@@ -114,7 +119,7 @@ const LoginPage: React.FC = () => {
               {showPassword ? <FaEyeSlash /> : <FaEye />}
             </ShowPasswordIcon>
           </PasswordWrapper>
-          <StyledButton primary type="submit">
+          <StyledButton primary onClick={goToMainPage}>
             로그인
           </StyledButton>
         </Form>
@@ -127,9 +132,9 @@ const LoginPage: React.FC = () => {
           &nbsp;구글 로그인
         </StyledButton>
         <Links>
-          <StyledLink to="/forgot-password">비밀번호 찾기</StyledLink>
+          <StyledLink to="/login/find-pw">비밀번호 찾기</StyledLink>
           <Divider>|</Divider>
-          <StyledLink to="/signup">회원가입</StyledLink>
+          <StyledLink to="/signup/1">회원가입</StyledLink>
         </Links>
       </Container>
     </div>

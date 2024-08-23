@@ -43,17 +43,6 @@
   color: #999;
 }
 
-.selected-today-btn {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(calc(100% + 10px), -50%);
-  border: 1.5px solid #1ceda4;
-  border-radius: 5px;
-  padding: 3px 6px;
-  font-size: 14px;
-}
-
 .col-center.week {
   font-size: 16px;
   color: #999;
