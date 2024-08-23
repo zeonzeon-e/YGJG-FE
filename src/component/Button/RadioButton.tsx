@@ -107,7 +107,7 @@ const RadioItemButton = styled.button<RadioItemButtonProps>`
       : bgColor || "transparent"};
   font-size: ${({ fontSize }) => (fontSize ? `${fontSize}px` : "inherit")};
   cursor: pointer;
-  width: 100px;
+  width: 100%;
   text-align: center;
 
   &:hover {
