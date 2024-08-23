@@ -14,7 +14,6 @@ import {
 } from "date-fns";
 import { ko } from "date-fns/locale";
 import "./Calendar.css";
-import MiniButton from "../Button/MiniButton";
 
 /**
  * Match 인터페이스 - 경기 정보를 나타내는 타입
@@ -74,13 +73,6 @@ const Calendar: React.FC<CalendarProps> = ({ matches, onDateSelect }) => {
         <div className="col col-center">
           <div className="month">{format(currentDate, monthFormat)}</div>
           <div className="year">{format(currentDate, yearFormat)}</div>
-          <MiniButton
-            onClick={() => {
-              setCurrentDate(new Date());
-            }}
-          >
-            오늘
-          </MiniButton>
         </div>
         <div className="col col-end" onClick={nextMonth}>
           <div className="icon-wrap">

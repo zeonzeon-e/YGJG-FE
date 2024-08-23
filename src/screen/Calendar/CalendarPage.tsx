@@ -75,6 +75,12 @@ const matches: Match[] = [
     teams: "대한민국 팀 vs 독일 팀",
     color: "#FF4500",
   },
+  {
+    date: "2024-08-23",
+    time: "12:00-14:00",
+    teams: "대한민국 팀 vs 독일 팀",
+    color: "#FF4500",
+  },
 ];
 
 /**

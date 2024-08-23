@@ -9,10 +9,6 @@ interface MiniButtonProps {
 
 // StyledDiv 컴포넌트 정의
 const StyledButton = styled.button<MiniButtonProps>`
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(calc(100% + 10px), -50%);
   border: 1.5px solid #1ceda4;
   border-radius: 5px;
   padding: 3px 6px;
