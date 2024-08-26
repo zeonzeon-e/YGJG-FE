@@ -3,7 +3,10 @@ import ReactDOM from "react-dom/client";
 import "./index.css";
 import App from "./App";
 import reportWebVitals from "./reportWebVitals";
-import { BrowserRouter } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import LoginPage from "./screen/Auth/LoginPage";
+import FindPassWardPage from "./screen/Auth/FindPassWardPage";
+import FindPassWardPhonePage from "./screen/Auth/FindPassWardPhonePage";
 
 const root = ReactDOM.createRoot(
   document.getElementById("root") as HTMLElement
@@ -11,7 +14,15 @@ const root = ReactDOM.createRoot(
 root.render(
   <React.StrictMode>
     <BrowserRouter>
-      <App />
+      {/* <App /> */}
+      <Routes>
+        <Route path="/" element={<LoginPage />} />
+        <Route path="/login/find-pw" element={<FindPassWardPage />} />
+        <Route
+          path="/login/find-pw/phone"
+          element={<FindPassWardPhonePage />}
+        />
+      </Routes>
     </BrowserRouter>
   </React.StrictMode>
 );

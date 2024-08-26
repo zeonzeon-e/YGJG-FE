@@ -73,14 +73,6 @@ const Calendar: React.FC<CalendarProps> = ({ matches, onDateSelect }) => {
         <div className="col col-center">
           <div className="month">{format(currentDate, monthFormat)}</div>
           <div className="year">{format(currentDate, yearFormat)}</div>
-          <div
-            className="selected-today-btn"
-            onClick={() => {
-              setCurrentDate(new Date());
-            }}
-          >
-            오늘
-          </div>
         </div>
         <div className="col col-end" onClick={nextMonth}>
           <div className="icon-wrap">

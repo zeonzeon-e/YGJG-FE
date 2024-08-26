@@ -2,6 +2,7 @@ import React from "react";
 import { FaChevronLeft } from "react-icons/fa6";
 import HorizontalLine from "../../Styled/HorizontalLine";
 import "./Header2.css";
+import { useNavigate } from "react-router-dom";
 
 interface OwnProps {
   text?: string; // 헤더에 표시될 텍스트 (선택적)
@@ -15,10 +16,12 @@ interface OwnProps {
  * @returns {JSX.Element} Header2 컴포넌트
  */
 const Header2: React.FC<OwnProps> = ({ text, line = true }) => {
+  const navigate = useNavigate();
+
   return (
     <div>
       <div className="Header2__wrap">
-        <div className="Header2__back">
+        <div className="Header2__back" onClick={() => navigate(-1)}>
           <FaChevronLeft />
         </div>
         <div className="Header2__text">{text}</div>
