@@ -4,16 +4,16 @@ import { Link } from "react-router-dom";
 import Header2 from "../../component/Header/Header2/Header2";
 import MainButton from "../../component/Button/MainButton/MainButton";
 
-const LoginPage: React.FC = () => {
+const FindPassWardPage: React.FC = () => {
   return (
     <div>
       <Header2 text="비밀번호 찾기" />
       <Container>
         <Title>비밀번호를 잊으셨나요?</Title>
-        <Link style={{ width: "100%" }} to="/find-by-phone">
+        <Link style={{ width: "100%" }} to="/login/find-pw/phone">
           <MainButton>휴대폰 번호로 찾기</MainButton>
         </Link>
-        <Link style={{ width: "100%" }} to="/find-by-email">
+        <Link style={{ width: "100%" }} to="/login/find-pw/email">
           <MainButton>이메일로 찾기</MainButton>
         </Link>
       </Container>
@@ -21,7 +21,7 @@ const LoginPage: React.FC = () => {
   );
 };
 
-export default LoginPage;
+export default FindPassWardPage;
 
 const Container = styled.div`
   display: flex;
