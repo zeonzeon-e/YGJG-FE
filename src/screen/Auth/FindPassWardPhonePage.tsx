@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import styled from "styled-components";
 import { Link } from "react-router-dom";
 import Header2 from "../../component/Header/Header2/Header2";
-import MainButton from "../../component/Button/MainButton/MainButton";
+import MainButton from "../../component/Button/MainButton";
 
 const FindPassWardPhonePage: React.FC = () => {
   const [loading, setLoading] = useState(false);

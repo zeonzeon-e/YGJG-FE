@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import LoginPage from "./screen/Auth/LoginPage";
 import FindPassWardPage from "./screen/Auth/FindPassWardPage";
 import FindPassWardPhonePage from "./screen/Auth/FindPassWardPhonePage";
+import MyPage from "./screen/My/Mypage";
 
 const root = ReactDOM.createRoot(
   document.getElementById("root") as HTMLElement
@@ -16,7 +17,7 @@ root.render(
     <BrowserRouter>
       {/* <App /> */}
       <Routes>
-        <Route path="/" element={<LoginPage />} />
+        <Route path="/" element={<MyPage />} />
         <Route path="/login/find-pw" element={<FindPassWardPage />} />
         <Route
           path="/login/find-pw/phone"
