@@ -1,179 +1,98 @@
-// import React, { useState } from "react";
-// import GlobalStyles from "../../component/Styled/GlobalStyled";
-// import logo512 from "../../../public/logo512.png";
-// import Header1 from "../../component/Header/Header1/Header1";
-// import styled from "styled-components";
-// import MenuList from "../../component/MenuList/MenuList";
-// import MiniButton from "../../component/Button/MiniButton";
-
-// const MyPage: React.FC = () => {
-
-//   const teamlist = [{color:"#000000", img:"image", name:"코리아 팀", position:"LW"},
-//     {color:"#00FF00", img:"image", name:"호주 팀", position:"GK"}]
-
-//   return (
-//     <>
-//       <GlobalStyles />
-//       <div className="MyPage">
-//         <Header1 text="마이페이지" />
-//         <Profile>
-//           <div>이미지</div>
-//           <div>
-//             <div className="h3">이름</div>
-//             <div className="p">julia3277@naver.com</div>
-//           </div>
-//           <SystemButton>프로필 설정</SystemButton>
-//         </Profile>
-//           {teamlist.map((el)=>{
-//             return(
-//               <JoinTeamList>
-//                 <div>{el.color}</div>
-//                 <div>{el.img}</div>
-//                 <div>{el.name}</div>
-//                 <div>{el.position}</div>
-//                 <MiniButton>정보 수정</MiniButton>
-//               </JoinTeamList>
-//             )
-
-//           })}
-//       </div>
-//     </>
-//   );
-// };
-
-// export default MyPage;
-
-// const Profile = styled.div`
-//   display: flex;
-//   flex-direction: column;
-//   justify-content: center;
-//   text-align: center;
-//   height: 120px;
-//   padding-top: 20px;
-//   justify-content: space-between;
-// `;
-
-// const SystemButton = styled.button`
-//   margin-right: auto;
-//   margin-left: auto;
-//   width: 70px;
-//   font-family: Pretendard-Light;
-//   font-size: 12px;
-//   background-color: var(--color-dark1);
-//   border: 0px;
-//   border-radius: 10px;
-//   padding: 2px;
-//   color: var(--color-light1);
-//   box-shadow: 0 0.5px 1px rgba(0, 0, 0, 0.3);
-// `;
-
-// const JoinTeamList = styled.div`
-  
-// `
-
 import React from "react";
+import GlobalStyles from "../../component/Styled/GlobalStyled";
+import Header1 from "../../component/Header/Header1/Header1";
 import styled from "styled-components";
-import { FaCalendarAlt, FaFlag } from "react-icons/fa";
-import ProfileCard from "../../component/ProfileCard/ProfileCard";
 import MiniButton from "../../component/Button/MiniButton";
-/**
- * Mypage 컴포넌트 - 사용자의 마이페이지를 표시
- * @returns {JSX.Element} Mypage 컴포넌트
- */
-const Mypage: React.FC = () => {
+import { FaCalendarAlt, FaClipboardCheck, FaEdit } from "react-icons/fa";
+import { useNavigate } from "react-router-dom"; // React Router 사용
+
+const MyPage: React.FC = () => {
+  const navigate = useNavigate();
+
+  const teamlist = [
+    { color: "#000000", img: "", name: "코리아 팀", position: "LW" },
+    { color: "#00FF00", img: "", name: "호주 팀", position: "GK" },
+  ];
+
   return (
-    <Container>
-      <Header>마이페이지</Header>
-      <ProfileSection>
-        <ProfileImage
-          src="https://example.com/profile-image.jpg"
-          alt="프로필 이미지"
-        />
-        <ProfileName>홍길동</ProfileName>
-        <ProfileEmail>naver1234@naver.com</ProfileEmail>
-        <ProfileButton>프로필 설정</ProfileButton>
-      </ProfileSection>
+    <>
+      <GlobalStyles />
+      <Container>
+        <Header1 text="마이페이지" />
+        <Profile>
+          <ProfileImage
+            src="https://example.com/profile-image.jpg"
+            alt="프로필 이미지"
+          />
+          <ProfileName>홍길동</ProfileName>
+          <ProfileEmail>naver1234@naver.com</ProfileEmail>
+          <ProfileButton>프로필 설정</ProfileButton>
+        </Profile>
 
-      <TeamSection>
         <SectionTitle>가입 중인 팀</SectionTitle>
-        <TeamCard>
-          <ProfileCard
-            profileImageUrl="https://example.com/team1-logo.jpg"
-            teamName="코리아 팀"
-            location="서울특별시"
-            teamSize="20명"
-            teamAgeRange="20대, 30대"
-            teamDays="월 화 수"
-            teamTime="오전(9시~12시)"
-            teamCost="30,000원"
-            teamLevel="레벨 중"
-            isManager={false}
-            isSubManager={false}
-          />
-          <MiniButton>정보 수정</MiniButton>
-        </TeamCard>
-        <TeamCard>
-          <ProfileCard
-            profileImageUrl="https://example.com/team2-logo.jpg"
-            teamName="호주 팀"
-            location="부산광역시"
-            teamSize="15명"
-            teamAgeRange="30대, 40대"
-            teamDays="목 금"
-            teamTime="오후(6시~9시)"
-            teamCost="20,000원"
-            teamLevel="레벨 상"
-            isManager={false}
-            isSubManager={false}
-          />
-          <MiniButton>정보 수정</MiniButton>
-        </TeamCard>
-      </TeamSection>
+        {teamlist.map((el, index) => (
+          <JoinTeamList key={index}>
+            <ColorCircle color={el.color} />
+            <div>{el.img}</div>
+            <div>{el.name}</div>
+            <PositionWrapper>
+              <PositionText position={el.position}>{el.position}</PositionText>
+              <span>으로 활동중</span>
+            </PositionWrapper>
+            <MiniButton onClick={() => navigate(`/team-edit/${index}`)}>
+              <FaEdit style={{ marginRight: "5px" }} />
+              정보 수정
+            </MiniButton>
+          </JoinTeamList>
+        ))}
 
-      <MenuSection>
-        <MenuItem>
-          <FaCalendarAlt size={20} />
-          <MenuText>내 경기 일정 보기</MenuText>
-        </MenuItem>
-        <MenuItem>
-          <FaFlag size={20} />
-          <MenuText>가입 승인 현황 보기</MenuText>
-        </MenuItem>
-      </MenuSection>
+        <MenuList>
+          <MenuItem>
+            <FaCalendarAlt size={24} />
+            <MenuText>내 경기 일정 보기</MenuText>
+          </MenuItem>
+          <MenuItem>
+            <FaClipboardCheck size={24} />
+            <MenuText>가입 승인 현황 보기</MenuText>
+          </MenuItem>
+        </MenuList>
 
-      <FooterSection>
-        <FooterItem>공지사항</FooterItem>
-        <FooterItem>자주 묻는 질문</FooterItem>
-        <FooterItem>문의하기</FooterItem>
-        <FooterDivider />
-        <FooterItem>비밀번호 변경하기</FooterItem>
-        <FooterItem>로그아웃</FooterItem>
-        <FooterItem>서비스 탈퇴하기</FooterItem>
-      </FooterSection>
-    </Container>
+        <Divider />
+
+        <FooterList>
+          <FooterTitle>고객센터</FooterTitle>
+          <FooterItem>공지사항</FooterItem>
+          <FooterItem>자주 묻는 질문</FooterItem>
+          <FooterItem>문의하기</FooterItem>
+        </FooterList>
+
+        <Divider />
+
+        <FooterList>
+          <FooterTitle>보안</FooterTitle>
+          <FooterItem>비밀번호 변경하기</FooterItem>
+          <FooterItem>로그아웃</FooterItem>
+          <FooterItem>서비스 탈퇴하기</FooterItem>
+        </FooterList>
+      </Container>
+    </>
   );
 };
 
-export default Mypage;
+export default MyPage;
 
 // 스타일 컴포넌트 정의
 
 const Container = styled.div`
-  padding: 16px;
+  padding: 20px;
 `;
 
-const Header = styled.h1`
-  text-align: center;
-  margin-bottom: 20px;
-  font-size: 24px;
-  font-family: "Pretendard-Bold";
-`;
-
-const ProfileSection = styled.div`
+const Profile = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-bottom: 40px;
+  margin-bottom: 20px;
+  margin-top: 20px;
 `;
 
 const ProfileImage = styled.img`
@@ -185,33 +104,31 @@ const ProfileImage = styled.img`
 
 const ProfileName = styled.div`
   font-size: 20px;
-  font-weight: bold;
+  font-family: "Pretendard-Bold";
   margin-bottom: 5px;
 `;
 
 const ProfileEmail = styled.div`
   font-size: 14px;
+  font-family: "Pretendard-Regular";
   color: #777;
   margin-bottom: 10px;
 `;
 
 const ProfileButton = styled.button`
-  background-color: var(--color-light2);
-  border: 1px solid var(--color-main);
+  background-color: var(--color-dark2);
+  border: 1px solid var(--color-dark1);
   border-radius: 20px;
-  padding: 10px 20px;
+  padding: 5px 10px;
   cursor: pointer;
   font-size: 14px;
-  color: var(--color-main);
+  font-family: "Pretendard-Regular";
+  color: var(--color-light1);
   transition: background-color 0.3s ease;
 
   &:hover {
-    background-color: var(--color-light1);
+    background-color: var(--color-dark1);
   }
-`;
-
-const TeamSection = styled.div`
-  margin-bottom: 40px;
 `;
 
 const SectionTitle = styled.h2`
@@ -220,19 +137,53 @@ const SectionTitle = styled.h2`
   margin-bottom: 20px;
 `;
 
-const TeamCard = styled.div`
+const JoinTeamList = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
   padding: 16px;
   border-radius: 8px;
   background-color: var(--color-light1);
   box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 16px;
 `;
 
-const MenuSection = styled.div`
-  margin-bottom: 40px;
+const ColorCircle = styled.div<{ color: string }>`
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: ${({ color }) => color};
+`;
+
+const PositionWrapper = styled.div`
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  color: var(--color-dark2);
+`;
+
+const PositionText = styled.span<{ position: string }>`
+  color: ${({ position }) => {
+    switch (position) {
+      case "FW":
+      case "LW":
+      case "RW":
+        return "var(--color-sk)"; // 공격수
+      case "DF":
+        return "var(--color-dp)"; // 수비수
+      case "MF":
+        return "var(--color-mf)"; // 미드필더
+      case "GK":
+        return "var(--color-gk)"; // 골키퍼
+      default:
+        return "var(--color-dark2)"; // 기본 색상
+    }
+  }};
+  font-weight: bold;
+`;
+
+const MenuList = styled.div`
+  margin: 40px 0;
 `;
 
 const MenuItem = styled.div`
@@ -248,13 +199,18 @@ const MenuText = styled.span`
   font-family: "Pretendard-Medium";
 `;
 
-const FooterSection = styled.div`
-  margin-top: 40px;
+const Divider = styled.div`
+  border-bottom: 1px solid var(--color-light2);
+  margin: 20px 0;
+`;
+
+const FooterList = styled.div`
+  margin-bottom: 20px;
 `;
 
 const FooterItem = styled.div`
   font-size: 14px;
-  margin-bottom: 12px;
+  margin-bottom: 4px;
   cursor: pointer;
   color: var(--color-dark2);
 
@@ -263,8 +219,9 @@ const FooterItem = styled.div`
   }
 `;
 
-const FooterDivider = styled.div`
-  border-bottom: 1px solid var(--color-light2);
-  margin: 20px 0;
+const FooterTitle = styled.div`
+  font-size: 12px;
+  margin-bottom: 5px;
+  cursor: pointer;
+  color: var(--color-dark1);
 `;
-

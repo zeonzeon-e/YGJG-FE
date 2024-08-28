@@ -8,6 +8,7 @@ import LoginPage from "./screen/Auth/LoginPage";
 import FindPassWardPage from "./screen/Auth/FindPassWardPage";
 import FindPassWardPhonePage from "./screen/Auth/FindPassWardPhonePage";
 import MyPage from "./screen/My/Mypage";
+import TeamInfoEdit from "./screen/My/TeamInfoEdit";
 
 const root = ReactDOM.createRoot(
   document.getElementById("root") as HTMLElement
@@ -23,6 +24,8 @@ root.render(
           path="/login/find-pw/phone"
           element={<FindPassWardPhonePage />}
         />
+        <Route path="/team-edit/:id" element={<TeamInfoEdit />} />{" "}
+        {/* 팀 정보 수정 페이지 */}
       </Routes>
     </BrowserRouter>
   </React.StrictMode>
