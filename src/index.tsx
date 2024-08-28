@@ -8,6 +8,7 @@ import LoginPage from "./screen/Auth/LoginPage";
 import FindPassWardPage from "./screen/Auth/FindPassWardPage";
 import FindPassWardPhonePage from "./screen/Auth/FindPassWardPhonePage";
 import MyPage from "./screen/My/Mypage";
+import TeamListPage from "./screen/Filter/TeamListPage";
 
 const root = ReactDOM.createRoot(
   document.getElementById("root") as HTMLElement
@@ -17,7 +18,7 @@ root.render(
     <BrowserRouter>
       {/* <App /> */}
       <Routes>
-        <Route path="/" element={<MyPage />} />
+        <Route path="/" element={<TeamListPage />} />
         <Route path="/login/find-pw" element={<FindPassWardPage />} />
         <Route
           path="/login/find-pw/phone"
