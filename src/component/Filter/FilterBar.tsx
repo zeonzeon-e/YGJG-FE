@@ -143,7 +143,7 @@ const Button = styled.button`
   background: none;
   cursor: pointer;
   outline: none;
-  font-size: 16px;
+  font-size: 14px;
   color: #555;
   transition: color 0.2s;
   z-index: 1;
