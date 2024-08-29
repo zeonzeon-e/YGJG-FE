@@ -3,18 +3,37 @@ import styled from "styled-components";
 import GlobalStyles from "../../component/Styled/GlobalStyled";
 import Header1 from "../../component/Header/Header1/Header1";
 import MiniButton from "../../component/Button/MiniButton";
+import { useLocation, useNavigate } from "react-router-dom";
 import { SketchPicker } from "react-color";
 
 const TeamInfoEdit: React.FC = () => {
-  const [color, setColor] = useState<string>("#00FF00"); // 색상 상태
-  const [isPickerVisible, setPickerVisible] = useState<boolean>(false); // 컬러피커 표시 상태
-
-  const handleColorChange = (newColor: any) => {
-    setColor(newColor.hex);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { teamIndex, color, position } = location.state || {
+    teamIndex: 0,
+    color: "#00FF00",
+    position: "ST",
   };
 
-  const toggleColorPicker = () => {
-    setPickerVisible(!isPickerVisible);
+  const [selectedColor, setSelectedColor] = useState<string>(color);
+  const [newPosition, setNewPosition] = useState<string>(position);
+
+  const handleColorChange = (newColor: any) => {
+    setSelectedColor(newColor.hex);
+  };
+
+  const handlePositionChange = (
+    event: React.ChangeEvent<HTMLSelectElement>
+  ) => {
+    setNewPosition(event.target.value);
+  };
+
+  const handleSubmit = () => {
+    navigate("/", {
+      state: {
+        updatedTeam: { teamIndex, color: selectedColor, position: newPosition },
+      },
+    });
   };
 
   return (
@@ -37,15 +56,8 @@ const TeamInfoEdit: React.FC = () => {
             있어요.
           </SectionDescription>
           <PositionWrapper>
-            <PositionSelect>
-              <option>현재 포지션</option>
-              <option value="ST">ST</option>
-              <option value="GK">GK</option>
-              <option value="DF">DF</option>
-              <option value="MF">MF</option>
-            </PositionSelect>
-            <PositionSelect>
-              <option>변경할 포지션</option>
+            <CurrentPosition>{position}</CurrentPosition>
+            <PositionSelect value={newPosition} onChange={handlePositionChange}>
               <option value="ST">ST</option>
               <option value="GK">GK</option>
               <option value="DF">DF</option>
@@ -60,17 +72,17 @@ const TeamInfoEdit: React.FC = () => {
             변경할 팀 색상을 팔레트에 적용하세요. 변경된 팀 색상이 적용됩니다.
           </SectionDescription>
           <ColorPickerWrapper>
-            <ColorCircle color={color} />
-            <MiniButton onClick={toggleColorPicker}>색상 찾아보기</MiniButton>
-          </ColorPickerWrapper>
-          {isPickerVisible && (
+            <ColorCircle color={selectedColor} />
             <ColorPickerContainer>
-              <SketchPicker color={color} onChange={handleColorChange} />
+              <SketchPicker
+                color={selectedColor}
+                onChange={handleColorChange}
+              />
             </ColorPickerContainer>
-          )}
+          </ColorPickerWrapper>
         </Section>
 
-        <SubmitButton>변경하기</SubmitButton>
+        <SubmitButton onClick={handleSubmit}>변경하기</SubmitButton>
       </Container>
     </>
   );
@@ -126,13 +138,26 @@ const PositionWrapper = styled.div`
   justify-content: space-between;
 `;
 
-const PositionSelect = styled.select`
-  width: 45%;
+const CurrentPosition = styled.div`
+  width: 60%;
   padding: 10px;
   font-family: "Pretendard-Regular";
   font-size: 14px;
   border: 1px solid var(--color-dark1);
   border-radius: 8px;
+  background-color: var(--color-light2);
+  text-align: center;
+  margin-top: 5px;
+`;
+
+const PositionSelect = styled.select`
+  width: 80%;
+  padding: 10px;
+  font-family: "Pretendard-Regular";
+  font-size: 14px;
+  border: 1px solid var(--color-dark1);
+  border-radius: 8px;
+  margin-top: 5px;
 `;
 
 const ColorPickerWrapper = styled.div`
@@ -149,7 +174,7 @@ const ColorCircle = styled.div<{ color: string }>`
 `;
 
 const ColorPickerContainer = styled.div`
-  margin-top: 10px;
+  margin-left: 10px;
 `;
 
 const SubmitButton = styled.button`
@@ -167,4 +192,9 @@ const SubmitButton = styled.button`
   &:hover {
     background-color: var(--color-sub);
   }
+`;
+
+const PositionDiv = styled.div`
+  width: 100%;
+  margin-left: 30px;
 `;

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import GlobalStyles from "../../component/Styled/GlobalStyled";
 import Header1 from "../../component/Header/Header1/Header1";
 import styled from "styled-components";
@@ -7,12 +7,22 @@ import { FaCalendarAlt, FaClipboardCheck, FaEdit } from "react-icons/fa";
 import { useNavigate } from "react-router-dom"; // React Router 사용
 
 const MyPage: React.FC = () => {
-  const navigate = useNavigate();
-
-  const teamlist = [
+  const [teamList, setTeamList] = useState([
     { color: "#000000", img: "", name: "코리아 팀", position: "LW" },
     { color: "#00FF00", img: "", name: "호주 팀", position: "GK" },
-  ];
+  ]);
+
+  const navigate = useNavigate();
+
+  const handleEditClick = (index: number) => {
+    navigate(`/team-edit/:id`, {
+      state: {
+        teamIndex: index,
+        color: teamList[index].color,
+        position: teamList[index].position,
+      },
+    });
+  };
 
   return (
     <>
@@ -30,7 +40,7 @@ const MyPage: React.FC = () => {
         </Profile>
 
         <SectionTitle>가입 중인 팀</SectionTitle>
-        {teamlist.map((el, index) => (
+        {teamList.map((el, index) => (
           <JoinTeamList key={index}>
             <ColorCircle color={el.color} />
             <div>{el.img}</div>
@@ -39,7 +49,7 @@ const MyPage: React.FC = () => {
               <PositionText position={el.position}>{el.position}</PositionText>
               <span>으로 활동중</span>
             </PositionWrapper>
-            <MiniButton onClick={() => navigate(`/team-edit/${index}`)}>
+            <MiniButton onClick={() => handleEditClick(index)}>
               <FaEdit style={{ marginRight: "5px" }} />
               정보 수정
             </MiniButton>

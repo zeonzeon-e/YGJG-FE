@@ -9,7 +9,6 @@ import FindPassWardPage from "./screen/Auth/FindPassWardPage";
 import FindPassWardPhonePage from "./screen/Auth/FindPassWardPhonePage";
 import MyPage from "./screen/My/Mypage";
 import TeamInfoEdit from "./screen/My/TeamInfoEdit";
-
 const root = ReactDOM.createRoot(
   document.getElementById("root") as HTMLElement
 );
