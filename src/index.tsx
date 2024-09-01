@@ -9,6 +9,9 @@ import FindPassWardPage from "./screen/Auth/FindPassWardPage";
 import FindPassWardPhonePage from "./screen/Auth/FindPassWardPhonePage";
 import MyPage from "./screen/My/Mypage";
 import TeamInfoEdit from "./screen/My/TeamInfoEdit";
+import PersonalCalendarPage from "./screen/My/PersonalCalendarPage";
+import JoinApprovalStatus from "./screen/My/JoinApprovalSataus";
+
 const root = ReactDOM.createRoot(
   document.getElementById("root") as HTMLElement
 );
@@ -19,6 +22,9 @@ root.render(
       <Routes>
         <Route path="/" element={<MyPage />} />
         <Route path="/login/find-pw" element={<FindPassWardPage />} />
+        <Route path="/my" element={<MyPage />} />
+        <Route path="/my/calendar" element={<PersonalCalendarPage />} />
+        <Route path="/my/joinstatus" element={<JoinApprovalStatus />} />
         <Route
           path="/login/find-pw/phone"
           element={<FindPassWardPhonePage />}

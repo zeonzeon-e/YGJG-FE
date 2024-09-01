@@ -59,11 +59,11 @@ const MyPage: React.FC = () => {
         <MenuList>
           <MenuItem>
             <FaCalendarAlt size={24} />
-            <MenuText>내 경기 일정 보기</MenuText>
+            <MenuText onClick={() => navigate("/my/calendar")}>내 경기 일정 보기</MenuText>
           </MenuItem>
           <MenuItem>
             <FaClipboardCheck size={24} />
-            <MenuText>가입 승인 현황 보기</MenuText>
+            <MenuText onClick={() => navigate("/my/joinstatus")}>가입 승인 현황 보기</MenuText>
           </MenuItem>
         </MenuList>
 

@@ -4,7 +4,7 @@ import GlobalStyles from "../../component/Styled/GlobalStyled";
 import Header1 from "../../component/Header/Header1/Header1";
 import MiniButton from "../../component/Button/MiniButton";
 import { useLocation, useNavigate } from "react-router-dom";
-import { SketchPicker } from "react-color";
+import { CompactPicker } from "react-color";
 
 const TeamInfoEdit: React.FC = () => {
   const location = useLocation();
@@ -74,7 +74,7 @@ const TeamInfoEdit: React.FC = () => {
           <ColorPickerWrapper>
             <ColorCircle color={selectedColor} />
             <ColorPickerContainer>
-              <SketchPicker
+              <CompactPicker
                 color={selectedColor}
                 onChange={handleColorChange}
               />
