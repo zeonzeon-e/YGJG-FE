@@ -4,11 +4,19 @@ import "./index.css";
 import App from "./App";
 import reportWebVitals from "./reportWebVitals";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import LoginPage from "./screen/Auth/LoginPage";
 import FindPassWardPage from "./screen/Auth/FindPassWardPage";
 import FindPassWardPhonePage from "./screen/Auth/FindPassWardPhonePage";
-import MyPage from "./screen/My/Mypage";
-import TeamListPage from "./screen/Filter/TeamListPage";
+import { createGlobalStyle } from "styled-components";
+import LoginPage from "./screen/Auth/LoginPage";
+
+const GlobalStyle = createGlobalStyle`
+  body, #root, .app-container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 0;
+    box-sizing: border-box;
+  }
+`;
 
 const root = ReactDOM.createRoot(
   document.getElementById("root") as HTMLElement
@@ -17,8 +25,9 @@ root.render(
   <React.StrictMode>
     <BrowserRouter>
       {/* <App /> */}
+      <GlobalStyle />
       <Routes>
-        <Route path="/" element={<TeamListPage />} />
+        <Route path="/" element={<LoginPage />} />
         <Route path="/login/find-pw" element={<FindPassWardPage />} />
         <Route
           path="/login/find-pw/phone"
