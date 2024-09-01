@@ -139,7 +139,7 @@ const PositionWrapper = styled.div`
 `;
 
 const CurrentPosition = styled.div`
-  width: 60%;
+  width: 50%;
   padding: 10px;
   font-family: "Pretendard-Regular";
   font-size: 14px;
@@ -151,13 +151,14 @@ const CurrentPosition = styled.div`
 `;
 
 const PositionSelect = styled.select`
-  width: 80%;
+  width: 50%;
   padding: 10px;
   font-family: "Pretendard-Regular";
   font-size: 14px;
   border: 1px solid var(--color-dark1);
   border-radius: 8px;
   margin-top: 5px;
+  margin-left: 10px;
 `;
 
 const ColorPickerWrapper = styled.div`
