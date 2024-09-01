@@ -4,13 +4,24 @@ import "./index.css";
 import App from "./App";
 import reportWebVitals from "./reportWebVitals";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import LoginPage from "./screen/Auth/LoginPage";
 import FindPassWardPage from "./screen/Auth/FindPassWardPage";
 import FindPassWardPhonePage from "./screen/Auth/FindPassWardPhonePage";
 import MyPage from "./screen/My/Mypage";
 import TeamInfoEdit from "./screen/My/TeamInfoEdit";
 import PersonalCalendarPage from "./screen/My/PersonalCalendarPage";
 import JoinApprovalStatus from "./screen/My/JoinApprovalSataus";
+import { createGlobalStyle } from "styled-components";
+import LoginPage from "./screen/Auth/LoginPage";
+import TeamListPage from "./screen/Filter/TeamListPage";
+
+const GlobalStyle = createGlobalStyle`
+  body, #root, .app-container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 0;
+    box-sizing: border-box;
+  }
+`;
 
 const root = ReactDOM.createRoot(
   document.getElementById("root") as HTMLElement
@@ -19,8 +30,9 @@ root.render(
   <React.StrictMode>
     <BrowserRouter>
       {/* <App /> */}
+      <GlobalStyle />
       <Routes>
-        <Route path="/" element={<MyPage />} />
+        <Route path="/" element={<TeamListPage />} />
         <Route path="/login/find-pw" element={<FindPassWardPage />} />
         <Route path="/my" element={<MyPage />} />
         <Route path="/my/calendar" element={<PersonalCalendarPage />} />
