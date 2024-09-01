@@ -8,6 +8,7 @@ import FindPassWardPage from "./screen/Auth/FindPassWardPage";
 import FindPassWardPhonePage from "./screen/Auth/FindPassWardPhonePage";
 import { createGlobalStyle } from "styled-components";
 import LoginPage from "./screen/Auth/LoginPage";
+import TeamListPage from "./screen/Filter/TeamListPage";
 
 const GlobalStyle = createGlobalStyle`
   body, #root, .app-container {
@@ -27,7 +28,7 @@ root.render(
       {/* <App /> */}
       <GlobalStyle />
       <Routes>
-        <Route path="/" element={<LoginPage />} />
+        <Route path="/" element={<TeamListPage />} />
         <Route path="/login/find-pw" element={<FindPassWardPage />} />
         <Route
           path="/login/find-pw/phone"

@@ -58,13 +58,13 @@ const TeamListPage: React.FC = () => {
   const getColorByPosition = (position: string): string => {
     switch (position) {
       case "공격수":
-        return "#e5350c"; // 빨강
+        return "var(--color-sk)"; // 빨강
       case "수비수":
-        return "#007aff"; // 파랑
+        return "var(--color-dp)"; // 파랑
       case "미드필더":
-        return "#34c759"; // 초록
+        return "var(--color-mf)"; // 초록
       case "골키퍼":
-        return "#ff9500"; // 노랑
+        return "var(--color-gk)"; // 노랑
       default:
         return "#95a5a6"; // 기본 회색
     }
