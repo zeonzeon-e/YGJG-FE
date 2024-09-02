@@ -25,7 +25,7 @@ const StyledButtonNegative = styled.button<CoupleButtonProps>`
   font-size: ${(props) => (props.fontSize ? `${props.fontSize}px` : "18px")};
   font-family: Pretendard-Medium;
   letter-spacing: 2px;
-  border-radius: ${(props) => (props.height ? `${props.height / 2}px` : "8px")};
+  border-radius: 8px;
   ${({ isClick }) =>
     isClick &&
     css`
@@ -47,7 +47,7 @@ const StyledButtonPositive = styled.button<CoupleButtonProps>`
   font-size: ${(props) => (props.fontSize ? `${props.fontSize}px` : "18px")};
   font-family: Pretendard-Medium;
   letter-spacing: 2px;
-  border-radius: ${(props) => (props.height ? `${props.height / 2}px` : "8px")};
+  border-radius: 8px;
   ${({ isClick }) =>
     isClick &&
     css`

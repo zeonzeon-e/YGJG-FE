@@ -1,7 +1,7 @@
 import React from "react";
 import styled from "styled-components";
 import GlobalStyles from "../../component/Styled/GlobalStyled";
-import Header1 from "../../component/Header/Header1/Header1";
+import Header2 from "../../component/Header/Header2/Header2";
 
 const JoinApprovalStatus: React.FC = () => {
   const approvalList = [
@@ -13,7 +13,7 @@ const JoinApprovalStatus: React.FC = () => {
     <>
       <GlobalStyles />
       <Container>
-        <Header1 text="가입 승인 현황" />
+        <Header2 text="가입 승인 현황" />
         {approvalList.map((item, index) => (
           <ApprovalItem key={index}>
             <ProfileImage src={item.imageUrl} alt="팀 이미지" />
