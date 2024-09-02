@@ -19,8 +19,8 @@ const StyledInput = styled.input<InputProps>`
   border: 1px solid var(--color-light2);
   padding: 15px;
   box-sizing: border-box;
-  font-size: ${(props) => (props.fontSize ? `${props.fontSize}px` : "12px")};
-  border-radius: ${(props) => (props.height ? `${props.height / 2}px` : "5px")};
+  font-size: ${(props) => (props.fontSize ? `${props.fontSize}px` : "14px")};
+  border-radius: 8px;
   // box-shadow: 0.25px 0.25px 0.5px 0.1px;
   &:focus {
     outline: 0px;
@@ -44,6 +44,7 @@ const Input: React.FC<InputProps> = ({
   height,
   type,
   placeholder,
+  fontSize,
 }) => {
   return (
     <StyledInput
@@ -51,6 +52,7 @@ const Input: React.FC<InputProps> = ({
       height={height}
       type={type}
       placeholder={placeholder}
+      fontSize={fontSize}
     />
   );
 };

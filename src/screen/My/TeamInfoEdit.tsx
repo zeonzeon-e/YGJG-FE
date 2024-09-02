@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import styled from "styled-components";
 import GlobalStyles from "../../component/Styled/GlobalStyled";
-import Header1 from "../../component/Header/Header1/Header1";
+import Header2 from "../../component/Header/Header2/Header2";
 import MiniButton from "../../component/Button/MiniButton";
 import { useLocation, useNavigate } from "react-router-dom";
 import { CompactPicker } from "react-color";
@@ -40,7 +40,7 @@ const TeamInfoEdit: React.FC = () => {
     <>
       <GlobalStyles />
       <Container>
-        <Header1 text="팀 정보 수정" />
+        <Header2 text="팀 정보 수정" />
         <Profile>
           <ProfileImage
             src="https://example.com/team-image.jpg"
