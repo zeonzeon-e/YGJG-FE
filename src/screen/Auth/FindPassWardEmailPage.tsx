@@ -4,8 +4,15 @@ import { Link } from "react-router-dom";
 import Header2 from "../../component/Header/Header2/Header2";
 import MainButton from "../../component/Button/MainButton";
 import Input from "../../component/Input/Input";
+import { useNavigate } from "react-router-dom";
 
 const FindPassWardEmailPage: React.FC = () => {
+  const navigate = useNavigate();
+
+  const goToFindPage = () => {
+    navigate("/");
+  };
+
   return (
     <div>
       <Header2 text="비밀번호 찾기" />
@@ -16,10 +23,9 @@ const FindPassWardEmailPage: React.FC = () => {
           placeholder="이메일을 입력해주세요"
           bgColor="#eee"
           height={50}
+          fontSize={24}
         />
-        <Link style={{ width: "100%" }} to="/login/find-pw/email">
-          <MainButton>이메일로 찾기</MainButton>
-        </Link>
+        <MainButton onClick={goToFindPage}>이메일로 찾기</MainButton>
       </Container>
     </div>
   );
