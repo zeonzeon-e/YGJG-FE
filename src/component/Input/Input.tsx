@@ -31,7 +31,7 @@ const StyledInput = styled.input<InputProps>`
 /**
  * props가 적용된 Input 컴포넌트 생성
  * @param {InputProps} props - 컴포넌트 props
- * @param {string} [props.color] - 인풋 배경 색상 (선택적)
+ * @param {string} [props.bgColor] - 인풋 배경 색상 (선택적)
  * @param {number} [props.height] - 인풋 높이 (선택적)
  * @param {number} [porps.width] - 인풋 너비 (선택적)
  * @param {string} [props.type] - 인풋 타입 정하기
