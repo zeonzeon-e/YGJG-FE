@@ -6,6 +6,10 @@ import reportWebVitals from "./reportWebVitals";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import FindPassWardPage from "./screen/Auth/FindPassWardPage";
 import FindPassWardPhonePage from "./screen/Auth/FindPassWardPhonePage";
+import MyPage from "./screen/My/Mypage";
+import TeamInfoEdit from "./screen/My/TeamInfoEdit";
+import PersonalCalendarPage from "./screen/My/PersonalCalendarPage";
+import JoinApprovalStatus from "./screen/My/JoinApprovalSataus";
 import { createGlobalStyle } from "styled-components";
 import LoginPage from "./screen/Auth/LoginPage";
 import TeamListPage from "./screen/Filter/TeamListPage";
@@ -30,10 +34,15 @@ root.render(
       <Routes>
         <Route path="/" element={<TeamListPage />} />
         <Route path="/login/find-pw" element={<FindPassWardPage />} />
+        <Route path="/my" element={<MyPage />} />
+        <Route path="/my/calendar" element={<PersonalCalendarPage />} />
+        <Route path="/my/joinstatus" element={<JoinApprovalStatus />} />
         <Route
           path="/login/find-pw/phone"
           element={<FindPassWardPhonePage />}
         />
+        <Route path="/team-edit/:id" element={<TeamInfoEdit />} />{" "}
+        {/* 팀 정보 수정 페이지 */}
       </Routes>
     </BrowserRouter>
   </React.StrictMode>
