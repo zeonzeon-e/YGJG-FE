@@ -32,7 +32,7 @@ root.render(
       {/* <App /> */}
       <GlobalStyle />
       <Routes>
-        <Route path="/" element={<TeamListPage />} />
+        <Route path="/" element={<MyPage />} />
         <Route path="/login/find-pw" element={<FindPassWardPage />} />
         <Route path="/my" element={<MyPage />} />
         <Route path="/my/calendar" element={<PersonalCalendarPage />} />
