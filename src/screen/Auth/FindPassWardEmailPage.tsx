@@ -23,7 +23,6 @@ const FindPassWardEmailPage: React.FC = () => {
           placeholder="이메일을 입력해주세요"
           bgColor="#eee"
           height={50}
-          fontSize={24}
         />
         <MainButton onClick={goToFindPage}>이메일로 찾기</MainButton>
       </Container>
