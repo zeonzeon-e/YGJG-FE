@@ -34,6 +34,7 @@ root.render(
       <GlobalStyle />
       <Routes>
         <Route path="/" element={<LoginPage />} />
+        <Route path="/login" element={<LoginPage />} />
         <Route path="/login/find-pw" element={<FindPassWardPage />} />
         <Route path="/my" element={<MyPage />} />
         <Route path="/my/calendar" element={<PersonalCalendarPage />} />
