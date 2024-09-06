@@ -116,7 +116,7 @@ const LoginPage: React.FC = () => {
               </ClearIconPassword>
             )}
             <ShowPasswordIcon onClick={togglePasswordVisibility}>
-              {showPassword ? <FaEyeSlash /> : <FaEye />}
+              {showPassword ? <FaEye /> : <FaEyeSlash />}
             </ShowPasswordIcon>
           </PasswordWrapper>
           <StyledButton primary onClick={goToMainPage}>
