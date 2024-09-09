@@ -4,25 +4,12 @@ import "./index.css";
 import App from "./App";
 import reportWebVitals from "./reportWebVitals";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import LoginPage from "./screen/Auth/LoginPage";
 import FindPassWardPage from "./screen/Auth/FindPassWardPage";
 import FindPassWardPhonePage from "./screen/Auth/FindPassWardPhonePage";
 import MyPage from "./screen/My/Mypage";
 import TeamInfoEdit from "./screen/My/TeamInfoEdit";
-import PersonalCalendarPage from "./screen/My/PersonalCalendarPage";
-import JoinApprovalStatus from "./screen/My/JoinApprovalSataus";
-import { createGlobalStyle } from "styled-components";
-import LoginPage from "./screen/Auth/LoginPage";
-import TeamListPage from "./screen/Filter/TeamListPage";
-import FindPassWardEmailPage from "./screen/Auth/FindPassWardEmailPage";
-
-const GlobalStyle = createGlobalStyle`
-  body, #root, .app-container {
-    max-width: 600px;
-    margin: 0 auto;
-    padding: 0;
-    box-sizing: border-box;
-  }
-`;
+import GameStrategy from "./screen/Team/GameStrategy/GameStrategy";
 
 const root = ReactDOM.createRoot(
   document.getElementById("root") as HTMLElement
@@ -31,24 +18,17 @@ root.render(
   <React.StrictMode>
     <BrowserRouter>
       {/* <App /> */}
-      <GlobalStyle />
       <Routes>
-        <Route path="/" element={<LoginPage />} />
-        <Route path="/login" element={<LoginPage />} />
+        <Route path="/" element={<MyPage />} />
         <Route path="/login/find-pw" element={<FindPassWardPage />} />
-        <Route path="/my" element={<MyPage />} />
-        <Route path="/my/calendar" element={<PersonalCalendarPage />} />
-        <Route path="/my/joinstatus" element={<JoinApprovalStatus />} />
         <Route
           path="/login/find-pw/phone"
           element={<FindPassWardPhonePage />}
         />
-        <Route
-          path="/login/find-pw/email"
-          element={<FindPassWardEmailPage />}
-        />
+        <Route path="/my" element={<MyPage />} />
         <Route path="/team-edit/:id" element={<TeamInfoEdit />} />{" "}
         {/* 팀 정보 수정 페이지 */}
+        <Route path="/team-strategy/:id" element={<GameStrategy />} />
       </Routes>
     </BrowserRouter>
   </React.StrictMode>
