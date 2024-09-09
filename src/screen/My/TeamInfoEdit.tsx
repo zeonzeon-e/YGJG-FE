@@ -29,7 +29,7 @@ const TeamInfoEdit: React.FC = () => {
   };
 
   const handleSubmit = () => {
-    navigate("/", {
+    navigate("/my", {
       state: {
         updatedTeam: { teamIndex, color: selectedColor, position: newPosition },
       },
@@ -193,9 +193,4 @@ const SubmitButton = styled.button`
   &:hover {
     background-color: var(--color-sub);
   }
-`;
-
-const PositionDiv = styled.div`
-  width: 100%;
-  margin-left: 30px;
 `;
