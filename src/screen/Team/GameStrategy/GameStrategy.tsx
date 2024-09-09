@@ -7,12 +7,21 @@ import { format } from "date-fns";
 import CalendarModal from "../../../component/Modal/CalendarModal"; // 이 부분은 달력을 직접 렌더링하는 컴포넌트입니다.
 import TimePickerModal from "../../../component/Modal/TimePickerModal";
 import { ko } from "date-fns/locale";
+import Input from "../../../component/Input/Input";
+import KakaoMapModal from "../../../component/Modal/KakaoAddress";
 
 const GameStrategy: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
+  const [showMapModal, setShowMapModal] = useState(false);
+  const [selectedAddress, setSelectedAddress] = useState<string>("");
+
+  const handleAddressSelect = (address: string) => {
+    setSelectedAddress(address);
+  };
+
 
   return (
     <>
@@ -20,6 +29,8 @@ const GameStrategy: React.FC = () => {
       <Header2 text="경기 전략" />
       <Container>
         <PickerContainer>
+          <h3>경기 날짜와 시간을 선택해주세요</h3>
+          <PickerButton>
           <StrategyButton onClick={() => setShowDatePicker(true)}>
             {selectedDate
               ? format(selectedDate, "MM월 dd일 EEEE", { locale: ko }) // Display day of the week here
@@ -29,6 +40,7 @@ const GameStrategy: React.FC = () => {
           <StrategyButton onClick={() => setShowTimePicker(true)}>
             {selectedTime || "시간을 선택하세요"}
           </StrategyButton>
+          </PickerButton>
           {showDatePicker && (
             <CalendarModal
               onDateSelect={(date: Date) => {
@@ -52,9 +64,17 @@ const GameStrategy: React.FC = () => {
           />
         )}
 
-        <Input placeholder="상대팀명 입력" />
-        <Input placeholder="주요 전술 사항" />
-        <Input placeholder="포메이션 입력" />
+        <Input type="text" placeholder="상대팀명을 입력해주세요" title="상대팀명을 입력해주세요" />
+
+        <MainButton onClick={() => setShowMapModal(true)}>주소 찾기</MainButton>
+        <SelectedAddress>{selectedAddress}</SelectedAddress>
+        {showMapModal && (
+          <KakaoMapModal
+            onClose={() => setShowMapModal(false)}
+            onAddressSelect={handleAddressSelect}
+          />
+        )}
+
         <MainButton>전략 게시하기</MainButton>
       </Container>
     </>
@@ -70,36 +90,30 @@ const Container = styled.div`
 `;
 
 const StrategyButton = styled.button`
-  background-color: #a4d65e;
-  color: #000;
-  border: none;
+  background-color: var(--color-light2);
+  color: var(--color-main);
+  border: 1px solid var(--color-main);
   padding: 10px 20px;
-  border-radius: 25px;
+  border-radius: 8px;
   margin-bottom: 20px;
   cursor: pointer;
   width: 100%;
 `;
 
-const DatePickerModal = styled.div`
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 80%;
-  background-color: white;
-  padding: 20px;
-  border-radius: 10px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-  z-index: 1000;
-`;
 const PickerContainer = styled.div`
   display: flex;
+  flex-direction: column;
+`
+
+
+const PickerButton = styled.div`
+  display: flex;
   width: 100%;
+  margin-top: 10px;
 `;
-const Input = styled.input`
-  width: 80%;
-  padding: 10px;
+
+const SelectedAddress = styled.div`
   margin: 10px 0;
-  border: 1px solid #ccc;
-  border-radius: 5px;
+  font-size: 14px;
+  color: #333;
 `;
