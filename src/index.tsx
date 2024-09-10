@@ -14,6 +14,7 @@ import { createGlobalStyle } from "styled-components";
 import LoginPage from "./screen/Auth/LoginPage";
 import TeamListPage from "./screen/Filter/TeamListPage";
 import FindPassWardEmailPage from "./screen/Auth/FindPassWardEmailPage";
+import SignUpPage from "./screen/Auth/SignUpPage";
 
 const GlobalStyle = createGlobalStyle`
   body, #root, .app-container {
@@ -33,7 +34,7 @@ root.render(
       {/* <App /> */}
       <GlobalStyle />
       <Routes>
-        <Route path="/" element={<LoginPage />} />
+        <Route path="/" element={<SignUpPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/login/find-pw" element={<FindPassWardPage />} />
         <Route path="/my" element={<MyPage />} />

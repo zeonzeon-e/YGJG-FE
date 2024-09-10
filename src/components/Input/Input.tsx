@@ -9,9 +9,11 @@ interface InputProps {
   type: string;
   placeholder?: string;
   fontSize?: number;
+  value?: string; // 추가: value prop
+  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void; // 추가: onChange prop
 }
 
-// StyledDiv 컴포넌트 정의
+// StyledInput 컴포넌트 정의
 const StyledInput = styled.input<InputProps>`
   background-color: ${(props) => props.bgColor || "#ccc"};
   height: ${(props) => (props.height ? `${props.height}px` : "20px")};
@@ -21,7 +23,7 @@ const StyledInput = styled.input<InputProps>`
   box-sizing: border-box;
   font-size: ${(props) => (props.fontSize ? `${props.fontSize}px` : "14px")};
   border-radius: 8px;
-  // box-shadow: 0.25px 0.25px 0.5px 0.1px;
+
   &:focus {
     outline: 0px;
     border: 1px solid var(--color-main);
@@ -37,6 +39,8 @@ const StyledInput = styled.input<InputProps>`
  * @param {string} [props.type] - 인풋 타입 정하기
  * @param {string} [porps.placeholder] - 인풋 설명 (선택적)
  * @param {number} [porps.fontSize] - 인풋 안에 있는 설명 텍스트 사이즈
+ * @param {string} [props.value] - 입력 필드의 값 (선택적)
+ * @param {function} [props.onChange] - 입력이 변경될 때 호출되는 함수 (선택적)
  * @returns {JSX.Element} Input 컴포넌트
  */
 const Input: React.FC<InputProps> = ({
@@ -45,6 +49,8 @@ const Input: React.FC<InputProps> = ({
   type,
   placeholder,
   fontSize,
+  value,
+  onChange,
 }) => {
   return (
     <StyledInput
@@ -53,6 +59,8 @@ const Input: React.FC<InputProps> = ({
       type={type}
       placeholder={placeholder}
       fontSize={fontSize}
+      value={value}
+      onChange={onChange}
     />
   );
 };
