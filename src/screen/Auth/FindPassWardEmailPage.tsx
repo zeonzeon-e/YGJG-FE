@@ -1,9 +1,9 @@
 import React from "react";
 import styled from "styled-components";
 import { Link } from "react-router-dom";
-import Header2 from "../../component/Header/Header2/Header2";
-import MainButton from "../../component/Button/MainButton";
-import Input from "../../component/Input/Input";
+import Header2 from "../../components/Header/Header2/Header2";
+import MainButton from "../../components/Button/MainButton";
+import Input from "../../components/Input/Input";
 import { useNavigate } from "react-router-dom";
 
 const FindPassWardEmailPage: React.FC = () => {

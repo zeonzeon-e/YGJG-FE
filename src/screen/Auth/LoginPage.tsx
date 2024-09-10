@@ -6,7 +6,7 @@ import { CgCloseO } from "react-icons/cg";
 import { RiKakaoTalkFill } from "react-icons/ri";
 import { FcGoogle } from "react-icons/fc";
 import axios, { AxiosResponse } from "axios";
-import Header1 from "../../component/Header/Header1/Header1";
+import Header1 from "../../components/Header/Header1/Header1";
 
 const LoginPage: React.FC = () => {
   // 상태 값에 타입을 명시적으로 지정
