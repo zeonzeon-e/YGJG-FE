@@ -7,13 +7,14 @@ import { format } from "date-fns";
 import CalendarModal from "../../../component/Modal/CalendarModal"; // 이 부분은 달력을 직접 렌더링하는 컴포넌트입니다.
 import TimePickerModal from "../../../component/Modal/TimePickerModal";
 import { ko } from "date-fns/locale";
+import CheckBox from "../../../component/CheckBox/CheckBox";
 
 const GameStrategy: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
-
+  const context = [["제목", "내용"]];
   return (
     <>
       <GlobalStyles />
@@ -55,6 +56,7 @@ const GameStrategy: React.FC = () => {
         <Input placeholder="상대팀명 입력" />
         <Input placeholder="주요 전술 사항" />
         <Input placeholder="포메이션 입력" />
+        <CheckBox content={context} isToggle={false} />
         <MainButton>전략 게시하기</MainButton>
       </Container>
     </>

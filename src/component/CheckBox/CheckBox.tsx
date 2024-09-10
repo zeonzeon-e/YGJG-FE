@@ -132,12 +132,12 @@ import styled from "styled-components";
 /**
  * CheckBoxProps - CheckBox 컴포넌트에 전달되는 props 타입 정의
  * @interface CheckBoxProps
- * @property {[string, string][]} content - 이중 배열: [제목, 내용]
+ * @property {string[][]} content - 이중 배열: [제목, 내용]
  * @property {boolean} isToggle - 드롭다운 사용 여부
  * @property {boolean} [isChecked] - 강제 체크 설정 여부 (선택 사항)
  */
 interface CheckBoxProps {
-  content: [string, string][]; // 이중 배열: [제목, 내용]
+  content: string[][]; // 이중 배열: [제목, 내용]
   isToggle: boolean; // 드롭다운 사용 여부
   isChecked?: boolean; // 강제 체크 설정 여부
 }
@@ -156,11 +156,11 @@ const CheckBox: React.FC<CheckBoxProps> = ({
   isChecked,
 }) => {
   const [allChecked, setAllChecked] = useState<boolean>(false);
-  const [checks, setChecks] = useState<boolean[]>(
-    () => Array(content.length).fill(false)
+  const [checks, setChecks] = useState<boolean[]>(() =>
+    Array(content.length).fill(false)
   );
-  const [toggles, setToggles] = useState<boolean[]>(
-    () => Array(content.length).fill(false)
+  const [toggles, setToggles] = useState<boolean[]>(() =>
+    Array(content.length).fill(false)
   );
 
   // content가 변경될 때 체크 상태 초기화
@@ -213,11 +213,17 @@ const CheckBox: React.FC<CheckBoxProps> = ({
             </CheckBoxLabel>
             {isToggle && (
               <ToggleButton onClick={() => handleToggleClick(index)}>
-                {toggles[index] ? <FaAngleDown size={20} /> : <FaAngleUp size={20} />}
+                {toggles[index] ? (
+                  <FaAngleDown size={20} />
+                ) : (
+                  <FaAngleUp size={20} />
+                )}
               </ToggleButton>
             )}
           </CheckBoxContent>
-          {isToggle && toggles[index] && <CheckBoxDetail>{detail}</CheckBoxDetail>}
+          {isToggle && toggles[index] && (
+            <CheckBoxDetail>{detail}</CheckBoxDetail>
+          )}
         </CheckBoxItem>
       ))}
     </div>
