@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import styled from "styled-components";
-import GlobalStyles from "../../component/Styled/GlobalStyled";
-import Header2 from "../../component/Header/Header2/Header2";
-import MiniButton from "../../component/Button/MiniButton";
+import GlobalStyles from "../../components/Styled/GlobalStyled";
+import Header2 from "../../components/Header/Header2/Header2";
+import MiniButton from "../../components/Button/MiniButton";
 import { useLocation, useNavigate } from "react-router-dom";
 import { CompactPicker } from "react-color";
 

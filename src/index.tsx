@@ -10,6 +10,22 @@ import FindPassWardPhonePage from "./screen/Auth/FindPassWardPhonePage";
 import MyPage from "./screen/My/Mypage";
 import TeamInfoEdit from "./screen/My/TeamInfoEdit";
 import GameStrategy from "./screen/Team/GameStrategy/GameStrategy";
+import PersonalCalendarPage from "./screen/My/PersonalCalendarPage";
+import JoinApprovalStatus from "./screen/My/JoinApprovalSataus";
+import { createGlobalStyle } from "styled-components";
+import LoginPage from "./screen/Auth/LoginPage";
+import TeamListPage from "./screen/Filter/TeamListPage";
+import FindPassWardEmailPage from "./screen/Auth/FindPassWardEmailPage";
+import SignUpPage from "./screen/Auth/SignUpPage";
+
+const GlobalStyle = createGlobalStyle`
+  body, #root, .app-container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 0;
+    box-sizing: border-box;
+  }
+`;
 
 const root = ReactDOM.createRoot(
   document.getElementById("root") as HTMLElement
@@ -20,6 +36,8 @@ root.render(
       {/* <App /> */}
       <Routes>
         <Route path="/" element={<MyPage />} />
+        <Route path="/" element={<SignUpPage />} />
+        <Route path="/login" element={<LoginPage />} />
         <Route path="/login/find-pw" element={<FindPassWardPage />} />
         <Route
           path="/login/find-pw/phone"

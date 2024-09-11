@@ -1,8 +1,8 @@
 import React, { useState } from "react";
-import GlobalStyles from "../../component/Styled/GlobalStyled";
-import Header1 from "../../component/Header/Header1/Header1";
+import GlobalStyles from "../../components/Styled/GlobalStyled";
+import Header1 from "../../components/Header/Header1/Header1";
 import styled from "styled-components";
-import MiniButton from "../../component/Button/MiniButton";
+import MiniButton from "../../components/Button/MiniButton";
 import { FaCalendarAlt, FaClipboardCheck, FaEdit } from "react-icons/fa";
 import { useNavigate } from "react-router-dom"; // React Router 사용
 

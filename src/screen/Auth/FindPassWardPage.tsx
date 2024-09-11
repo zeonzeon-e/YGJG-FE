@@ -1,8 +1,8 @@
 import React from "react";
 import styled from "styled-components";
 import { Link } from "react-router-dom";
-import Header2 from "../../component/Header/Header2/Header2";
-import MainButton from "../../component/Button/MainButton";
+import Header2 from "../../components/Header/Header2/Header2";
+import MainButton from "../../components/Button/MainButton";
 
 const FindPassWardPage: React.FC = () => {
   return (

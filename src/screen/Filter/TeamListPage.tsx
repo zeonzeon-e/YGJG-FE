@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import styled from "styled-components";
-import FilterBar from "../../component/Filter/FilterBar";
-import HorizontalLine from "../../component/Styled/HorizontalLine";
-import Header2 from "../../component/Header/Header2/Header2";
+import FilterBar from "../../components/Filter/FilterBar";
+import HorizontalLine from "../../components/Styled/HorizontalLine";
+import Header2 from "../../components/Header/Header2/Header2";
 
 // [
 //     {

@@ -1,12 +1,22 @@
 import React from "react";
 import styled from "styled-components";
-import GlobalStyles from "../../component/Styled/GlobalStyled";
-import Header2 from "../../component/Header/Header2/Header2";
+import GlobalStyles from "../../components/Styled/GlobalStyled";
+import Header2 from "../../components/Header/Header2/Header2";
 
 const JoinApprovalStatus: React.FC = () => {
   const approvalList = [
-    { teamName: "코리아 팀", position: "공격수", status: "승인대기", imageUrl: "https://example.com/profile-image.jpg" },
-    { teamName: "코리아 팀", position: "공격수", status: "거절", imageUrl: "https://example.com/profile-image.jpg" },
+    {
+      teamName: "코리아 팀",
+      position: "공격수",
+      status: "승인대기",
+      imageUrl: "https://example.com/profile-image.jpg",
+    },
+    {
+      teamName: "코리아 팀",
+      position: "공격수",
+      status: "거절",
+      imageUrl: "https://example.com/profile-image.jpg",
+    },
   ];
 
   return (
@@ -75,7 +85,8 @@ const Position = styled.div`
 const Status = styled.div<{ status: string }>`
   font-size: 14px;
   font-family: "Pretendard-Regular";
-  color: ${({ status }) => (status === "승인대기" ? "var(--color-error)" : "var(--color-dark2)")};
+  color: ${({ status }) =>
+    status === "승인대기" ? "var(--color-error)" : "var(--color-dark2)"};
   margin-left: auto;
 `;
 

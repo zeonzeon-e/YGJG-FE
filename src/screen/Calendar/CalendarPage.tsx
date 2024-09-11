@@ -1,8 +1,8 @@
 import React, { useState } from "react";
-import GlobalStyles from "../../component/Styled/GlobalStyled";
-import Calendar from "../../component/Calendar/Calendar";
-import Header2 from "../../component/Header/Header2/Header2";
-import MatchCard from "../../component/MatchCard/MatchCard";
+import GlobalStyles from "../../components/Styled/GlobalStyled";
+import Calendar from "../../components/Calendar/Calendar";
+import Header2 from "../../components/Header/Header2/Header2";
+import MatchCard from "../../components/MatchCard/MatchCard";
 
 /**
  * Match 인터페이스 - 경기 데이터를 위한 타입 정의
