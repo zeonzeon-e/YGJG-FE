@@ -32,24 +32,23 @@ const root = ReactDOM.createRoot(
 root.render(
   <React.StrictMode>
     <BrowserRouter>
-      <GlobalStyle>
-        {/* <App /> */}
-        <Routes>
-          <Route path="/" element={<MyPage />} />
-          <Route path="/singup" element={<SignUpPage />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/login/find-pw" element={<FindPassWardPage />} />
-          <Route
-            path="/login/find-pw/phone"
-            element={<FindPassWardPhonePage />}
-          />
-          <Route path="/my" element={<MyPage />} />
-          {/* 팀 정보 수정 페이지 */}
-          <Route path="/team-edit/:id" element={<TeamInfoEdit />} />
-          {/* 팀 전략 생성 페이지*/}
-          <Route path="/team-strategy/:id" element={<GameStrategy />} />
-        </Routes>
-      </GlobalStyle>
+      {/* <App /> */}
+      <GlobalStyle />
+      <Routes>
+        <Route path="/" element={<MyPage />} />
+        <Route path="/singup" element={<SignUpPage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/login/find-pw" element={<FindPassWardPage />} />
+        <Route
+          path="/login/find-pw/phone"
+          element={<FindPassWardPhonePage />}
+        />
+        <Route path="/my" element={<MyPage />} />
+        {/* 팀 정보 수정 페이지 */}
+        <Route path="/team-edit/:id" element={<TeamInfoEdit />} />
+        {/* 팀 전략 생성 페이지*/}
+        <Route path="/team-strategy/:id" element={<GameStrategy />} />
+      </Routes>
     </BrowserRouter>
   </React.StrictMode>
 );
