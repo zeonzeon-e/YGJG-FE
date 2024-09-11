@@ -36,7 +36,7 @@ root.render(
         {/* <App /> */}
         <Routes>
           <Route path="/" element={<MyPage />} />
-          <Route path="/" element={<SignUpPage />} />
+          <Route path="/singup" element={<SignUpPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/login/find-pw" element={<FindPassWardPage />} />
           <Route
@@ -44,8 +44,9 @@ root.render(
             element={<FindPassWardPhonePage />}
           />
           <Route path="/my" element={<MyPage />} />
-          <Route path="/team-edit/:id" element={<TeamInfoEdit />} />{" "}
           {/* 팀 정보 수정 페이지 */}
+          <Route path="/team-edit/:id" element={<TeamInfoEdit />} />
+          {/* 팀 전략 생성 페이지*/}
           <Route path="/team-strategy/:id" element={<GameStrategy />} />
         </Routes>
       </GlobalStyle>
