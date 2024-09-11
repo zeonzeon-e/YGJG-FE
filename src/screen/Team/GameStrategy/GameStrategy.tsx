@@ -1,15 +1,15 @@
 import React, { useState } from "react";
 import styled from "styled-components";
-import GlobalStyles from "../../../component/Styled/GlobalStyled";
-import Header2 from "../../../component/Header/Header2/Header2";
-import MainButton from "../../../component/Button/MainButton";
+import GlobalStyles from "../../../components/Styled/GlobalStyled";
+import Header2 from "../../../components/Header/Header2/Header2";
+import MainButton from "../../../components/Button/MainButton";
 import { format } from "date-fns";
-import CalendarModal from "../../../component/Modal/CalendarModal"; // 이 부분은 달력을 직접 렌더링하는 컴포넌트입니다.
-import TimePickerModal from "../../../component/Modal/TimePickerModal";
+import CalendarModal from "../../../components/Modal/CalendarModal"; // 이 부분은 달력을 직접 렌더링하는 컴포넌트입니다.
+import TimePickerModal from "../../../components/Modal/TimePickerModal";
 import { ko } from "date-fns/locale";
-import CheckBox from "../../../component/CheckBox/CheckBox";
-import Input from "../../../component/Input/Input";
-import KakaoMapModal from "../../../component/Modal/KakaoAddress";
+import CheckBox from "../../../components/CheckBox/CheckBox";
+import Input from "../../../components/Input/Input";
+import KakaoMapModal from "../../../components/Modal/KakaoAddress";
 
 const GameStrategy: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
