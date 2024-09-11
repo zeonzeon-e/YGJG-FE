@@ -10,10 +10,9 @@ import FindPassWardPhonePage from "./screen/Auth/FindPassWardPhonePage";
 import MyPage from "./screen/My/Mypage";
 import TeamInfoEdit from "./screen/My/TeamInfoEdit";
 import GameStrategy from "./screen/Team/GameStrategy/GameStrategy";
-import PersonalCalendarPage from "./screen/My/PersonalCalendarPage";
+import PersonalCalenderPage from "./screen/My/PersonalCalendarPage";
 import JoinApprovalStatus from "./screen/My/JoinApprovalSataus";
 import { createGlobalStyle } from "styled-components";
-import LoginPage from "./screen/Auth/LoginPage";
 import TeamListPage from "./screen/Filter/TeamListPage";
 import FindPassWardEmailPage from "./screen/Auth/FindPassWardEmailPage";
 import SignUpPage from "./screen/Auth/SignUpPage";
@@ -33,21 +32,23 @@ const root = ReactDOM.createRoot(
 root.render(
   <React.StrictMode>
     <BrowserRouter>
-      {/* <App /> */}
-      <Routes>
-        <Route path="/" element={<MyPage />} />
-        <Route path="/" element={<SignUpPage />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/login/find-pw" element={<FindPassWardPage />} />
-        <Route
-          path="/login/find-pw/phone"
-          element={<FindPassWardPhonePage />}
-        />
-        <Route path="/my" element={<MyPage />} />
-        <Route path="/team-edit/:id" element={<TeamInfoEdit />} />{" "}
-        {/* 팀 정보 수정 페이지 */}
-        <Route path="/team-strategy/:id" element={<GameStrategy />} />
-      </Routes>
+      <GlobalStyle>
+        {/* <App /> */}
+        <Routes>
+          <Route path="/" element={<MyPage />} />
+          <Route path="/" element={<SignUpPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/login/find-pw" element={<FindPassWardPage />} />
+          <Route
+            path="/login/find-pw/phone"
+            element={<FindPassWardPhonePage />}
+          />
+          <Route path="/my" element={<MyPage />} />
+          <Route path="/team-edit/:id" element={<TeamInfoEdit />} />{" "}
+          {/* 팀 정보 수정 페이지 */}
+          <Route path="/team-strategy/:id" element={<GameStrategy />} />
+        </Routes>
+      </GlobalStyle>
     </BrowserRouter>
   </React.StrictMode>
 );
