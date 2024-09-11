@@ -4,10 +4,12 @@ import "./index.css";
 import App from "./App";
 import reportWebVitals from "./reportWebVitals";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import LoginPage from "./screen/Auth/LoginPage";
 import FindPassWardPage from "./screen/Auth/FindPassWardPage";
 import FindPassWardPhonePage from "./screen/Auth/FindPassWardPhonePage";
 import MyPage from "./screen/My/Mypage";
 import TeamInfoEdit from "./screen/My/TeamInfoEdit";
+import GameStrategy from "./screen/Team/GameStrategy/GameStrategy";
 import PersonalCalendarPage from "./screen/My/PersonalCalendarPage";
 import JoinApprovalStatus from "./screen/My/JoinApprovalSataus";
 import { createGlobalStyle } from "styled-components";
@@ -32,24 +34,19 @@ root.render(
   <React.StrictMode>
     <BrowserRouter>
       {/* <App /> */}
-      <GlobalStyle />
       <Routes>
+        <Route path="/" element={<MyPage />} />
         <Route path="/" element={<SignUpPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/login/find-pw" element={<FindPassWardPage />} />
-        <Route path="/my" element={<MyPage />} />
-        <Route path="/my/calendar" element={<PersonalCalendarPage />} />
-        <Route path="/my/joinstatus" element={<JoinApprovalStatus />} />
         <Route
           path="/login/find-pw/phone"
           element={<FindPassWardPhonePage />}
         />
-        <Route
-          path="/login/find-pw/email"
-          element={<FindPassWardEmailPage />}
-        />
+        <Route path="/my" element={<MyPage />} />
         <Route path="/team-edit/:id" element={<TeamInfoEdit />} />{" "}
         {/* 팀 정보 수정 페이지 */}
+        <Route path="/team-strategy/:id" element={<GameStrategy />} />
       </Routes>
     </BrowserRouter>
   </React.StrictMode>

@@ -27,8 +27,8 @@ const MyPage: React.FC = () => {
   return (
     <>
       <GlobalStyles />
+      <Header1 text="마이페이지" />
       <Container>
-        <Header1 text="마이페이지" />
         <Profile>
           <ProfileImage
             src="https://example.com/profile-image.jpg"
