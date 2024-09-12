@@ -7,18 +7,25 @@ import { format } from "date-fns";
 import CalendarModal from "../../../components/Modal/CalendarModal"; // 이 부분은 달력을 직접 렌더링하는 컴포넌트입니다.
 import TimePickerModal from "../../../components/Modal/TimePickerModal";
 import { ko } from "date-fns/locale";
-import CheckBox from "../../../components/CheckBox/CheckBox";
 import Input from "../../../components/Input/Input";
 import KakaoMapModal from "../../../components/Modal/KakaoAddress";
+import FormationModal from "../../../components/Modal/FormationModal";
 
 const GameStrategy: React.FC = () => {
+  //날짜 지정
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  //시간 지정
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
+  //날짜 모달(픽커) 팝업 여부
   const [showDatePicker, setShowDatePicker] = useState(false);
+  //시간 모달(픽커) 팝업 여부
   const [showTimePicker, setShowTimePicker] = useState(false);
-  const context = [["제목", "내용"]];
+  //주소 검색 모달 픽업 여부
   const [showMapModal, setShowMapModal] = useState(false);
+  //주소 지정
   const [selectedAddress, setSelectedAddress] = useState<string>("");
+  //포메이션 모달 팝업 여부
+  const [showFormationModal, setShowFormationModal] = useState(false);
 
   const handleAddressSelect = (address: string) => {
     setSelectedAddress(address);
@@ -29,8 +36,8 @@ const GameStrategy: React.FC = () => {
       <GlobalStyles />
       <Header2 text="경기 전략" />
       <Container>
-        <PickerContainer>
-          <h3>경기 날짜와 시간을 선택해주세요</h3>
+        <ItemDiv>
+          <h4>경기 날짜와 시간을 선택해주세요</h4>
           <PickerButton>
             <StrategyButton onClick={() => setShowDatePicker(true)}>
               {selectedDate
@@ -54,7 +61,7 @@ const GameStrategy: React.FC = () => {
               }}
             />
           )}
-        </PickerContainer>
+        </ItemDiv>
         {showTimePicker && (
           <TimePickerModal
             onTimeSelect={(time: string) => {
@@ -64,26 +71,53 @@ const GameStrategy: React.FC = () => {
             onClose={() => setShowTimePicker(false)}
           />
         )}
-
-        <Input type="text" placeholder="상대팀명 입력" />
-        <Input type="text" placeholder="주요 전술 사항" />
-        <Input type="text" placeholder="포메이션 입력" />
-        <CheckBox content={context} isToggle={false} />
         <Input
           type="text"
           placeholder="상대팀명을 입력해주세요"
           title="상대팀명을 입력해주세요"
         />
-
-        <MainButton onClick={() => setShowMapModal(true)}>주소 찾기</MainButton>
-        <SelectedAddress>{selectedAddress}</SelectedAddress>
-        {showMapModal && (
-          <KakaoMapModal
-            onClose={() => setShowMapModal(false)}
-            onAddressSelect={handleAddressSelect}
-          />
-        )}
-
+        <ItemDiv>
+          <h4>경기장을 선택해주세요</h4>
+          <MainButton
+            width={100}
+            height={40}
+            onClick={() => setShowMapModal(true)}
+          >
+            주소 찾기
+          </MainButton>
+          <SelectedAddress>{selectedAddress}</SelectedAddress>
+          {showMapModal && (
+            <KakaoMapModal
+              onClose={() => setShowMapModal(false)}
+              onAddressSelect={handleAddressSelect}
+            />
+          )}
+        </ItemDiv>
+        <Input
+          type="text"
+          placeholder="경기전술을 작성해주세요"
+          title="경기전술을 작성해주세요"
+          height={100}
+        />
+        <ItemDiv>
+          <h4>포메이션을 알려주세요</h4>
+          <Formation>
+            <FormationButton onClick={() => setShowFormationModal(true)}>
+              포메이션
+              <br />
+              새로 만들기
+            </FormationButton>
+            <FormationButton>
+              기존 포메이션
+              <br />
+              불러오기
+            </FormationButton>
+          </Formation>
+          <img src="/formation.png" />
+          {showFormationModal && (
+            <FormationModal onClose={() => setShowFormationModal(false)} />
+          )}
+        </ItemDiv>
         <MainButton>전략 게시하기</MainButton>
       </Container>
     </>
@@ -106,10 +140,28 @@ const StrategyButton = styled.button`
   border-radius: 8px;
   margin-bottom: 20px;
   cursor: pointer;
-  width: 100%;
+  width: 90%;
+
+  &:first-child {
+    margin-right: 10px;
+  }
+`;
+const FormationButton = styled.button`
+  background-color: white;
+  color: var(--color-dark2);
+  border: 1px solid var(--color-sub);
+  padding: 8px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  cursor: pointer;
+  width: 90%;
+
+  &:first-child {
+    margin-right: 10px;
+  }
 `;
 
-const PickerContainer = styled.div`
+const ItemDiv = styled.div`
   display: flex;
   flex-direction: column;
 `;
@@ -124,4 +176,10 @@ const SelectedAddress = styled.div`
   margin: 10px 0;
   font-size: 14px;
   color: #333;
+`;
+
+const Formation = styled.div`
+  display: flex;
+  width: 100%;
+  margin-top: 10px;
 `;

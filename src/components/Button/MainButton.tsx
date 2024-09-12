@@ -22,7 +22,7 @@ const StyledButton = styled.button<MainButtonProps>`
   width: ${(props) => (props.width ? `${props.width}px` : "100%")};
   border: 1px solid var(--color-light2);
   box-sizing: border-box;
-  padding: 16px 0;
+  padding: ${(props) => (props.height ? `${props.height / 10}px 0` : "16px 0")};
   font-size: ${(props) => (props.fontSize ? `${props.fontSize}px` : "18px")};
   font-family: Pretendard-Medium;
   letter-spacing: 2px;
