@@ -1,85 +1,108 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { FaAngleDown, FaAngleUp, FaCheck } from "react-icons/fa6";
 import styled from "styled-components";
 
-/**
- * CheckBoxProps - CheckBox 컴포넌트에 전달되는 props 타입 정의
- * @interface CheckBoxProps
- * @property {string[][]} content - 이중 배열: [제목, 내용]
- * @property {boolean} isToggle - 드롭다운 사용 여부
- * @property {boolean} [isChecked] - 강제 체크 설정 여부 (선택 사항)
- */
-interface CheckBoxProps {
-  content: string[][]; // 이중 배열: [제목, 내용]
-  isToggle: boolean; // 드롭다운 사용 여부
-  isChecked?: boolean; // 강제 체크 설정 여부
-}
+/* #################### 사용 예시 #######################
 
-/**
- * CheckBox 컴포넌트 - 제목과 세부 내용을 가진 체크박스 리스트를 렌더링
- * @param {CheckBoxProps} props - 컴포넌트에 전달되는 props
- * @param {string[][]} props.content - 제목과 세부 내용을 포함한 이중 배열
- * @param {boolean} props.isToggle - 드롭다운 상세보기 여부
- * @param {boolean} [props.isChecked] - 강제 체크 설정 여부 (선택 사항)
- * @returns {JSX.Element} CheckBox 컴포넌트
- */
-const CheckBox: React.FC<CheckBoxProps> = ({
-  content = [],
-  isToggle = false,
-  isChecked,
-}) => {
-  const [allChecked, setAllChecked] = useState<boolean>(false);
-  const [checks, setChecks] = useState<boolean[]>(() =>
+/ Step 2: 약관 동의 컴포넌트
+const TermsAgreement: React.FC<{ onNext: () => void }> = ({ onNext }) => {
+  const content: [string, string][] = [
+    ["(필수) 서비스 이용자 동의", "내용1"],
+    ["(필수) 개인정보 수집/이용 동의", "내용2"],
+    ["(필수) 제 3자 제공 동의", "내용3"],
+    ["(선택) 메일 수신 동의", "내용4"],
+    ["(선택) 마케팅 수신 동의", "내용5"],
+    ["(선택) 야간 마케팅 수신 동의", "내용6"],
+  ];
+
+  const requiredIndexes = [0, 1, 2]; // 필수 항목 인덱스
+  const [checkedState, setCheckedState] = useState<boolean[]>(
     Array(content.length).fill(false)
   );
-  const [toggles, setToggles] = useState<boolean[]>(() =>
-    Array(content.length).fill(false)
-  );
-
-  // content가 변경될 때 체크 상태 초기화
-  useEffect(() => {
-    setAllChecked(false);
-    setChecks(Array(content.length).fill(false));
-  }, [content]);
-
-  // 전체 선택 클릭 핸들러
-  const handleAllClick = () => {
-    const newCheckedState = !allChecked;
-    setAllChecked(newCheckedState);
-    setChecks(Array(content.length).fill(newCheckedState));
-  };
 
   // 개별 체크박스 클릭 핸들러
   const handleCheckboxClick = (index: number) => {
-    const newChecks = [...checks];
-    newChecks[index] = !newChecks[index];
-    setChecks(newChecks);
-    setAllChecked(newChecks.every((checked) => checked));
+    const updatedCheckedState = [...checkedState];
+    updatedCheckedState[index] = !updatedCheckedState[index];
+    setCheckedState(updatedCheckedState);
   };
+
+  // 전체 체크박스 클릭 핸들러
+  const handleAllClick = (checked: boolean) => {
+    setCheckedState(Array(content.length).fill(checked));
+  };
+
+  // 필수 항목 체크 여부 확인
+  const isNextButtonEnabled = requiredIndexes.every(
+    (index) => checkedState[index]
+  );
+
+  return (
+    <Container>
+      <Title>약관 동의</Title>
+      <SubTitle>
+        서비스 이용에 필요한 필수 약관과 선택 약관에 동의해주세요
+      </SubTitle>
+      <CheckBox
+        content={content}
+        checkedState={checkedState}
+        isToggle={true}
+        onCheckboxClick={handleCheckboxClick}
+        onAllClick={handleAllClick}
+      />
+      <ButtonWrapper>
+        <MainButton disabled={!isNextButtonEnabled} onClick={onNext}>
+          다음
+        </MainButton>
+      </ButtonWrapper>
+    </Container>
+  );
+};
+ */
+
+interface CheckBoxProps {
+  content: [string, string][];
+  checkedState: boolean[];
+  isToggle: boolean;
+  onCheckboxClick: (index: number) => void;
+  onAllClick: (checked: boolean) => void;
+}
+
+const CheckBox: React.FC<CheckBoxProps> = ({
+  content,
+  checkedState,
+  isToggle,
+  onCheckboxClick,
+  onAllClick,
+}) => {
+  const [toggles, setToggles] = useState<boolean[]>(() =>
+    Array(content.length).fill(false)
+  );
+  const allChecked = checkedState.every(Boolean);
 
   // 토글 버튼 클릭 핸들러
   const handleToggleClick = (index: number) => {
-    const newToggles = [...toggles];
-    newToggles[index] = !newToggles[index];
-    setToggles(newToggles);
+    const updatedToggles = [...toggles];
+    updatedToggles[index] = !updatedToggles[index];
+    setToggles(updatedToggles);
   };
 
   return (
     <div>
       {/* 전체 선택 체크박스 */}
-      <SelectAllWrapper onClick={handleAllClick}>
+      <SelectAllWrapper onClick={() => onAllClick(!allChecked)}>
         <IconWrapper className={allChecked ? "icon" : ""}>
           <FaCheck className="CheckBox-icon" />
         </IconWrapper>
-        전체선택
+        전체 동의
       </SelectAllWrapper>
 
       {/* 개별 체크박스 목록 */}
       {content.map(([title, detail], index) => (
         <CheckBoxItem key={index}>
           <CheckBoxContent>
-            <CheckBoxLabel onClick={() => handleCheckboxClick(index)}>
-              <IconWrapper className={checks[index] ? "icon" : ""}>
+            <CheckBoxLabel onClick={() => onCheckboxClick(index)}>
+              <IconWrapper className={checkedState[index] ? "icon" : ""}>
                 <FaCheck className="CheckBox-icon" />
               </IconWrapper>
               {title}
@@ -87,9 +110,9 @@ const CheckBox: React.FC<CheckBoxProps> = ({
             {isToggle && (
               <ToggleButton onClick={() => handleToggleClick(index)}>
                 {toggles[index] ? (
-                  <FaAngleDown size={20} />
-                ) : (
                   <FaAngleUp size={20} />
+                ) : (
+                  <FaAngleDown size={20} />
                 )}
               </ToggleButton>
             )}

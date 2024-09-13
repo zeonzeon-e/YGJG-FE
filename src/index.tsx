@@ -36,7 +36,7 @@ root.render(
       <GlobalStyle />
       <Routes>
         <Route path="/" element={<MyPage />} />
-        <Route path="/singup" element={<SignUpPage />} />
+        <Route path="/signup" element={<SignUpPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/login/find-pw" element={<FindPassWardPage />} />
         <Route
