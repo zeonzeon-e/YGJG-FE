@@ -62,7 +62,7 @@ const getColorByPosition = (position: string): string => {
 };
 
 interface TeamList1Props {
-    onPlayerSelect: (player: { detail_position: string; name: string }) => void;
+    onPlayerSelect: (player: { detail_position: string; name: string }) => void; /** player: {detail_position: string; name: string} **/
   }
 
 const TeamList1: React.FC<TeamList1Props> = ({ onPlayerSelect }) => {

@@ -1,3 +1,6 @@
+//경기전략 페이지 안에 들어가는 선수 목록 컴포넌트
+//선수 모양이 동그라미 모양
+
 import React from "react";
 import styled from "styled-components";
 
@@ -54,7 +57,7 @@ const getColorByPosition = (position: string): string => {
 };
 
 interface TeamList3Props {
-    onPlayerSelect: (player: { detail_position: string; name: string; position: string; }) => void;
+    onPlayerSelect: (player: { detail_position: string; name: string; position: string; }) => void; /** player: {detail_position: string; name: string; position: string;} **/
   }
 
 const TeamList3: React.FC<TeamList3Props> = ({ onPlayerSelect }) => {
