@@ -43,6 +43,7 @@ root.render(
           path="/login/find-pw/phone"
           element={<FindPassWardPhonePage />}
         />
+        <Route path="/team/list" element={<TeamListPage />} />
         <Route path="/my" element={<MyPage />} />
         {/* 팀 정보 수정 페이지 */}
         <Route path="/team-edit/:id" element={<TeamInfoEdit />} />

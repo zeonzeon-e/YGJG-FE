@@ -1,92 +1,87 @@
 import React, { useState, useCallback, useEffect } from "react";
 import styled from "styled-components";
+import MiniButton from "../Button/MiniButton";
+import TeamList3 from "../TeamList/TeamList3";
 
 interface FormationModalProps {
   onClose: () => void;
+  onSave: (circles: CirclePosition[]) => void;
 }
 
 interface CirclePosition {
   id: number;
   x: number;
   y: number;
+  color: string;
+  detail_position: string;
+  name: string;
 }
 
-const FormationModal: React.FC<FormationModalProps> = ({ onClose }) => {
+const FormationModal: React.FC<FormationModalProps> = ({ onClose, onSave }) => {
   const [circles, setCircles] = useState<CirclePosition[]>([]);
   const [draggingCircle, setDraggingCircle] = useState<number | null>(null);
-  const [dragOffset, setDragOffset] = useState<{ x: number; y: number }>({
-    x: 0,
-    y: 0,
-  });
+  const [dragOffset, setDragOffset] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
 
-  // 모달이 열렸을 때 스크롤 방지
   useEffect(() => {
     const originalStyle = window.getComputedStyle(document.body).overflow;
-    document.body.style.overflow = "hidden";
+    document.body.style.overflow = "hidden"; // Disable background scroll
 
     return () => {
-      document.body.style.overflow = originalStyle;
+      document.body.style.overflow = originalStyle; // Re-enable background scroll
     };
   }, []);
 
-  // 원 추가 함수
-  const addCircle = () => {
-    const newCircle: CirclePosition = {
-      id: circles.length + 1,
-      x: 50, // 초기 위치 (x, y) 설정
-      y: 50,
-    };
-    setCircles([...circles, newCircle]);
+  const getColorByPosition = (position: string): string => {
+    switch (position) {
+      case "공격수":
+        return "var(--color-sk)";
+      case "수비수":
+        return "var(--color-dp)";
+      case "미드필더":
+        return "var(--color-mf)";
+      case "골키퍼":
+        return "var(--color-gk)";
+      default:
+        return "#9E9E9E";
+    }
   };
 
-  // 드래그 시작 (마우스 + 터치)
+  const handlePlayerSelect = (player: { name: string; detail_position: string; position: string }) => {
+    const imageRect = document.getElementById("formation-image")?.getBoundingClientRect();
+    if (imageRect) {
+      const newCircle: CirclePosition = {
+        id: circles.length + 1,
+        x: imageRect.width / 2 - 15,
+        y: imageRect.height / 2 - 15,
+        color: getColorByPosition(player.position),
+        detail_position: player.detail_position,
+        name: player.name
+      };
+      setCircles([...circles, newCircle]);
+    }
+  };
+
   const startDrag = useCallback(
-    (
-      id: number,
-      event: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>
-    ) => {
+    (id: number, event: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => {
       setDraggingCircle(id);
       const rect = event.currentTarget.getBoundingClientRect();
-
-      if ("touches" in event) {
-        setDragOffset({
-          x: event.touches[0].clientX - rect.left,
-          y: event.touches[0].clientY - rect.top,
-        });
-      } else {
-        setDragOffset({
-          x: event.clientX - rect.left,
-          y: event.clientY - rect.top,
-        });
-      }
+      setDragOffset({
+        x: "touches" in event ? event.touches[0].clientX - rect.left : event.clientX - rect.left,
+        y: "touches" in event ? event.touches[0].clientY - rect.top : event.clientY - rect.top,
+      });
     },
     []
   );
 
-  // 드래그 중 (마우스 + 터치)
   const onDrag = useCallback(
-    (
-      event: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>
-    ) => {
+    (event: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => {
       if (draggingCircle !== null) {
-        const imageRect = document
-          .getElementById("formation-image")
-          ?.getBoundingClientRect();
+        const imageRect = document.getElementById("formation-image")?.getBoundingClientRect();
         if (!imageRect) return;
-
-        let x: number, y: number;
-        if ("touches" in event) {
-          x = event.touches[0].clientX - imageRect.left - dragOffset.x;
-          y = event.touches[0].clientY - imageRect.top - dragOffset.y;
-        } else {
-          x = event.clientX - imageRect.left - dragOffset.x;
-          y = event.clientY - imageRect.top - dragOffset.y;
-        }
-
-        // 원이 이미지 바깥으로 나가지 않도록 제한
-        x = Math.max(0, Math.min(x, imageRect.width - 60)); // 원의 너비(30px)를 고려하여 제한
-        y = Math.max(0, Math.min(y, imageRect.height - 60)); // 원의 높이(30px)를 고려하여 제한
-
+        let x = "touches" in event ? event.touches[0].clientX - imageRect.left - dragOffset.x : event.clientX - imageRect.left - dragOffset.x;
+        let y = "touches" in event ? event.touches[0].clientY - imageRect.top - dragOffset.y : event.clientY - imageRect.top - dragOffset.y;
+        x = Math.max(0, Math.min(x, imageRect.width - 50));
+        y = Math.max(0, Math.min(y, imageRect.height - 50));
         setCircles((prevCircles) =>
           prevCircles.map((circle) =>
             circle.id === draggingCircle ? { ...circle, x, y } : circle
@@ -97,39 +92,50 @@ const FormationModal: React.FC<FormationModalProps> = ({ onClose }) => {
     [draggingCircle, dragOffset]
   );
 
-  // 드래그 종료 (마우스 + 터치)
   const stopDrag = useCallback(() => {
     setDraggingCircle(null);
   }, []);
 
+  const handleSave = () => {
+    onSave(circles);
+    onClose();
+  };
+
   return (
     <ModalOverlay onClick={onClose}>
-      <ModalContent onClick={(e) => e.stopPropagation()}>
-        <CloseButton onClick={onClose}>X</CloseButton>
-        <h4>포메이션을 설정하세요</h4>
+      <ScrollableTeamListContainer>
+        <ModalContent onClick={(e) => e.stopPropagation()}>
+          <CloseButton onClick={onClose}>X</CloseButton>
+          <h4>포메이션을 설정하세요</h4>
+          <MiniButton onClick={() => setCircles([])}>초기화</MiniButton>
 
-        {/* Formation Image */}
-        <FormationImageContainer
-          id="formation-image"
-          onMouseMove={onDrag}
-          onMouseUp={stopDrag}
-          onTouchMove={onDrag}
-          onTouchEnd={stopDrag}
-        >
-          <FormationImage src="/formation.png" alt="Formation Field" />
-          {circles.map((circle) => (
-            <DraggableCircle
-              key={circle.id}
-              style={{ left: `${circle.x}px`, top: `${circle.y}px` }}
-              onMouseDown={(e) => startDrag(circle.id, e)}
-              onTouchStart={(e) => startDrag(circle.id, e)}
-            />
-          ))}
-        </FormationImageContainer>
+          <FormationImageContainer
+            id="formation-image"
+            onMouseMove={onDrag}
+            onMouseUp={stopDrag}
+            onTouchMove={onDrag}
+            onTouchEnd={stopDrag}
+          >
+            <FormationImage src="/formation.png" alt="Formation Field" />
+            {circles.map((circle) => (
+              <DraggableCircle
+                key={circle.id}
+                style={{ left: `${circle.x}px`, top: `${circle.y}px`, backgroundColor: circle.color }}
+                onMouseDown={(e) => startDrag(circle.id, e)}
+                onTouchStart={(e) => startDrag(circle.id, e)}
+              >
+                {circle.detail_position}
+                <br />
+                {circle.name}
+              </DraggableCircle>
+            ))}
+          </FormationImageContainer>
 
-        <AddCircleButton onClick={addCircle}>원 추가</AddCircleButton>
-        <SaveButton onClick={onClose}>적용하기</SaveButton>
-      </ModalContent>
+          <TeamList3 onPlayerSelect={handlePlayerSelect} />
+
+          <SaveButton onClick={handleSave}>적용하기</SaveButton>
+        </ModalContent>
+      </ScrollableTeamListContainer>
     </ModalOverlay>
   );
 };
@@ -157,6 +163,8 @@ const ModalContent = styled.div`
   width: 90%;
   max-width: 500px;
   position: relative;
+  max-height: 90%;
+  overflow: hidden;
 `;
 
 const CloseButton = styled.button`
@@ -176,7 +184,7 @@ const FormationImageContainer = styled.div`
   display: inline-block;
   border: 1px solid #ddd;
   margin-bottom: 20px;
-  user-select: none; /* 텍스트 드래그 방지 */
+  user-select: none;
 `;
 
 const FormationImage = styled.img`
@@ -185,23 +193,24 @@ const FormationImage = styled.img`
 
 const DraggableCircle = styled.div`
   position: absolute;
-  width: 60px;
-  height: 60px;
+  width: 50px;
+  height: 50px;
   border-radius: 50%;
-  background-color: red;
   cursor: grab;
-  touch-action: none; /* 모바일 터치로 드래그 할 때 사용 */
+  touch-action: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: white;
+  font-size: 12px;
+  text-align: center;
 `;
 
-const AddCircleButton = styled.button`
-  background-color: #4caf50;
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 8px;
+const ScrollableTeamListContainer = styled.div`
+  max-height: 90%;
+  overflow-y: auto;
+  border: 1px solid #ddd;
   margin-bottom: 10px;
-  cursor: pointer;
-  width: 100%;
 `;
 
 const SaveButton = styled.button`
