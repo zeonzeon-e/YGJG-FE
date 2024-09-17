@@ -3,7 +3,7 @@
 
 import React from "react";
 import styled from "styled-components";
-
+//나중에 백엔드에서 가져올 정보
 const playersData = [
   {
     id: 1,
