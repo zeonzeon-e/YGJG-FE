@@ -1,3 +1,7 @@
+//playersData에 role까지 받기
+//매니저, 부매니저, 선수로 role 나눠져 있는 팀 선수 목록 컴포넌트
+//프로필사진(원형) 이름 - 디테일 포지션
+
 import React from "react";
 import styled from "styled-components";
 
@@ -45,21 +49,17 @@ const playersData = [
   }
 ];
 
-// 포지션별 우선순위 지정
+// 역할별 우선순위 지정
 const positionPriority: { [key: string]: number } = {
   "매니저": 1,
   "부매니저": 2,
   "선수": 3
 };
 
-// 포지션별 색상 가져오기
+// 역할별 색상 가져오기
 const getColorByPosition = (position: string): string => {
   switch (position) {
-    case "공격수": return "var(--color-sk)";
-    case "수비수": return "var(--color-dp)";
-    case "미드필더": return "var(--color-mf)";
-    case "골키퍼": return "var(--color-gk)";
-    default: return "#9E9E9E";
+    default: return "var(--color-sub)";
   }
 };
 
@@ -68,27 +68,28 @@ interface TeamList2Props {
   }
 
 const TeamList2: React.FC<TeamList2Props> = ({ onPlayerSelect }) => {
-  // 포지션에 따라 그룹화 및 정렬
+  // 역할에 따라 그룹화 및 정렬
   const roleGroups = playersData.reduce((acc, player) => {
     acc[player.role] = acc[player.role] || [];
     acc[player.role].push(player);
     return acc;
   }, {} as { [key: string]: typeof playersData });
 
-  // 포지션 정렬
+  // 역할 정렬
   const sortedPositions = Object.keys(roleGroups).sort(
     (a, b) => positionPriority[a] - positionPriority[b]
   );
 
+
   return (
     <PageContainer>
-      {sortedPositions.map(position => (
-        <React.Fragment key={position}>
-          <PositionHeader color={getColorByPosition(position)}>
-            {position}
+      {sortedPositions.map(detail_position => (
+        <React.Fragment key={detail_position}>
+          <PositionHeader color={getColorByPosition(detail_position)}>
+            {detail_position}
           </PositionHeader>
           <PlayerListContainer>
-            {roleGroups[position].map(player => (
+            {roleGroups[detail_position].map(player => (
               <PlayerItem key={player.id} onClick={() => onPlayerSelect({ detail_position: player.detail_position, name: player.name })}>
                 <PlayerInfo>
                   <PlayerImage src={player.profileImageUrl} alt={player.name} />
@@ -112,7 +113,6 @@ const PageContainer = styled.div`
 const PositionHeader = styled.div<{ color: string }>`
   font-size: 18px;
   font-weight: bold;
-  color: white;
   background-color: ${({ color }) => color};
   padding: 8px;
   border-radius: 50px;

@@ -1,3 +1,6 @@
+//포지션 별로 나눠져 있는 팀 선수 목록 컴포넌트
+//프로필사진(원형) 이름 - 포지션
+
 import React from "react";
 import styled from "styled-components";
 

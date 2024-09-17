@@ -2,6 +2,7 @@ import React, { useState, useCallback, useEffect } from "react";
 import styled from "styled-components";
 import MiniButton from "../Button/MiniButton";
 import TeamList3 from "../TeamList/TeamList3";
+import TeamList2 from "../TeamList/TeamList2";
 
 interface FormationModalProps {
   onClose: () => void;
@@ -54,6 +55,20 @@ const FormationModal: React.FC<FormationModalProps> = ({ onClose, onSave }) => {
         x: imageRect.width / 2 - 15,
         y: imageRect.height / 2 - 15,
         color: getColorByPosition(player.position),
+        detail_position: player.detail_position,
+        name: player.name
+      };
+      setCircles([...circles, newCircle]);
+    }
+  };
+  const handlePlayerSelect2 = (player: { name: string; detail_position: string; }) => {
+    const imageRect = document.getElementById("formation-image")?.getBoundingClientRect();
+    if (imageRect) {
+      const newCircle: CirclePosition = {
+        id: circles.length + 1,
+        x: imageRect.width / 2 - 15,
+        y: imageRect.height / 2 - 15,
+        color: getColorByPosition(player.detail_position),
         detail_position: player.detail_position,
         name: player.name
       };
@@ -132,6 +147,7 @@ const FormationModal: React.FC<FormationModalProps> = ({ onClose, onSave }) => {
           </FormationImageContainer>
 
           <TeamList3 onPlayerSelect={handlePlayerSelect} />
+          <TeamList2 onPlayerSelect={handlePlayerSelect2} />
 
           <SaveButton onClick={handleSave}>적용하기</SaveButton>
         </ModalContent>
