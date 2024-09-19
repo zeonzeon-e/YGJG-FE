@@ -153,23 +153,28 @@ const PersonalInfo: React.FC<{ onNext: (data: any) => void }> = ({
       <SubTitle>서비스 이용에 필요한 정보를 입력해주세요</SubTitle>
       <Input
         type="email"
+        height={40}
         placeholder="이메일"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
       />
       <Input
         type="password"
+        height={40}
         placeholder="비밀번호"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
       />
       <Input
         type="password"
+        height={40}
         placeholder="비밀번호 확인"
         value={confirmPassword}
         onChange={(e) => setConfirmPassword(e.target.value)}
       />
-      <MainButton onClick={handleSubmit}>다음</MainButton>
+      <MainButton height={40} onClick={handleSubmit}>
+        다음
+      </MainButton>
     </Container>
   );
 };
