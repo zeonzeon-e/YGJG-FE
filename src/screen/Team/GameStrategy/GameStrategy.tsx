@@ -4,31 +4,38 @@ import GlobalStyles from "../../../components/Styled/GlobalStyled";
 import Header2 from "../../../components/Header/Header2/Header2";
 import MainButton from "../../../components/Button/MainButton";
 import { format } from "date-fns";
-import CalendarModal from "../../../components/Modal/CalendarModal"; // 이 부분은 달력을 직접 렌더링하는 컴포넌트입니다.
+import CalendarModal from "../../../components/Modal/CalendarModal";
 import TimePickerModal from "../../../components/Modal/TimePickerModal";
 import { ko } from "date-fns/locale";
 import Input from "../../../components/Input/Input";
 import KakaoMapModal from "../../../components/Modal/KakaoAddress";
 import FormationModal from "../../../components/Modal/FormationModal";
 
+interface CirclePosition {
+  id: number;
+  x: number;
+  y: number;
+  color: string;
+  detail_position: string;
+  name: string;
+}
+
 const GameStrategy: React.FC = () => {
-  //날짜 지정
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  //시간 지정
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
-  //날짜 모달(픽커) 팝업 여부
   const [showDatePicker, setShowDatePicker] = useState(false);
-  //시간 모달(픽커) 팝업 여부
   const [showTimePicker, setShowTimePicker] = useState(false);
-  //주소 검색 모달 픽업 여부
   const [showMapModal, setShowMapModal] = useState(false);
-  //주소 지정
   const [selectedAddress, setSelectedAddress] = useState<string>("");
-  //포메이션 모달 팝업 여부
   const [showFormationModal, setShowFormationModal] = useState(false);
+  const [formationCircles, setFormationCircles] = useState<CirclePosition[]>([]);
 
   const handleAddressSelect = (address: string) => {
     setSelectedAddress(address);
+  };
+
+  const handleFormationSave = (circles: CirclePosition[]) => {
+    setFormationCircles(circles); // Save formation circles
   };
 
   return (
@@ -40,9 +47,7 @@ const GameStrategy: React.FC = () => {
           <h4>경기 날짜와 시간을 선택해주세요</h4>
           <PickerButton>
             <StrategyButton onClick={() => setShowDatePicker(true)}>
-              {selectedDate
-                ? format(selectedDate, "MM월 dd일 EEEE", { locale: ko }) // Display day of the week here
-                : "날짜를 선택하세요"}
+              {selectedDate ? format(selectedDate, "MM월 dd일 EEEE", { locale: ko }) : "날짜를 선택하세요"}
             </StrategyButton>
 
             <StrategyButton onClick={() => setShowTimePicker(true)}>
@@ -53,12 +58,9 @@ const GameStrategy: React.FC = () => {
             <CalendarModal
               onDateSelect={(date: Date) => {
                 setSelectedDate(date);
-                setShowDatePicker(false); // 달력에서 날짜를 선택하면 모달을 닫습니다.
-              }}
-              onClose={() => {
                 setShowDatePicker(false);
-                setShowTimePicker(true);
               }}
+              onClose={() => setShowDatePicker(false)}
             />
           )}
         </ItemDiv>
@@ -71,34 +73,18 @@ const GameStrategy: React.FC = () => {
             onClose={() => setShowTimePicker(false)}
           />
         )}
-        <Input
-          type="text"
-          placeholder="상대팀명을 입력해주세요"
-          title="상대팀명을 입력해주세요"
-        />
+        <Input type="text" placeholder="상대팀명을 입력해주세요" title="상대팀명을 입력해주세요" />
         <ItemDiv>
           <h4>경기장을 선택해주세요</h4>
-          <MainButton
-            width={100}
-            height={40}
-            onClick={() => setShowMapModal(true)}
-          >
+          <MainButton width={100} height={40} onClick={() => setShowMapModal(true)}>
             주소 찾기
           </MainButton>
           <SelectedAddress>{selectedAddress}</SelectedAddress>
           {showMapModal && (
-            <KakaoMapModal
-              onClose={() => setShowMapModal(false)}
-              onAddressSelect={handleAddressSelect}
-            />
+            <KakaoMapModal onClose={() => setShowMapModal(false)} onAddressSelect={handleAddressSelect} />
           )}
         </ItemDiv>
-        <Input
-          type="text"
-          placeholder="경기전술을 작성해주세요"
-          title="경기전술을 작성해주세요"
-          height={100}
-        />
+        <Input type="text" placeholder="경기전술을 작성해주세요" title="경기전술을 작성해주세요" height={100} />
         <ItemDiv>
           <h4>포메이션을 알려주세요</h4>
           <Formation>
@@ -107,15 +93,20 @@ const GameStrategy: React.FC = () => {
               <br />
               새로 만들기
             </FormationButton>
-            <FormationButton>
-              기존 포메이션
-              <br />
-              불러오기
-            </FormationButton>
+            <FormationButton>기존 포메이션<br />불러오기</FormationButton>
           </Formation>
-          <img src="/formation.png" />
+          <FormationImageContainer>
+            <FormationImage src="/formation.png" alt="Formation Field" />
+            {formationCircles.map((circle) => (
+              <FixedCircle key={circle.id} style={{ left: `${circle.x}px`, top: `${circle.y}px`, backgroundColor: circle.color }}>
+                {circle.detail_position}
+                <br />
+                {circle.name}
+              </FixedCircle>
+            ))}
+          </FormationImageContainer>
           {showFormationModal && (
-            <FormationModal onClose={() => setShowFormationModal(false)} />
+            <FormationModal onClose={() => setShowFormationModal(false)} onSave={handleFormationSave} />
           )}
         </ItemDiv>
         <MainButton>전략 게시하기</MainButton>
@@ -126,6 +117,7 @@ const GameStrategy: React.FC = () => {
 
 export default GameStrategy;
 
+// Styled Components
 const Container = styled.div`
   display: flex;
   flex-direction: column;
@@ -141,11 +133,8 @@ const StrategyButton = styled.button`
   margin-bottom: 20px;
   cursor: pointer;
   width: 90%;
-
-  &:first-child {
-    margin-right: 10px;
-  }
 `;
+
 const FormationButton = styled.button`
   background-color: white;
   color: var(--color-dark2);
@@ -155,10 +144,6 @@ const FormationButton = styled.button`
   margin-bottom: 20px;
   cursor: pointer;
   width: 90%;
-
-  &:first-child {
-    margin-right: 10px;
-  }
 `;
 
 const ItemDiv = styled.div`
@@ -182,4 +167,31 @@ const Formation = styled.div`
   display: flex;
   width: 100%;
   margin-top: 10px;
+`;
+
+const FormationImageContainer = styled.div`
+  position: relative;
+  width: 100%;
+  height: auto;
+  display: inline-block;
+  border: 1px solid #ddd;
+  margin-bottom: 20px;
+`;
+
+const FormationImage = styled.img`
+  width: 100%;
+`;
+
+const FixedCircle = styled.div`
+  position: absolute;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: white;
+  font-size: 12px;
+  text-align: center;
+  cursor: default; /* No drag */
 `;

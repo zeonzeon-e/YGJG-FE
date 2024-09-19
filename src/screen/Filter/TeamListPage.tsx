@@ -5,23 +5,22 @@ import FilterBar from "../../components/Filter/FilterBar";
 import HorizontalLine from "../../components/Styled/HorizontalLine";
 import Header2 from "../../components/Header/Header2/Header2";
 
-// [
-//     {
-//       "id": 1,
-//       "name": "이지현",
-//       "position": "공격수",
-//       "detail_position": "ST",
-//       "profileImageUrl": "https://example.com/player1.jpg"
-//     },
-//     {
-//       "id": 2,
-//       "name": "이지현",
-//       "position": "수비수",
-//       "detail_position": "WD",
-//       "profileImageUrl": "https://example.com/player2.jpg"
-//     },
-//     ...
-//   ]
+const player = [
+    {
+      "id": 1,
+      "name": "이지현",
+      "position": "공격수",
+      "detail_position": "ST",
+      "profileImageUrl": "https://example.com/player1.jpg"
+    },
+    {
+      "id": 2,
+      "name": "이지현",
+      "position": "수비수",
+      "detail_position": "WD",
+      "profileImageUrl": "https://example.com/player2.jpg"
+    },
+  ]
 
 interface Player {
   id: number;
@@ -48,7 +47,8 @@ const TeamListPage: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchPlayers(); // 컴포넌트가 마운트될 때 플레이어 데이터를 가져옴
+    //fetchPlayers(); // 컴포넌트가 마운트될 때 플레이어 데이터를 가져옴
+    setPlayers(player)
   }, []);
 
   const handleFilterChange = (value: string) => {

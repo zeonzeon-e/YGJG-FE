@@ -172,7 +172,7 @@ const PersonalInfo: React.FC<{ onNext: (data: any) => void }> = ({
         value={confirmPassword}
         onChange={(e) => setConfirmPassword(e.target.value)}
       />
-      <MainButton height={40} onClick={handleSubmit}>
+      <MainButton bgColor="#2c7a7b" onClick={handleSubmit}>
         다음
       </MainButton>
     </Container>
