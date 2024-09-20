@@ -48,12 +48,12 @@ const PhoneVerification: React.FC<{ onNext: () => void }> = ({ onNext }) => {
       </SubTitle>
       <Input
         type="text"
-        height={40}
+        height={50}
         placeholder="휴대폰 번호를 입력하세요"
         value={phone}
         onChange={(e) => setPhone(e.target.value)}
       />
-      <MainButton height={40} onClick={() => console.log("인증번호 발송")}>
+      <MainButton height={50} onClick={() => console.log("인증번호 발송")}>
         인증번호 받기
       </MainButton>
       <div style={{ margin: "90px" }}></div>
@@ -63,13 +63,13 @@ const PhoneVerification: React.FC<{ onNext: () => void }> = ({ onNext }) => {
         3분 이내로 인증번호를 입력해주세요
       </SubTitle>
       <Input
-        height={40}
+        height={50}
         type="text"
         placeholder="인증번호를 입력하세요"
         value={verificationCode}
         onChange={(e) => setVerificationCode(e.target.value)}
       />
-      <MainButton height={40} onClick={handleVerify}>
+      <MainButton height={50} onClick={handleVerify}>
         인증하기
       </MainButton>
     </Container>
@@ -153,26 +153,26 @@ const PersonalInfo: React.FC<{ onNext: (data: any) => void }> = ({
       <SubTitle>서비스 이용에 필요한 정보를 입력해주세요</SubTitle>
       <Input
         type="email"
-        height={40}
+        height={50}
         placeholder="이메일"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
       />
       <Input
         type="password"
-        height={40}
+        height={50}
         placeholder="비밀번호"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
       />
       <Input
         type="password"
-        height={40}
+        height={50}
         placeholder="비밀번호 확인"
         value={confirmPassword}
         onChange={(e) => setConfirmPassword(e.target.value)}
       />
-      <MainButton bgColor="#2c7a7b" onClick={handleSubmit}>
+      <MainButton height={50} onClick={handleSubmit}>
         다음
       </MainButton>
     </Container>
