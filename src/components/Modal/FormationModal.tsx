@@ -2,7 +2,6 @@ import React, { useState, useCallback, useEffect } from "react";
 import styled from "styled-components";
 import MiniButton from "../Button/MiniButton";
 import TeamList3 from "../TeamList/TeamList3";
-import TeamList2 from "../TeamList/TeamList2";
 
 interface FormationModalProps {
   onClose: () => void;
@@ -21,7 +20,10 @@ interface CirclePosition {
 const FormationModal: React.FC<FormationModalProps> = ({ onClose, onSave }) => {
   const [circles, setCircles] = useState<CirclePosition[]>([]);
   const [draggingCircle, setDraggingCircle] = useState<number | null>(null);
-  const [dragOffset, setDragOffset] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+  const [dragOffset, setDragOffset] = useState<{ x: number; y: number }>({
+    x: 0,
+    y: 0,
+  });
 
   useEffect(() => {
     const originalStyle = window.getComputedStyle(document.body).overflow;
@@ -47,8 +49,14 @@ const FormationModal: React.FC<FormationModalProps> = ({ onClose, onSave }) => {
     }
   };
 
-  const handlePlayerSelect = (player: { name: string; detail_position: string; position: string }) => {
-    const imageRect = document.getElementById("formation-image")?.getBoundingClientRect();
+  const handlePlayerSelect = (player: {
+    name: string;
+    detail_position: string;
+    position: string;
+  }) => {
+    const imageRect = document
+      .getElementById("formation-image")
+      ?.getBoundingClientRect();
     if (imageRect) {
       const newCircle: CirclePosition = {
         id: circles.length + 1,
@@ -56,13 +64,18 @@ const FormationModal: React.FC<FormationModalProps> = ({ onClose, onSave }) => {
         y: imageRect.height / 2 - 15,
         color: getColorByPosition(player.position),
         detail_position: player.detail_position,
-        name: player.name
+        name: player.name,
       };
       setCircles([...circles, newCircle]);
     }
   };
-  const handlePlayerSelect2 = (player: { name: string; detail_position: string; }) => {
-    const imageRect = document.getElementById("formation-image")?.getBoundingClientRect();
+  const handlePlayerSelect2 = (player: {
+    name: string;
+    detail_position: string;
+  }) => {
+    const imageRect = document
+      .getElementById("formation-image")
+      ?.getBoundingClientRect();
     if (imageRect) {
       const newCircle: CirclePosition = {
         id: circles.length + 1,
@@ -70,31 +83,50 @@ const FormationModal: React.FC<FormationModalProps> = ({ onClose, onSave }) => {
         y: imageRect.height / 2 - 15,
         color: getColorByPosition(player.detail_position),
         detail_position: player.detail_position,
-        name: player.name
+        name: player.name,
       };
       setCircles([...circles, newCircle]);
     }
   };
 
   const startDrag = useCallback(
-    (id: number, event: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => {
+    (
+      id: number,
+      event: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>
+    ) => {
       setDraggingCircle(id);
       const rect = event.currentTarget.getBoundingClientRect();
       setDragOffset({
-        x: "touches" in event ? event.touches[0].clientX - rect.left : event.clientX - rect.left,
-        y: "touches" in event ? event.touches[0].clientY - rect.top : event.clientY - rect.top,
+        x:
+          "touches" in event
+            ? event.touches[0].clientX - rect.left
+            : event.clientX - rect.left,
+        y:
+          "touches" in event
+            ? event.touches[0].clientY - rect.top
+            : event.clientY - rect.top,
       });
     },
     []
   );
 
   const onDrag = useCallback(
-    (event: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => {
+    (
+      event: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>
+    ) => {
       if (draggingCircle !== null) {
-        const imageRect = document.getElementById("formation-image")?.getBoundingClientRect();
+        const imageRect = document
+          .getElementById("formation-image")
+          ?.getBoundingClientRect();
         if (!imageRect) return;
-        let x = "touches" in event ? event.touches[0].clientX - imageRect.left - dragOffset.x : event.clientX - imageRect.left - dragOffset.x;
-        let y = "touches" in event ? event.touches[0].clientY - imageRect.top - dragOffset.y : event.clientY - imageRect.top - dragOffset.y;
+        let x =
+          "touches" in event
+            ? event.touches[0].clientX - imageRect.left - dragOffset.x
+            : event.clientX - imageRect.left - dragOffset.x;
+        let y =
+          "touches" in event
+            ? event.touches[0].clientY - imageRect.top - dragOffset.y
+            : event.clientY - imageRect.top - dragOffset.y;
         x = Math.max(0, Math.min(x, imageRect.width - 50));
         y = Math.max(0, Math.min(y, imageRect.height - 50));
         setCircles((prevCircles) =>
@@ -135,7 +167,11 @@ const FormationModal: React.FC<FormationModalProps> = ({ onClose, onSave }) => {
             {circles.map((circle) => (
               <DraggableCircle
                 key={circle.id}
-                style={{ left: `${circle.x}px`, top: `${circle.y}px`, backgroundColor: circle.color }}
+                style={{
+                  left: `${circle.x}px`,
+                  top: `${circle.y}px`,
+                  backgroundColor: circle.color,
+                }}
                 onMouseDown={(e) => startDrag(circle.id, e)}
                 onTouchStart={(e) => startDrag(circle.id, e)}
               >
@@ -147,7 +183,6 @@ const FormationModal: React.FC<FormationModalProps> = ({ onClose, onSave }) => {
           </FormationImageContainer>
 
           <TeamList3 onPlayerSelect={handlePlayerSelect} />
-          <TeamList2 onPlayerSelect={handlePlayerSelect2} />
 
           <SaveButton onClick={handleSave}>적용하기</SaveButton>
         </ModalContent>
