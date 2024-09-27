@@ -9,65 +9,79 @@ const playersData = [
     id: 1,
     name: "이지현",
     position: "공격수",
-    detail_position: "ST"
+    detail_position: "ST",
   },
   {
     id: 2,
     name: "이지현",
     position: "수비수",
-    detail_position: "WD"
+    detail_position: "WD",
   },
   {
     id: 3,
     name: "최민석",
     position: "수비수",
-    detail_position: "WD"
+    detail_position: "WD",
   },
   {
     id: 4,
     name: "김유성",
     position: "미드필더",
-    detail_position: "MF"
+    detail_position: "MF",
   },
   {
     id: 5,
     name: "김민기",
     position: "골키퍼",
-    detail_position: "GK"
-  }
+    detail_position: "GK",
+  },
 ];
 
 // 포지션별 우선순위 지정
 const positionPriority: { [key: string]: number } = {
-  "공격수": 1,
-  "수비수": 2,
-  "미드필더": 3,
-  "골키퍼": 4
+  공격수: 1,
+  수비수: 2,
+  미드필더: 3,
+  골키퍼: 4,
 };
 
 // 포지션별 색상 가져오기
 const getColorByPosition = (position: string): string => {
   switch (position) {
-    case "공격수": return "var(--color-sk)";
-    case "수비수": return "var(--color-dp)";
-    case "미드필더": return "var(--color-mf)";
-    case "골키퍼": return "var(--color-gk)";
-    default: return "#9E9E9E";
+    case "공격수":
+      return "var(--color-sk)";
+    case "수비수":
+      return "var(--color-dp)";
+    case "미드필더":
+      return "var(--color-mf)";
+    case "골키퍼":
+      return "var(--color-gk)";
+    default:
+      return "#9E9E9E";
   }
 };
 
 interface TeamList3Props {
-    onPlayerSelect: (player: { detail_position: string; name: string; position: string; }) => void; /** player: {detail_position: string; name: string; position: string;} **/
-  }
+  players: {
+    id: number;
+    name: string;
+    position: string;
+    detail_position: string;
+  }[];
+  onPlayerSelect: (player: {
+    detail_position: string;
+    name: string;
+    position: string;
+  }) => void;
+}
 
-const TeamList3: React.FC<TeamList3Props> = ({ onPlayerSelect }) => {
-  
+const TeamList3: React.FC<TeamList3Props> = ({ players, onPlayerSelect }) => {
   // 포지션에 따라 그룹화 및 정렬
-  const positionGroups = playersData.reduce((acc, player) => {
+  const positionGroups = players.reduce((acc, player) => {
     acc[player.position] = acc[player.position] || [];
     acc[player.position].push(player);
     return acc;
-  }, {} as { [key: string]: typeof playersData });
+  }, {} as { [key: string]: typeof players });
 
   // 포지션 정렬
   const sortedPositions = Object.keys(positionGroups).sort(
@@ -76,15 +90,28 @@ const TeamList3: React.FC<TeamList3Props> = ({ onPlayerSelect }) => {
 
   return (
     <PageContainer>
-      {sortedPositions.map(position => (
+      {sortedPositions.map((position) => (
         <React.Fragment key={position}>
           <PositionHeader color={getColorByPosition(position)}>
             {position}
           </PositionHeader>
           <PlayerListContainer>
-            {positionGroups[position].map(player => (
-              <PlayerItem key={player.id} onClick={() => onPlayerSelect({ detail_position: player.detail_position, name: player.name, position: player.position })}>
-                  <PlayerName>{player.detail_position}<br/>{player.name}</PlayerName>
+            {positionGroups[position].map((player) => (
+              <PlayerItem
+                key={player.id}
+                onClick={() =>
+                  onPlayerSelect({
+                    detail_position: player.detail_position,
+                    name: player.name,
+                    position: player.position,
+                  })
+                }
+              >
+                <PlayerName>
+                  {player.detail_position}
+                  <br />
+                  {player.name}
+                </PlayerName>
               </PlayerItem>
             ))}
           </PlayerListContainer>
@@ -97,12 +124,10 @@ const TeamList3: React.FC<TeamList3Props> = ({ onPlayerSelect }) => {
 export default TeamList3;
 
 // Styled Components
-const PageContainer = styled.div`
-`;
+const PageContainer = styled.div``;
 
 const PositionHeader = styled.div<{ color: string }>`
-  font-size: 18px;
-  font-weight: bold;
+  font-size: 16px;
   color: white;
   background-color: ${({ color }) => color};
   padding: 8px;
@@ -121,7 +146,7 @@ const PlayerListContainer = styled.div`
 
 const PlayerItem = styled.div`
   display: flex;
-  padding:10px;
+  padding: 10px;
   align-items: center;
   text-align: center;
   border-radius: 100px;
@@ -133,6 +158,5 @@ const PlayerItem = styled.div`
 
 const PlayerName = styled.div`
   font-size: 16px;
-  font-weight: bold;
   margin: auto;
 `;

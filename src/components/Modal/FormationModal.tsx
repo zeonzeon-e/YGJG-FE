@@ -2,12 +2,44 @@ import React, { useState, useCallback, useEffect } from "react";
 import styled from "styled-components";
 import MiniButton from "../Button/MiniButton";
 import TeamList3 from "../TeamList/TeamList3";
-
+const playersData = [
+  {
+    id: 1,
+    name: "이지현",
+    position: "공격수",
+    detail_position: "ST",
+  },
+  {
+    id: 2,
+    name: "이지현",
+    position: "수비수",
+    detail_position: "WD",
+  },
+  {
+    id: 3,
+    name: "최민석",
+    position: "수비수",
+    detail_position: "WD",
+  },
+  {
+    id: 4,
+    name: "김유성",
+    position: "미드필더",
+    detail_position: "MF",
+  },
+  {
+    id: 5,
+    name: "김민기",
+    position: "골키퍼",
+    detail_position: "GK",
+  },
+];
 interface FormationModalProps {
   onClose: () => void;
   onSave: (circles: CirclePosition[]) => void;
 }
 
+//포메이션 위치한 원
 interface CirclePosition {
   id: number;
   x: number;
@@ -24,7 +56,7 @@ const FormationModal: React.FC<FormationModalProps> = ({ onClose, onSave }) => {
     x: 0,
     y: 0,
   });
-
+  const [availablePlayers, setAvailablePlayers] = useState(playersData);
   useEffect(() => {
     const originalStyle = window.getComputedStyle(document.body).overflow;
     document.body.style.overflow = "hidden"; // Disable background scroll
@@ -67,28 +99,18 @@ const FormationModal: React.FC<FormationModalProps> = ({ onClose, onSave }) => {
         name: player.name,
       };
       setCircles([...circles, newCircle]);
+      // 선택된 선수를 availablePlayers에서 제거
+      setAvailablePlayers((prevPlayers) =>
+        prevPlayers.filter(
+          (p) =>
+            !(
+              p.name === player.name &&
+              p.detail_position === player.detail_position
+            )
+        )
+      );
     }
   };
-  const handlePlayerSelect2 = (player: {
-    name: string;
-    detail_position: string;
-  }) => {
-    const imageRect = document
-      .getElementById("formation-image")
-      ?.getBoundingClientRect();
-    if (imageRect) {
-      const newCircle: CirclePosition = {
-        id: circles.length + 1,
-        x: imageRect.width / 2 - 15,
-        y: imageRect.height / 2 - 15,
-        color: getColorByPosition(player.detail_position),
-        detail_position: player.detail_position,
-        name: player.name,
-      };
-      setCircles([...circles, newCircle]);
-    }
-  };
-
   const startDrag = useCallback(
     (
       id: number,
@@ -148,14 +170,19 @@ const FormationModal: React.FC<FormationModalProps> = ({ onClose, onSave }) => {
     onClose();
   };
 
+  const onReset = () => {
+    setCircles([]);
+    setAvailablePlayers(playersData);
+  };
   return (
     <ModalOverlay onClick={onClose}>
       <ScrollableTeamListContainer>
         <ModalContent onClick={(e) => e.stopPropagation()}>
           <CloseButton onClick={onClose}>X</CloseButton>
-          <h4>포메이션을 설정하세요</h4>
-          <MiniButton onClick={() => setCircles([])}>초기화</MiniButton>
-
+          <FomationTitle>
+            <h3>포메이션을 설정하세요</h3>
+            <MiniButton onClick={onReset}>초기화</MiniButton>
+          </FomationTitle>
           <FormationImageContainer
             id="formation-image"
             onMouseMove={onDrag}
@@ -182,7 +209,10 @@ const FormationModal: React.FC<FormationModalProps> = ({ onClose, onSave }) => {
             ))}
           </FormationImageContainer>
 
-          <TeamList3 onPlayerSelect={handlePlayerSelect} />
+          <TeamList3
+            players={availablePlayers}
+            onPlayerSelect={handlePlayerSelect}
+          />
 
           <SaveButton onClick={handleSave}>적용하기</SaveButton>
         </ModalContent>
@@ -211,7 +241,7 @@ const ModalContent = styled.div`
   background: white;
   padding: 20px;
   border-radius: 10px;
-  width: 90%;
+  width: 89%;
   max-width: 500px;
   position: relative;
   max-height: 90%;
@@ -227,13 +257,19 @@ const CloseButton = styled.button`
   font-size: 16px;
   cursor: pointer;
 `;
-
+const FomationTitle = styled.div`
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+  & > h3 {
+    padding-right: 10px;
+  }
+`;
 const FormationImageContainer = styled.div`
   position: relative;
   width: 100%;
   height: auto;
   display: inline-block;
-  border: 1px solid #ddd;
   margin-bottom: 20px;
   user-select: none;
 `;
@@ -260,8 +296,8 @@ const DraggableCircle = styled.div`
 const ScrollableTeamListContainer = styled.div`
   max-height: 90%;
   overflow-y: auto;
-  border: 1px solid #ddd;
   margin-bottom: 10px;
+  border-radius: 10px;
 `;
 
 const SaveButton = styled.button`
@@ -273,4 +309,6 @@ const SaveButton = styled.button`
   margin-top: 20px;
   width: 100%;
   cursor: pointer;
+  font-family: Pretendard-Medium;
+  font-size: 18px;
 `;
