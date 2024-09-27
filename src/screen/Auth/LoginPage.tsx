@@ -134,7 +134,7 @@ const LoginPage: React.FC = () => {
         <Links>
           <StyledLink to="/login/find-pw">비밀번호 찾기</StyledLink>
           <Divider>|</Divider>
-          <StyledLink to="/signup/1">회원가입</StyledLink>
+          <StyledLink to="/signup">회원가입</StyledLink>
         </Links>
       </Container>
     </div>

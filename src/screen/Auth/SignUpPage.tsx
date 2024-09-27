@@ -4,6 +4,7 @@ import CheckBox from "../../components/CheckBox/CheckBox";
 import Input from "../../components/Input/Input";
 import MainButton from "../../components/Button/MainButton";
 import ScrollProgress from "../../components/ScrollProgress/ScrollProgress";
+import { Link } from "react-router-dom";
 import { MdClose } from "react-icons/md";
 
 // Styled Components
@@ -17,7 +18,7 @@ const Title = styled.h2`
 
 const SubTitle = styled.p`
   color: black;
-  margin-bottom: 20px;
+  margin-top: 20px;
 `;
 
 const ButtonWrapper = styled.div`
@@ -184,7 +185,9 @@ const SignupComplete: React.FC = () => {
   return (
     <Container>
       <Title>회원가입이 완료되었습니다!</Title>
-      <MainButton>로그인 하러 가기</MainButton>
+      <Link to="/login">
+        <MainButton>로그인 하러 가기</MainButton>
+      </Link>
     </Container>
   );
 };
@@ -201,9 +204,11 @@ const SignupPage: React.FC = () => {
 
   return (
     <div style={{ padding: "20px" }}>
-      <div style={{ padding: "10px 0" }}>
-        <MdClose size={30} />
-      </div>
+      <Link to="/login">
+        <div style={{ padding: "10px 0" }}>
+          <MdClose size={30} />
+        </div>
+      </Link>
       <div style={{ padding: "5px" }}>
         <ScrollProgress targetWidth={step * 20} />
         <div style={{ padding: "10px" }} />
