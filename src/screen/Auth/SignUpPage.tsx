@@ -6,6 +6,7 @@ import MainButton from "../../components/Button/MainButton";
 import ScrollProgress from "../../components/ScrollProgress/ScrollProgress";
 import { Link } from "react-router-dom";
 import { MdClose } from "react-icons/md";
+import { FaCheck } from "react-icons/fa6";
 
 // Styled Components
 const Container = styled.div`
@@ -24,6 +25,18 @@ const SubTitle = styled.p`
 const ButtonWrapper = styled.div`
   display: flex;
   margin-top: 20px;
+`;
+
+const SubContainer = styled.div`
+  height: 70vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+`;
+
+const IconWrapper = styled.div`
+  margin: 50px 0;
 `;
 
 // Step 1: 휴대폰 인증 컴포넌트
@@ -183,12 +196,18 @@ const PersonalInfo: React.FC<{ onNext: (data: any) => void }> = ({
 // Step 5: 회원가입 완료 컴포넌트
 const SignupComplete: React.FC = () => {
   return (
-    <Container>
-      <Title>회원가입이 완료되었습니다!</Title>
+    <SubContainer>
+      <Title>회원가입이 완료됐어요!</Title>
+      <p>이제 원하는 팀에 가입할 수 있어요</p>
+      <IconWrapper>
+        <FaCheck size={70} color="#0e6244" />
+      </IconWrapper>
       <Link to="/login">
-        <MainButton>로그인 하러 가기</MainButton>
+        <MainButton width={240} height={50}>
+          로그인 하러 가기
+        </MainButton>
       </Link>
-    </Container>
+    </SubContainer>
   );
 };
 

@@ -83,7 +83,7 @@ const LoginPage: React.FC = () => {
   };
 
   return (
-    <div>
+    <div style={{ padding: "0 10px" }}>
       <Header1 text="요기조기" line={false} />
       <Container>
         <Title>로그인</Title>
