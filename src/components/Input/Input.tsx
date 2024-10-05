@@ -25,8 +25,7 @@ const StyledInput = styled.input<InputProps>`
   box-sizing: border-box;
   font-size: ${(props) => (props.fontSize ? `${props.fontSize}px` : "14px")};
   border-radius: 8px;
-  margin-top: 10px;
-  margin-bottom: 10px;
+  margin: 5px 0 5px 0;
   // box-shadow: 0.25px 0.25px 0.5px 0.1px;
 
   &:focus {

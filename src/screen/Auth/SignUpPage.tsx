@@ -7,6 +7,8 @@ import ScrollProgress from "../../components/ScrollProgress/ScrollProgress";
 import { Link } from "react-router-dom";
 import { MdClose } from "react-icons/md";
 import { FaCheck } from "react-icons/fa6";
+import RadioButton from "../../components/Button/RadioButton";
+import KakaoMapModal from "../../components/Modal/KakaoAddress";
 
 // Styled Components
 const Container = styled.div`
@@ -19,7 +21,14 @@ const Title = styled.h2`
 
 const SubTitle = styled.p`
   color: black;
-  margin-top: 20px;
+  margin-top: 8px;
+  font-size: 14px;
+`;
+
+const InputTitle = styled.p`
+  color: black;
+  margin-top: 10px;
+  margin-left: 3px;
 `;
 
 const ButtonWrapper = styled.div`
@@ -37,6 +46,12 @@ const SubContainer = styled.div`
 
 const IconWrapper = styled.div`
   margin: 50px 0;
+`;
+
+const SelectedAddress = styled.div`
+  margin: 10px 0;
+  font-size: 14px;
+  color: #333;
 `;
 
 // Step 1: 휴대폰 인증 컴포넌트
@@ -145,47 +160,128 @@ const TermsAgreement: React.FC<{ onNext: () => void }> = ({ onNext }) => {
   );
 };
 
-// Step 3: 개인정보 입력 컴포넌트
+// Step 3: 개인정보 입력
 const PersonalInfo: React.FC<{ onNext: (data: any) => void }> = ({
   onNext,
 }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [birth, setBirth] = useState("");
+  const [gender, setGender] = useState<string | null>(null);
+  const [showMapModal, setShowMapModal] = useState(false);
+  const [selectedAddress, setSelectedAddress] = useState<string>("");
 
   const handleSubmit = () => {
     if (password === confirmPassword) {
-      onNext({ email, password });
+      onNext({ email, password, gender });
     } else {
       alert("비밀번호가 일치하지 않습니다.");
     }
+  };
+
+  const handleAddressSelect = (address: string) => {
+    setSelectedAddress(address);
   };
 
   return (
     <Container>
       <Title>개인정보 입력</Title>
       <SubTitle>서비스 이용에 필요한 정보를 입력해주세요</SubTitle>
+      <InputTitle>이메일</InputTitle>
       <Input
         type="email"
-        height={50}
+        height={45}
         placeholder="이메일"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
       />
+      <InputTitle>비밀번호</InputTitle>
       <Input
         type="password"
-        height={50}
+        height={45}
         placeholder="비밀번호"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
       />
+      <InputTitle>비밀번호 확인</InputTitle>
       <Input
         type="password"
-        height={50}
+        height={45}
         placeholder="비밀번호 확인"
         value={confirmPassword}
         onChange={(e) => setConfirmPassword(e.target.value)}
       />
+      <InputTitle>생년월일 (6자리)</InputTitle>
+      <Input
+        type="text"
+        height={45}
+        placeholder="000000"
+        value={birth}
+        onChange={(e) => setBirth(e.target.value)}
+      />
+      <InputTitle>성별</InputTitle>
+      <RadioButton
+        items={["남성", "여성"]}
+        onChange={(value) => setGender(value)} // 선택된 성별 값을 설정
+      />
+      <InputTitle>주소</InputTitle>
+      <MainButton
+        width={100}
+        height={40}
+        fontSize={15}
+        onClick={() => setShowMapModal(true)}
+      >
+        주소 찾기
+      </MainButton>
+      <SelectedAddress>{selectedAddress}</SelectedAddress>
+      {showMapModal && (
+        <KakaoMapModal
+          onClose={() => setShowMapModal(false)}
+          onAddressSelect={handleAddressSelect}
+        />
+      )}
+      <div style={{ margin: "20px" }}></div>
+      <MainButton height={50} onClick={handleSubmit}>
+        다음
+      </MainButton>
+    </Container>
+  );
+};
+
+// Step 4: 추가정보 입력
+const SubPersonalInfo: React.FC<{ onNext: (data: any) => void }> = ({
+  onNext,
+}) => {
+  const [experience, setExperience] = useState<string | null>(null);
+  const [former, setFormer] = useState<string | null>(null);
+  const [level, setLever] = useState<string | null>(null);
+
+  const handleSubmit = () => {
+    onNext({ experience, former, level });
+  };
+
+  return (
+    <Container>
+      <Title>추가정보 입력</Title>
+      <SubTitle>서비스 이용에 필요한 추가 정보를 입력해주세요</SubTitle>
+      <InputTitle>선수 경험</InputTitle>
+      <RadioButton
+        items={["있다", "없다"]}
+        onChange={(value) => setExperience(value)}
+      />
+      <InputTitle>선수 경험</InputTitle>
+      <RadioButton
+        items={["초등학교 선출", "중학교 선출", "고등학교 선출"]}
+        onChange={(value) => setFormer(value)}
+      />
+      <InputTitle>선수 경험</InputTitle>
+      <RadioButton
+        items={["상", "중", "하"]}
+        onChange={(value) => setLever(value)}
+      />
+
+      <div style={{ margin: "20px" }}></div>
       <MainButton height={50} onClick={handleSubmit}>
         다음
       </MainButton>
@@ -234,7 +330,7 @@ const SignupPage: React.FC = () => {
         {step === 1 && <PhoneVerification onNext={handleNextStep} />}
         {step === 2 && <TermsAgreement onNext={handleNextStep} />}
         {step === 3 && <PersonalInfo onNext={handleNextStep} />}
-        {step === 4 && <PhoneVerification onNext={handleNextStep} />}
+        {step === 4 && <SubPersonalInfo onNext={handleNextStep} />}
         {step === 5 && <SignupComplete />}
       </div>
     </div>

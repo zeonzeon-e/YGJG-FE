@@ -42,7 +42,7 @@ const StyledButton = styled.button<MainButtonProps>`
       opacity: 0.6; // 비활성화된 상태의 불투명도
     `};
 
-  margin: 8px 0px 8px 0px;
+  margin: 5px 0px 5px 0px;
 `;
 
 /**
