@@ -28,7 +28,9 @@ const GameStrategy: React.FC = () => {
   const [showMapModal, setShowMapModal] = useState(false);
   const [selectedAddress, setSelectedAddress] = useState<string>("");
   const [showFormationModal, setShowFormationModal] = useState(false);
-  const [formationCircles, setFormationCircles] = useState<CirclePosition[]>([]);
+  const [formationCircles, setFormationCircles] = useState<CirclePosition[]>(
+    []
+  );
 
   const handleAddressSelect = (address: string) => {
     setSelectedAddress(address);
@@ -47,7 +49,9 @@ const GameStrategy: React.FC = () => {
           <h4>경기 날짜와 시간을 선택해주세요</h4>
           <PickerButton>
             <StrategyButton onClick={() => setShowDatePicker(true)}>
-              {selectedDate ? format(selectedDate, "MM월 dd일 EEEE", { locale: ko }) : "날짜를 선택하세요"}
+              {selectedDate
+                ? format(selectedDate, "MM월 dd일 EEEE", { locale: ko })
+                : "날짜를 선택하세요"}
             </StrategyButton>
 
             <StrategyButton onClick={() => setShowTimePicker(true)}>
@@ -73,18 +77,34 @@ const GameStrategy: React.FC = () => {
             onClose={() => setShowTimePicker(false)}
           />
         )}
-        <Input type="text" placeholder="상대팀명을 입력해주세요" title="상대팀명을 입력해주세요" />
+        <Input
+          type="text"
+          placeholder="상대팀명을 입력해주세요"
+          title="상대팀명을 입력해주세요"
+        />
         <ItemDiv>
           <h4>경기장을 선택해주세요</h4>
-          <MainButton width={100} height={40} onClick={() => setShowMapModal(true)}>
+          <MainButton
+            width={100}
+            height={40}
+            onClick={() => setShowMapModal(true)}
+          >
             주소 찾기
           </MainButton>
           <SelectedAddress>{selectedAddress}</SelectedAddress>
           {showMapModal && (
-            <KakaoMapModal onClose={() => setShowMapModal(false)} onAddressSelect={handleAddressSelect} />
+            <KakaoMapModal
+              onClose={() => setShowMapModal(false)}
+              onAddressSelect={handleAddressSelect}
+            />
           )}
         </ItemDiv>
-        <Input type="text" placeholder="경기전술을 작성해주세요" title="경기전술을 작성해주세요" height={100} />
+        <Input
+          type="text"
+          placeholder="경기전술을 작성해주세요"
+          title="경기전술을 작성해주세요"
+          height={100}
+        />
         <ItemDiv>
           <h4>포메이션을 알려주세요</h4>
           <Formation>
@@ -93,12 +113,23 @@ const GameStrategy: React.FC = () => {
               <br />
               새로 만들기
             </FormationButton>
-            <FormationButton>기존 포메이션<br />불러오기</FormationButton>
+            <FormationButton>
+              기존 포메이션
+              <br />
+              불러오기
+            </FormationButton>
           </Formation>
           <FormationImageContainer>
             <FormationImage src="/formation.png" alt="Formation Field" />
             {formationCircles.map((circle) => (
-              <FixedCircle key={circle.id} style={{ left: `${circle.x}px`, top: `${circle.y}px`, backgroundColor: circle.color }}>
+              <FixedCircle
+                key={circle.id}
+                style={{
+                  left: `${circle.x}px`,
+                  top: `${circle.y}px`,
+                  backgroundColor: circle.color,
+                }}
+              >
                 {circle.detail_position}
                 <br />
                 {circle.name}
@@ -106,7 +137,10 @@ const GameStrategy: React.FC = () => {
             ))}
           </FormationImageContainer>
           {showFormationModal && (
-            <FormationModal onClose={() => setShowFormationModal(false)} onSave={handleFormationSave} />
+            <FormationModal
+              onClose={() => setShowFormationModal(false)}
+              onSave={handleFormationSave}
+            />
           )}
         </ItemDiv>
         <MainButton>전략 게시하기</MainButton>
@@ -160,7 +194,7 @@ const PickerButton = styled.div`
 const SelectedAddress = styled.div`
   margin: 10px 0;
   font-size: 14px;
-  color: #333;
+  color: var(--color-dark1);
 `;
 
 const Formation = styled.div`
