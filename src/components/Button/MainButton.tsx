@@ -90,6 +90,7 @@ const MainButton: React.FC<MainButtonProps> = ({
 
   return (
     <StyledButton
+      className="shadow-df"
       bgColor={bgColor}
       textColor={textColor}
       height={height}

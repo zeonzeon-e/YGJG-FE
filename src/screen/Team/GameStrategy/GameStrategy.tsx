@@ -8,6 +8,7 @@ import CalendarModal from "../../../components/Modal/CalendarModal";
 import TimePickerModal from "../../../components/Modal/TimePickerModal";
 import { ko } from "date-fns/locale";
 import Input from "../../../components/Input/Input";
+import Input2 from "../../../components/Input/Input2";
 import KakaoMapModal from "../../../components/Modal/KakaoAddress";
 import FormationModal from "../../../components/Modal/FormationModal";
 
@@ -48,13 +49,19 @@ const GameStrategy: React.FC = () => {
         <ItemDiv>
           <h4>경기 날짜와 시간을 선택해주세요</h4>
           <PickerButton>
-            <StrategyButton onClick={() => setShowDatePicker(true)}>
+            <StrategyButton
+              className="shadow-df"
+              onClick={() => setShowDatePicker(true)}
+            >
               {selectedDate
                 ? format(selectedDate, "MM월 dd일 EEEE", { locale: ko })
                 : "날짜를 선택하세요"}
             </StrategyButton>
 
-            <StrategyButton onClick={() => setShowTimePicker(true)}>
+            <StrategyButton
+              className="shadow-df"
+              onClick={() => setShowTimePicker(true)}
+            >
               {selectedTime || "시간을 선택하세요"}
             </StrategyButton>
           </PickerButton>
@@ -84,20 +91,29 @@ const GameStrategy: React.FC = () => {
         />
         <ItemDiv>
           <h4>경기장을 선택해주세요</h4>
-          <MainButton
-            width={100}
-            height={40}
-            onClick={() => setShowMapModal(true)}
-          >
-            주소 찾기
-          </MainButton>
-          <SelectedAddress>{selectedAddress}</SelectedAddress>
-          {showMapModal && (
-            <KakaoMapModal
-              onClose={() => setShowMapModal(false)}
-              onAddressSelect={handleAddressSelect}
-            />
-          )}
+          <AddressDiv value={selectedAddress}>
+            <Input2 type="string" value={selectedAddress}></Input2>
+            {selectedAddress && (
+              <Input
+                type="string"
+                placeholder="상세주소를 입력해주세요(선택)"
+              ></Input>
+            )}
+
+            <MainButton
+              width={100}
+              height={35}
+              onClick={() => setShowMapModal(true)}
+            >
+              주소 찾기
+            </MainButton>
+            {showMapModal && (
+              <KakaoMapModal
+                onClose={() => setShowMapModal(false)}
+                onAddressSelect={handleAddressSelect}
+              />
+            )}
+          </AddressDiv>
         </ItemDiv>
         <Input
           type="text"
@@ -108,12 +124,15 @@ const GameStrategy: React.FC = () => {
         <ItemDiv>
           <h4>포메이션을 알려주세요</h4>
           <Formation>
-            <FormationButton onClick={() => setShowFormationModal(true)}>
+            <FormationButton
+              className="shadow-df"
+              onClick={() => setShowFormationModal(true)}
+            >
               포메이션
               <br />
               새로 만들기
             </FormationButton>
-            <FormationButton>
+            <FormationButton className="shadow-df">
               기존 포메이션
               <br />
               불러오기
@@ -183,6 +202,7 @@ const FormationButton = styled.button`
 const ItemDiv = styled.div`
   display: flex;
   flex-direction: column;
+  margin-top: 10px;
 `;
 
 const PickerButton = styled.div`
@@ -228,4 +248,10 @@ const FixedCircle = styled.div`
   font-size: 12px;
   text-align: center;
   cursor: default; /* No drag */
+`;
+
+const AddressDiv = styled.div<{ value?: string }>`
+  width: 100%;
+  ${(props) => (props.value ? "" : "display: flex;")}
+  align-items: center;
 `;

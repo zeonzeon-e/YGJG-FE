@@ -72,13 +72,11 @@ html {
 
 /*border default*/
 .border-df {
-  border: 1px solid var(--color-dark2);
-  opacity: 30%;
+  border: 1px solid var(--color-border);
 }
 /*shadow default*/
 .shadow-df {
-  box-shadow: 0 0 0 2px var(--color-dark2);
-  opacity: 10%;
+  box-shadow: 0 1.5px 1.5px 0 var(--color-shabow);
 }
 
 html,
@@ -267,6 +265,8 @@ input:focus {
   --color-light2: #ededed;
   --color-dark1: #b3b3b3;
   --color-dark2: #333333;
+  --color-border: rgba(51, 51, 51, 0.3);
+  --color-shabow: rgba(51, 51, 51, 0.1);
 
   /* 공지 빨강 */
   --color-error: #ff383b;

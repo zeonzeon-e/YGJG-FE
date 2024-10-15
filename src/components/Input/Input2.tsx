@@ -3,6 +3,7 @@ import { realpath } from "fs";
 import React, { forwardRef } from "react";
 import styled from "styled-components";
 
+//입력 안되는 input 창
 // props 타입 정의
 interface InputProps {
   bgColor?: string;
@@ -20,18 +21,20 @@ interface InputProps {
 
 // StyledInput 컴포넌트 정의
 const StyledInput = styled.input<InputProps>`
-  background-color: ${(props) => props.bgColor || "var(--color-light1)"};
-  height: ${(props) => (props.height ? `${props.height}px` : "20px")};
+  background-color: ${(props) => props.bgColor || "var(--color-light2)"};
+  height: ${(props) => (props.height ? `${props.height}px` : "100%")};
   width: ${(props) => (props.width ? `${props.width}px` : "100%")};
   padding: ${(props) => (props.padding ? `${props.padding}px` : "15px")};
   box-sizing: border-box;
   font-size: ${(props) => (props.fontSize ? `${props.fontSize}px` : "14px")};
   border-radius: 8px;
   margin: 5px 0 5px 0;
+  white-space: pre-wrap;
+  word-break: break-all;
 
   &:focus {
     outline: 0px;
-    border: 1px solid var(--color-main);
+    border: 1px solid var(--color-border);
   }
 `;
 
@@ -62,6 +65,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
       <div>
         {title && <h4>{title}</h4>}
         <StyledInput
+          readOnly
           className="border-df shadow-df"
           ref={ref}
           bgColor={bgColor}
