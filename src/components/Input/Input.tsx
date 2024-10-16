@@ -15,6 +15,7 @@ interface InputProps {
   padding?: number;
   value?: string;
   maxLength?: number; // 추가: maxLength prop
+  border?: string;
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
@@ -28,7 +29,7 @@ const StyledInput = styled.input<InputProps>`
   font-size: ${(props) => (props.fontSize ? `${props.fontSize}px` : "14px")};
   border-radius: 8px;
   margin: 5px 0 5px 0;
-
+  border: ${(props) => props.border || "1px solid var(--color-border)"};
   &:focus {
     outline: 0px;
     border: 1px solid var(--color-main);
@@ -55,6 +56,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
       padding,
       width,
       maxLength,
+      border,
     },
     ref
   ) => {
@@ -74,6 +76,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           padding={padding}
           width={width}
           maxLength={maxLength}
+          border={border}
         />
       </div>
     );
