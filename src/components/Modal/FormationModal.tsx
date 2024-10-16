@@ -206,7 +206,7 @@ const FormationModal: React.FC<FormationModalProps> = ({ onClose, onSave }) => {
             <h3>포메이션을 설정하세요</h3>
             <MiniButton onClick={onReset}>초기화</MiniButton>
           </FomationTitle>
-          
+
           <FormationImageContainer
             id="formation-image"
             onMouseMove={onDrag}
@@ -238,19 +238,34 @@ const FormationModal: React.FC<FormationModalProps> = ({ onClose, onSave }) => {
             onPlayerSelect={handlePlayerSelect}
           />
           <ColorSelectionContainer>
-            <CircleButton color="red"  onClick={() => handleColorCircleAdd("red")}>
+            <CircleButton
+              color="red"
+              onClick={() => handleColorCircleAdd("red")}
+            >
               <ColorCircle color="red" />
             </CircleButton>
-            <CircleButton color="blue" onClick={() => handleColorCircleAdd("blue")}>
+            <CircleButton
+              color="blue"
+              onClick={() => handleColorCircleAdd("blue")}
+            >
               <ColorCircle color="blue" />
             </CircleButton>
-            <CircleButton color="green" onClick={() => handleColorCircleAdd("green")}>
+            <CircleButton
+              color="green"
+              onClick={() => handleColorCircleAdd("green")}
+            >
               <ColorCircle color="green" />
             </CircleButton>
-            <CircleButton color="yellow" onClick={() => handleColorCircleAdd("yellow")}>
+            <CircleButton
+              color="yellow"
+              onClick={() => handleColorCircleAdd("yellow")}
+            >
               <ColorCircle color="yellow" />
             </CircleButton>
-            <CircleButton color="gray" onClick={() => handleColorCircleAdd("gray")}>
+            <CircleButton
+              color="gray"
+              onClick={() => handleColorCircleAdd("gray")}
+            >
               <ColorCircle color="gray" />
             </CircleButton>
           </ColorSelectionContainer>
@@ -368,8 +383,8 @@ const ColorCircle = styled.div<{ color: string }>`
   background-color: ${(props) => props.color};
 `;
 
-const CircleButton = styled.div<{color:string}>`
-    display: flex;
+const CircleButton = styled.div<{ color: string }>`
+  display: flex;
   padding: 10px;
   align-items: center;
   text-align: center;
@@ -379,4 +394,4 @@ const CircleButton = styled.div<{color:string}>`
   height: 25px;
   margin: 10px;
   border: 1px solid var(--color-dark2);
-`
+`;

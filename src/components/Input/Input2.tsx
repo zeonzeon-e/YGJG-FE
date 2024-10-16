@@ -15,22 +15,22 @@ interface InputProps {
   title?: string;
   padding?: number;
   value?: string;
-  maxLength?: number; // 추가: maxLength prop
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
 // StyledInput 컴포넌트 정의
-const StyledInput = styled.input<InputProps>`
+const StyledInput = styled.div<InputProps>`
   background-color: ${(props) => props.bgColor || "var(--color-light2)"};
   height: ${(props) => (props.height ? `${props.height}px` : "100%")};
   width: ${(props) => (props.width ? `${props.width}px` : "100%")};
-  padding: ${(props) => (props.padding ? `${props.padding}px` : "15px")};
+  padding: ${(props) => (props.padding ? `${props.padding}px` : "10px")};
   box-sizing: border-box;
   font-size: ${(props) => (props.fontSize ? `${props.fontSize}px` : "14px")};
   border-radius: 8px;
   margin: 5px 0 5px 0;
   white-space: pre-wrap;
   word-break: break-all;
+  min-width: 200px;
 
   &:focus {
     outline: 0px;
@@ -57,7 +57,6 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
       onChange,
       padding,
       width,
-      maxLength,
     },
     ref
   ) => {
@@ -65,7 +64,6 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
       <div>
         {title && <h4>{title}</h4>}
         <StyledInput
-          readOnly
           className="border-df shadow-df"
           ref={ref}
           bgColor={bgColor}
@@ -73,12 +71,12 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           type={type}
           placeholder={placeholder}
           fontSize={fontSize}
-          value={value}
           onChange={onChange}
           padding={padding}
           width={width}
-          maxLength={maxLength}
-        />
+        >
+          {value}
+        </StyledInput>
       </div>
     );
   }

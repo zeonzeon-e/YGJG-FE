@@ -11,6 +11,7 @@ import Input from "../../../components/Input/Input";
 import Input2 from "../../../components/Input/Input2";
 import KakaoMapModal from "../../../components/Modal/KakaoAddress";
 import FormationModal from "../../../components/Modal/FormationModal";
+import FormationListModal from "../../../components/Modal/FormationListModal";
 
 interface CirclePosition {
   id: number;
@@ -32,11 +33,14 @@ const GameStrategy: React.FC = () => {
   const [formationCircles, setFormationCircles] = useState<CirclePosition[]>(
     []
   );
+  const [showFormationModal2, setShowFormationModal2] = useState(false);
 
   const handleAddressSelect = (address: string) => {
     setSelectedAddress(address);
   };
-
+  const handleFormationSave2 = (circles: CirclePosition[]) => {
+    setFormationCircles(circles); // Save formation circles
+  };
   const handleFormationSave = (circles: CirclePosition[]) => {
     setFormationCircles(circles); // Save formation circles
   };
@@ -57,7 +61,6 @@ const GameStrategy: React.FC = () => {
                 ? format(selectedDate, "MM월 dd일 EEEE", { locale: ko })
                 : "날짜를 선택하세요"}
             </StrategyButton>
-
             <StrategyButton
               className="shadow-df"
               onClick={() => setShowTimePicker(true)}
@@ -92,7 +95,7 @@ const GameStrategy: React.FC = () => {
         <ItemDiv>
           <h4>경기장을 선택해주세요</h4>
           <AddressDiv value={selectedAddress}>
-            <Input2 type="string" value={selectedAddress}></Input2>
+            <Input2 type="string" height={35} value={selectedAddress}></Input2>
             {selectedAddress && (
               <Input
                 type="string"
@@ -132,7 +135,10 @@ const GameStrategy: React.FC = () => {
               <br />
               새로 만들기
             </FormationButton>
-            <FormationButton className="shadow-df">
+            <FormationButton
+              className="shadow-df"
+              onClick={() => setShowFormationModal2(true)}
+            >
               기존 포메이션
               <br />
               불러오기
@@ -155,10 +161,17 @@ const GameStrategy: React.FC = () => {
               </FixedCircle>
             ))}
           </FormationImageContainer>
+          {/* 포메이션 생성하는 모달 */}
           {showFormationModal && (
             <FormationModal
               onClose={() => setShowFormationModal(false)}
               onSave={handleFormationSave}
+            />
+          )}
+          {showFormationModal2 && (
+            <FormationListModal
+              onClose={() => setShowFormationModal2(false)}
+              onSave={handleFormationSave2}
             />
           )}
         </ItemDiv>
@@ -175,15 +188,16 @@ const Container = styled.div`
   display: flex;
   flex-direction: column;
   padding: 20px;
+  overflow-y: auto; /* 스크롤 가능하도록 설정 */
+  -webkit-overflow-scrolling: touch; /* 모바일에서 터치 스크롤 부드럽게 */
 `;
 
 const StrategyButton = styled.button`
-  background-color: var(--color-light2);
-  color: var(--color-main);
-  border: 1px solid var(--color-main);
+  background-color: var(--color-main);
+  color: var(--color-light1);
+  border: 1px solid var(--color-border);
   padding: 10px 20px;
   border-radius: 8px;
-  margin-bottom: 20px;
   cursor: pointer;
   width: 90%;
 `;
@@ -202,19 +216,14 @@ const FormationButton = styled.button`
 const ItemDiv = styled.div`
   display: flex;
   flex-direction: column;
-  margin-top: 10px;
+  margin-top: 20px;
+  margin-bottom: 20px;
 `;
 
 const PickerButton = styled.div`
   display: flex;
   width: 100%;
-  margin-top: 10px;
-`;
-
-const SelectedAddress = styled.div`
-  margin: 10px 0;
-  font-size: 14px;
-  color: var(--color-dark1);
+  margin-top: 5px;
 `;
 
 const Formation = styled.div`
