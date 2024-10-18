@@ -70,6 +70,15 @@ html {
   color: var(--color-normal1);
 }
 
+/*border default*/
+.border-df {
+  border: 1px solid var(--color-border);
+}
+/*shadow default*/
+.shadow-df {
+  box-shadow: 0 1.5px 1.5px 0 var(--color-shabow);
+}
+
 html,
 body,
 div,
@@ -181,6 +190,7 @@ section,
 body {
   line-height: 1;
   font-family: "Pretendard-Regular";
+  font-size: 17px;
 
   /*드래그 방지*/
   -webkit-user-select: none;
@@ -211,44 +221,59 @@ input:focus {
   border-color: black;
 }
 
-/*텍스트 크기 별*/
-h1 {
-  font-size: 24px;
-  font-family: Pretendard-Black;
+/*텍스트 크기 별 (아이폰 디폴트)*/
+.Large TItle {
+  font-size: 34px;
 }
-h2 {
+.Title1 {
+  font-size: 28px;
+}
+.Title2 {
+  font-size: 22px;
+}
+.Title3 {
   font-size: 20px;
-  font-family: Pretendard-Bold;
 }
-h3 {
-  font-size: 18px;
-  font-family: Pretendard-Medium;
+.Headline {
+  font-size: 17px;
+  font-family: "Pretendard-SemiBold";
 }
-h4 {
+.Body {
+  font-size: 17px;
+}
+.Callout {
   font-size: 16px;
-  font-family: "Pretendard-Regular";
 }
-h5 {
-  font-size: 14px;
-  font-family: "Pretendard-Regular";
+.Subhead {
+  font-size: 15px;
 }
-p {
-  font-family: "Pretendard-Light";
+.Footnote {
+  font-size: 13px;
+}
+.Caption1 {
   font-size: 12px;
 }
-
+.Caption2 {
+  font-size: 11px;
+}
 /* 추가 세팅 */
 :root {
   --vh: 100%;
 
   /*기본 흰~검 팔레트*/
-  --color-light1: #f2f2f2;
+  --color-light1: #f9f9f9;
   --color-light2: #ededed;
   --color-dark1: #b3b3b3;
   --color-dark2: #333333;
+  --color-border: rgba(51, 51, 51, 0.3);
+  --color-shabow: rgba(51, 51, 51, 0.1);
 
   /* 공지 빨강 */
-  --color-error: #ff3838;
+  --color-error: #ff383b;
+  --color-warning: #ffcc00;
+  --color-info: #0063f7;
+  --color-success: #06c270;
+  --color-gray: #aeaeb2;
 
   /**포지션 컬러**/
   --color-gk: #ff9500;
@@ -260,6 +285,7 @@ p {
   --color-subtle: #aaffe1;
   --color-sub: #1ceda4;
   --color-main: #0e6244;
+  --color-main-darker: #003925;
 }
 
 .normal {

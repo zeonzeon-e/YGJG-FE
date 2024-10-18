@@ -8,8 +8,10 @@ import CalendarModal from "../../../components/Modal/CalendarModal";
 import TimePickerModal from "../../../components/Modal/TimePickerModal";
 import { ko } from "date-fns/locale";
 import Input from "../../../components/Input/Input";
+import Input2 from "../../../components/Input/Input2";
 import KakaoMapModal from "../../../components/Modal/KakaoAddress";
 import FormationModal from "../../../components/Modal/FormationModal";
+import FormationListModal from "../../../components/Modal/FormationListModal";
 
 interface CirclePosition {
   id: number;
@@ -28,12 +30,17 @@ const GameStrategy: React.FC = () => {
   const [showMapModal, setShowMapModal] = useState(false);
   const [selectedAddress, setSelectedAddress] = useState<string>("");
   const [showFormationModal, setShowFormationModal] = useState(false);
-  const [formationCircles, setFormationCircles] = useState<CirclePosition[]>([]);
+  const [formationCircles, setFormationCircles] = useState<CirclePosition[]>(
+    []
+  );
+  const [showFormationModal2, setShowFormationModal2] = useState(false);
 
   const handleAddressSelect = (address: string) => {
     setSelectedAddress(address);
   };
-
+  const handleFormationSave2 = (circles: CirclePosition[]) => {
+    setFormationCircles(circles); // Save formation circles
+  };
   const handleFormationSave = (circles: CirclePosition[]) => {
     setFormationCircles(circles); // Save formation circles
   };
@@ -46,11 +53,18 @@ const GameStrategy: React.FC = () => {
         <ItemDiv>
           <h4>경기 날짜와 시간을 선택해주세요</h4>
           <PickerButton>
-            <StrategyButton onClick={() => setShowDatePicker(true)}>
-              {selectedDate ? format(selectedDate, "MM월 dd일 EEEE", { locale: ko }) : "날짜를 선택하세요"}
+            <StrategyButton
+              className="shadow-df"
+              onClick={() => setShowDatePicker(true)}
+            >
+              {selectedDate
+                ? format(selectedDate, "MM월 dd일 EEEE", { locale: ko })
+                : "날짜를 선택하세요"}
             </StrategyButton>
-
-            <StrategyButton onClick={() => setShowTimePicker(true)}>
+            <StrategyButton
+              className="shadow-df"
+              onClick={() => setShowTimePicker(true)}
+            >
               {selectedTime || "시간을 선택하세요"}
             </StrategyButton>
           </PickerButton>
@@ -73,40 +87,92 @@ const GameStrategy: React.FC = () => {
             onClose={() => setShowTimePicker(false)}
           />
         )}
-        <Input type="text" placeholder="상대팀명을 입력해주세요" title="상대팀명을 입력해주세요" />
+        <Input
+          type="text"
+          placeholder="상대팀명을 입력해주세요"
+          title="상대팀명을 입력해주세요"
+        />
         <ItemDiv>
           <h4>경기장을 선택해주세요</h4>
-          <MainButton width={100} height={40} onClick={() => setShowMapModal(true)}>
-            주소 찾기
-          </MainButton>
-          <SelectedAddress>{selectedAddress}</SelectedAddress>
-          {showMapModal && (
-            <KakaoMapModal onClose={() => setShowMapModal(false)} onAddressSelect={handleAddressSelect} />
-          )}
+          <AddressDiv value={selectedAddress}>
+            <Input2 type="string" height={35} value={selectedAddress}></Input2>
+            {selectedAddress && (
+              <Input
+                type="string"
+                placeholder="상세주소를 입력해주세요(선택)"
+              ></Input>
+            )}
+
+            <MainButton
+              width={100}
+              height={35}
+              onClick={() => setShowMapModal(true)}
+            >
+              주소 찾기
+            </MainButton>
+            {showMapModal && (
+              <KakaoMapModal
+                onClose={() => setShowMapModal(false)}
+                onAddressSelect={handleAddressSelect}
+              />
+            )}
+          </AddressDiv>
         </ItemDiv>
-        <Input type="text" placeholder="경기전술을 작성해주세요" title="경기전술을 작성해주세요" height={100} />
+        <Input
+          type="text"
+          placeholder="경기전술을 작성해주세요"
+          title="경기전술을 작성해주세요"
+          height={100}
+        />
         <ItemDiv>
           <h4>포메이션을 알려주세요</h4>
           <Formation>
-            <FormationButton onClick={() => setShowFormationModal(true)}>
+            <FormationButton
+              className="shadow-df"
+              onClick={() => setShowFormationModal(true)}
+            >
               포메이션
               <br />
               새로 만들기
             </FormationButton>
-            <FormationButton>기존 포메이션<br />불러오기</FormationButton>
+            <FormationButton
+              className="shadow-df"
+              onClick={() => setShowFormationModal2(true)}
+            >
+              기존 포메이션
+              <br />
+              불러오기
+            </FormationButton>
           </Formation>
           <FormationImageContainer>
             <FormationImage src="/formation.png" alt="Formation Field" />
             {formationCircles.map((circle) => (
-              <FixedCircle key={circle.id} style={{ left: `${circle.x}px`, top: `${circle.y}px`, backgroundColor: circle.color }}>
+              <FixedCircle
+                key={circle.id}
+                style={{
+                  left: `${circle.x}px`,
+                  top: `${circle.y}px`,
+                  backgroundColor: circle.color,
+                }}
+              >
                 {circle.detail_position}
                 <br />
                 {circle.name}
               </FixedCircle>
             ))}
           </FormationImageContainer>
+          {/* 포메이션 생성하는 모달 */}
           {showFormationModal && (
-            <FormationModal onClose={() => setShowFormationModal(false)} onSave={handleFormationSave} />
+            <FormationModal
+              onClose={() => setShowFormationModal(false)}
+              onSave={handleFormationSave}
+            />
+          )}
+          {showFormationModal2 && (
+            <FormationListModal
+              onClose={() => setShowFormationModal2(false)}
+              onSave={handleFormationSave2}
+            />
           )}
         </ItemDiv>
         <MainButton>전략 게시하기</MainButton>
@@ -122,15 +188,16 @@ const Container = styled.div`
   display: flex;
   flex-direction: column;
   padding: 20px;
+  overflow-y: auto; /* 스크롤 가능하도록 설정 */
+  -webkit-overflow-scrolling: touch; /* 모바일에서 터치 스크롤 부드럽게 */
 `;
 
 const StrategyButton = styled.button`
-  background-color: var(--color-light2);
-  color: var(--color-main);
-  border: 1px solid var(--color-main);
+  background-color: var(--color-main);
+  color: var(--color-light1);
+  border: 1px solid var(--color-border);
   padding: 10px 20px;
   border-radius: 8px;
-  margin-bottom: 20px;
   cursor: pointer;
   width: 90%;
 `;
@@ -149,18 +216,14 @@ const FormationButton = styled.button`
 const ItemDiv = styled.div`
   display: flex;
   flex-direction: column;
+  margin-top: 20px;
+  margin-bottom: 20px;
 `;
 
 const PickerButton = styled.div`
   display: flex;
   width: 100%;
-  margin-top: 10px;
-`;
-
-const SelectedAddress = styled.div`
-  margin: 10px 0;
-  font-size: 14px;
-  color: #333;
+  margin-top: 5px;
 `;
 
 const Formation = styled.div`
@@ -194,4 +257,10 @@ const FixedCircle = styled.div`
   font-size: 12px;
   text-align: center;
   cursor: default; /* No drag */
+`;
+
+const AddressDiv = styled.div<{ value?: string }>`
+  width: 100%;
+  ${(props) => (props.value ? "" : "display: flex;")}
+  align-items: center;
 `;

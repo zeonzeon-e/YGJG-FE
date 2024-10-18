@@ -2,6 +2,7 @@ import React, { useState, useCallback, useEffect } from "react";
 import styled from "styled-components";
 import MiniButton from "../Button/MiniButton";
 import TeamList3 from "../TeamList/TeamList3";
+
 const playersData = [
   {
     id: 1,
@@ -34,12 +35,13 @@ const playersData = [
     detail_position: "GK",
   },
 ];
+
 interface FormationModalProps {
   onClose: () => void;
   onSave: (circles: CirclePosition[]) => void;
 }
 
-//포메이션 위치한 원
+// 포메이션 위치한 원
 interface CirclePosition {
   id: number;
   x: number;
@@ -57,6 +59,7 @@ const FormationModal: React.FC<FormationModalProps> = ({ onClose, onSave }) => {
     y: 0,
   });
   const [availablePlayers, setAvailablePlayers] = useState(playersData);
+
   useEffect(() => {
     const originalStyle = window.getComputedStyle(document.body).overflow;
     document.body.style.overflow = "hidden"; // Disable background scroll
@@ -78,6 +81,24 @@ const FormationModal: React.FC<FormationModalProps> = ({ onClose, onSave }) => {
         return "var(--color-gk)";
       default:
         return "#9E9E9E";
+    }
+  };
+
+  // 선택된 색상의 원을 추가하는 함수
+  const handleColorCircleAdd = (color: string) => {
+    const imageRect = document
+      .getElementById("formation-image")
+      ?.getBoundingClientRect();
+    if (imageRect) {
+      const newCircle: CirclePosition = {
+        id: circles.length + 1,
+        x: imageRect.width / 2 - 15,
+        y: imageRect.height / 2 - 15,
+        color: color,
+        detail_position: "", // 색상 선택 시 별도의 포지션 대신 Custom으로 추가
+        name: "",
+      };
+      setCircles([...circles, newCircle]);
     }
   };
 
@@ -111,6 +132,7 @@ const FormationModal: React.FC<FormationModalProps> = ({ onClose, onSave }) => {
       );
     }
   };
+
   const startDrag = useCallback(
     (
       id: number,
@@ -174,6 +196,7 @@ const FormationModal: React.FC<FormationModalProps> = ({ onClose, onSave }) => {
     setCircles([]);
     setAvailablePlayers(playersData);
   };
+
   return (
     <ModalOverlay onClick={onClose}>
       <ScrollableTeamListContainer>
@@ -183,6 +206,7 @@ const FormationModal: React.FC<FormationModalProps> = ({ onClose, onSave }) => {
             <h3>포메이션을 설정하세요</h3>
             <MiniButton onClick={onReset}>초기화</MiniButton>
           </FomationTitle>
+
           <FormationImageContainer
             id="formation-image"
             onMouseMove={onDrag}
@@ -213,7 +237,38 @@ const FormationModal: React.FC<FormationModalProps> = ({ onClose, onSave }) => {
             players={availablePlayers}
             onPlayerSelect={handlePlayerSelect}
           />
-
+          <ColorSelectionContainer>
+            <CircleButton
+              color="red"
+              onClick={() => handleColorCircleAdd("red")}
+            >
+              <ColorCircle color="red" />
+            </CircleButton>
+            <CircleButton
+              color="blue"
+              onClick={() => handleColorCircleAdd("blue")}
+            >
+              <ColorCircle color="blue" />
+            </CircleButton>
+            <CircleButton
+              color="green"
+              onClick={() => handleColorCircleAdd("green")}
+            >
+              <ColorCircle color="green" />
+            </CircleButton>
+            <CircleButton
+              color="yellow"
+              onClick={() => handleColorCircleAdd("yellow")}
+            >
+              <ColorCircle color="yellow" />
+            </CircleButton>
+            <CircleButton
+              color="gray"
+              onClick={() => handleColorCircleAdd("gray")}
+            >
+              <ColorCircle color="gray" />
+            </CircleButton>
+          </ColorSelectionContainer>
           <SaveButton onClick={handleSave}>적용하기</SaveButton>
         </ModalContent>
       </ScrollableTeamListContainer>
@@ -257,6 +312,7 @@ const CloseButton = styled.button`
   font-size: 16px;
   cursor: pointer;
 `;
+
 const FomationTitle = styled.div`
   display: flex;
   align-items: center;
@@ -265,6 +321,7 @@ const FomationTitle = styled.div`
     padding-right: 10px;
   }
 `;
+
 const FormationImageContainer = styled.div`
   position: relative;
   width: 100%;
@@ -311,4 +368,30 @@ const SaveButton = styled.button`
   cursor: pointer;
   font-family: Pretendard-Medium;
   font-size: 18px;
+`;
+
+const ColorSelectionContainer = styled.div`
+  display: flex;
+  justify-content: space-around;
+  margin-bottom: 15px;
+`;
+
+const ColorCircle = styled.div<{ color: string }>`
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: ${(props) => props.color};
+`;
+
+const CircleButton = styled.div<{ color: string }>`
+  display: flex;
+  padding: 10px;
+  align-items: center;
+  text-align: center;
+  border-radius: 100px;
+  background-color: ${(props) => props.color};
+  width: 25px;
+  height: 25px;
+  margin: 10px;
+  border: 1px solid var(--color-dark2);
 `;
