@@ -1,3 +1,5 @@
+// src/pages/LoginPage/LoginPage.tsx
+
 import React, { useState } from "react";
 import styled from "styled-components";
 import { Link, useNavigate } from "react-router-dom";
@@ -7,79 +9,116 @@ import { RiKakaoTalkFill } from "react-icons/ri";
 import { FcGoogle } from "react-icons/fc";
 import axios, { AxiosResponse } from "axios";
 import Header1 from "../../components/Header/Header1/Header1";
+import { setAccessToken, setRefreshToken } from "../../utils/authUtils";
 
+/**
+ * 로그인 페이지 컴포넌트
+ * @returns {JSX.Element} 로그인 페이지
+ */
 const LoginPage: React.FC = () => {
-  // 상태 값에 타입을 명시적으로 지정
+  // 상태 변수 설정
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const navigate = useNavigate();
 
-  // 카카오와 구글의 OAuth 엔드포인트 및 클라이언트 ID를 설정
-  const KAKAO_AUTH_URL = `https://kauth.kakao.com/oauth/authorize?response_type=code&client_id=YOUR_KAKAO_CLIENT_ID&redirect_uri=YOUR_REDIRECT_URI`;
-  const GOOGLE_AUTH_URL = `https://accounts.google.com/o/oauth2/v2/auth?response_type=code&client_id=YOUR_GOOGLE_CLIENT_ID&redirect_uri=YOUR_REDIRECT_URI&scope=email%20profile`;
+  // OAuth 엔드포인트 URL
+  const KAKAO_AUTH_URL = "/api/auth/kakao/get-url";
+  const GOOGLE_AUTH_URL = "/api/auth/google/get-url";
 
+  /**
+   * 비밀번호 표시/숨기기 토글 함수
+   * @returns {void}
+   */
   const togglePasswordVisibility = (): void => {
     setShowPassword(!showPassword);
   };
 
+  /**
+   * 이메일 입력값 초기화 함수
+   * @returns {void}
+   */
   const clearEmail = (): void => {
     setEmail("");
   };
 
+  /**
+   * 비밀번호 입력값 초기화 함수
+   * @returns {void}
+   */
   const clearPassword = (): void => {
     setPassword("");
   };
 
-  const goToMainPage = () => {
+  /**
+   * 메인 페이지로 이동하는 함수
+   * @returns {void}
+   */
+  const goToMainPage = (): void => {
     navigate("/");
   };
 
   /**
-   * 로그인 폼이 제출될 때 호출되는 함수
+   * 로그인 폼 제출 처리 함수
    * @param {React.FormEvent} e - 폼 제출 이벤트
+   * @returns {Promise<void>}
    */
   const handleSubmit = async (e: React.FormEvent): Promise<void> => {
-    e.preventDefault(); // 폼 제출 시 페이지 리로드 방지
+    e.preventDefault();
 
-    // 서버로 전송할 데이터 객체의 타입을 지정
     const loginData: { email: string; password: string } = {
       email: email,
       password: password,
     };
 
     try {
-      // 서버로 POST 요청 보내기 (예시로 JSONPlaceholder 사용)
-      const response: AxiosResponse<{ id: number }> = await axios.post(
-        "https://jsonplaceholder.typicode.com/posts",
+      const response: AxiosResponse = await axios.post(
+        "/api/sign/sign-in",
         loginData
       );
 
       if (response.status === 200 || response.status === 201) {
-        // 요청이 성공한 경우 처리 (예: 사용자 대시보드로 리디렉션 및 토큰 저장)
+        const { token, refreshToken } = response.data;
+        setAccessToken(token);
+        setRefreshToken(refreshToken);
         console.log("로그인 성공", response.data);
+        goToMainPage();
       } else {
-        // 요청이 실패한 경우 처리 (예: 오류 메시지 표시)
         console.error("로그인 실패");
       }
     } catch (error) {
-      // 네트워크 오류 등의 예외 처리
       console.error("서버와의 통신 오류:", error);
     }
   };
 
   /**
-   * 카카오 로그인 버튼 클릭 시 OAuth 인증 페이지로 이동
+   * 카카오 로그인 처리 함수
+   * @returns {Promise<void>}
    */
-  const handleKakaoLogin = () => {
-    window.location.href = KAKAO_AUTH_URL;
+  const handleKakaoLogin = async (): Promise<void> => {
+    try {
+      const response: AxiosResponse<{ kakaoUrl: string }> = await axios.get(
+        KAKAO_AUTH_URL
+      );
+      window.location.href = response.data.kakaoUrl;
+    } catch (error) {
+      console.error("카카오 로그인 URL 가져오기 실패:", error);
+    }
   };
 
   /**
-   * 구글 로그인 버튼 클릭 시 OAuth 인증 페이지로 이동
+   * 구글 로그인 처리 함수
+   * @returns {Promise<void>}
    */
-  const handleGoogleLogin = () => {
-    window.location.href = GOOGLE_AUTH_URL;
+  const handleGoogleLogin = async (): Promise<void> => {
+    try {
+      const response: AxiosResponse<{ googleUrl: string }> = await axios.get(
+        GOOGLE_AUTH_URL
+      );
+      window.location.href = response.data.googleUrl;
+    } catch (error) {
+      console.error("구글 로그인 URL 가져오기 실패:", error);
+    }
   };
 
   return (
@@ -87,13 +126,12 @@ const LoginPage: React.FC = () => {
       <Header1 text="요기조기" line={false} />
       <Container>
         <Title>로그인</Title>
-        {/* 로그인 폼 */}
         <Form onSubmit={handleSubmit}>
           <InputWrapper>
             <StyledInput
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="휴대폰 번호 또는 이메일"
+              placeholder="이메일"
               required
             />
             {email && (
@@ -119,7 +157,7 @@ const LoginPage: React.FC = () => {
               {showPassword ? <FaEye /> : <FaEyeSlash />}
             </ShowPasswordIcon>
           </PasswordWrapper>
-          <StyledButton primary onClick={goToMainPage}>
+          <StyledButton primary type="submit">
             로그인
           </StyledButton>
         </Form>
@@ -143,6 +181,12 @@ const LoginPage: React.FC = () => {
 
 export default LoginPage;
 
+// 스타일 컴포넌트 정의
+
+/**
+ * 컨테이너 스타일 컴포넌트
+ * @type {StyledComponent}
+ */
 const Container = styled.div`
   display: flex;
   flex-direction: column;
@@ -151,10 +195,18 @@ const Container = styled.div`
   margin: auto;
 `;
 
+/**
+ * 폼 스타일 컴포넌트
+ * @type {StyledComponent}
+ */
 const Form = styled.form`
   width: 100%;
 `;
 
+/**
+ * 제목 스타일 컴포넌트
+ * @type {StyledComponent}
+ */
 const Title = styled.h2`
   font-size: 24px;
   font-weight: bold;
@@ -162,18 +214,30 @@ const Title = styled.h2`
   color: var(--color-dark2);
 `;
 
+/**
+ * 입력 래퍼 스타일 컴포넌트
+ * @type {StyledComponent}
+ */
 const InputWrapper = styled.div`
   position: relative;
   width: 100%;
   margin-bottom: 10px;
 `;
 
+/**
+ * 비밀번호 래퍼 스타일 컴포넌트
+ * @type {StyledComponent}
+ */
 const PasswordWrapper = styled.div`
   position: relative;
   width: 100%;
   margin-bottom: 50px;
 `;
 
+/**
+ * 입력 필드 스타일 컴포넌트
+ * @type {StyledComponent}
+ */
 const StyledInput = styled.input`
   width: 100%;
   padding: 15px;
@@ -189,6 +253,10 @@ const StyledInput = styled.input`
   }
 `;
 
+/**
+ * 비밀번호 표시 아이콘 스타일 컴포넌트
+ * @type {StyledComponent}
+ */
 const ShowPasswordIcon = styled.span`
   position: absolute;
   right: 15px;
@@ -199,6 +267,10 @@ const ShowPasswordIcon = styled.span`
   color: #777;
 `;
 
+/**
+ * 입력 필드 초기화 아이콘 스타일 컴포넌트
+ * @type {StyledComponent}
+ */
 const ClearIcon = styled.span`
   position: absolute;
   right: 15px;
@@ -209,10 +281,19 @@ const ClearIcon = styled.span`
   color: #bbb;
 `;
 
+/**
+ * 비밀번호 입력 필드 초기화 아이콘 스타일 컴포넌트
+ * @type {StyledComponent}
+ */
 const ClearIconPassword = styled(ClearIcon)`
-  right: 45px; // 비밀번호 보이기 아이콘의 위치를 고려하여 오른쪽으로 더 이동
+  right: 45px;
 `;
 
+/**
+ * 버튼 스타일 컴포넌트
+ * @param {object} props - 버튼 속성
+ * @returns {StyledComponent} 스타일된 버튼 컴포넌트
+ */
 const StyledButton = styled.button<{
   primary?: boolean;
   kakao?: boolean;
@@ -245,6 +326,10 @@ const StyledButton = styled.button<{
   `}
 `;
 
+/**
+ * 링크 래퍼 스타일 컴포넌트
+ * @type {StyledComponent}
+ */
 const Links = styled.div`
   display: flex;
   justify-content: center;
@@ -252,6 +337,10 @@ const Links = styled.div`
   margin-top: 20px;
 `;
 
+/**
+ * 스타일된 링크 컴포넌트
+ * @type {StyledComponent}
+ */
 const StyledLink = styled(Link)`
   font-size: 14px;
   color: #555;
@@ -263,6 +352,10 @@ const StyledLink = styled(Link)`
   }
 `;
 
+/**
+ * 구분자 스타일 컴포넌트
+ * @type {StyledComponent}
+ */
 const Divider = styled.span`
   margin: 0 10px;
   color: #ccc;
