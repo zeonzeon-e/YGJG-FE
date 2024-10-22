@@ -17,8 +17,7 @@ import TeamListPage from "./screen/Filter/TeamListPage";
 import FindPassWardEmailPage from "./screen/Auth/FindPassWardEmailPage";
 import SignUpPage from "./screen/Auth/SignUpPage";
 import IntroPage from "./screen/IntroPage";
-import InvitePage from "./screen/Invite/InvitePage";
-import InvitePassPage from "./screen/Invite/InvitePassPage";
+import { InvitePage, InvitePassPage } from "./screen/Invite/InvitePage";
 
 const GlobalStyle = createGlobalStyle`
   body, #root, .app-container {
