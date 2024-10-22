@@ -7,86 +7,120 @@ import MainButton from "../../components/Button/MainButton";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
-// 공통 레이아웃 컴포넌트
-const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  return (
-    <>
-      <GlobalStyles />
-      <Header2 text="초대코드" />
-      <Container>{children}</Container>
-    </>
-  );
-};
-
-// 초대 코드 입력 페이지 컴포넌트
-const InvitePageContent: React.FC = () => {
+// 컴포넌트들을 내보내기
+const InvitePage = () => {
   const navigate = useNavigate();
   const [inviteCode, setInviteCode] = useState(""); // 초대코드 입력 상태
   const [error, setError] = useState(""); // 에러 메시지 상태
   const validCodes = ["ABC123", "DEF456", "GHI789"];
+  const [state, setState] = useState(0); //0: 초대코드 조회 1: 팀 카드 확인
 
+  const [teamName, setTeamName] = useState(""); // 팀 이름 상태
+  const [teamLocation, setTeamLocation] = useState(""); // 팀 위치 상태
+  const [profileImageUrl, setProfileImageUrl] = useState(""); // 팀 프로필 이미지 상태
   const handleCheckCode = () => {
     if (validCodes.includes(inviteCode.toUpperCase())) {
-      navigate(`/invite-pass/${inviteCode}`); // 유효한 코드인 경우 다음 페이지로 이동
+      setState(1);
     } else {
       setError("일치하는 팀이 없어요");
     }
   };
 
+  // useEffect(() => {
+  //   const fetchTeamData = async () => {
+  //     try {
+  //       const response = await axios.get("/api/team-info", {
+  //         params: { inviteCode },
+  //       });
+  //       const { teamName, matchLocation, profileImageUrl } = response.data;
+  //       setTeamName(teamName);
+  //       setTeamLocation(matchLocation);
+  //       setProfileImageUrl(profileImageUrl);
+  //     } catch (error) {
+  //       console.error("팀 정보를 가져오는 중 오류 발생", error);
+  //     }
+  //   };
+
+  //   if (inviteCode) {
+  //     fetchTeamData();
+  //   }
+  // }, [inviteCode]);
+
   return (
     <>
-      <ContainerHeader>
-        <ContainerTitle className="Title2">
-          받으신 초대코드가 있으신가요?
-        </ContainerTitle>
-        <ContainerCaption className="Footnote">
-          초대코드를 입력하면, 승인없이 바로 팀에 가입할 수 있어요
-        </ContainerCaption>
-      </ContainerHeader>
-      <ContainerInput>
-        <Input
-          type="string"
-          placeholder="초대코드 입력"
-          height={50}
-          value={inviteCode}
-          onChange={(e) => setInviteCode(e.target.value)}
-          border={error && "1px solid var(--color-error)"}
-        />
-        {error && <ErrorMessage className="Footnote">{error}</ErrorMessage>}
-        <MainButton onClick={handleCheckCode}>초대코드 조회하기</MainButton>
-      </ContainerInput>
+      <GlobalStyles />
+      <Header2 text="초대코드" />
+      {state === 0 && (
+        <Container>
+          <ContainerHeader>
+            <ContainerTitle className="Title2">
+              받으신 초대코드가 있으신가요?
+            </ContainerTitle>
+            <ContainerCaption className="Footnote">
+              초대코드를 입력하면, 승인없이 바로 팀에 가입할 수 있어요
+            </ContainerCaption>
+          </ContainerHeader>
+          <ContainerInput>
+            <Input
+              type="string"
+              placeholder="초대코드 입력"
+              height={50}
+              value={inviteCode}
+              onChange={(e) => setInviteCode(e.target.value)}
+              border={error && "1px solid var(--color-error)"}
+            />
+            {error && <ErrorMessage className="Footnote">{error}</ErrorMessage>}
+            <MainButton onClick={handleCheckCode}>초대코드 조회하기</MainButton>
+          </ContainerInput>
+        </Container>
+      )}
+      {state === 1 && (
+        <Container>
+          <ContainerHeader>
+            <ContainerTitle className="Title2">
+              초대받은 팀이 맞나요?
+            </ContainerTitle>
+          </ContainerHeader>
+          <Card className="shadow-df">
+            <ProfileImage
+              src={profileImageUrl || "/default-profile.png"}
+              alt="Profile"
+            />
+            <CardTeamName className="Headline">
+              {teamName || "팀 이름"}
+            </CardTeamName>
+            <CardTeamLoc className="Caption1">
+              {teamLocation || "주요 경기 장소"}
+            </CardTeamLoc>
+          </Card>
+          <ContainerInput>
+            <MainButton onClick={handleCheckCode}>바로 가입하기</MainButton>
+            <MainButton
+              bgColor="white"
+              textColor="var(--color-main)"
+              onClick={() => navigate("/invite")}
+            >
+              다시 검색하기
+            </MainButton>
+          </ContainerInput>
+        </Container>
+      )}
     </>
   );
 };
 
+export default InvitePage;
+
 // 초대 코드 확인 페이지 컴포넌트
-const InvitePassPageContent: React.FC = () => {
+const InvitePassPageContent: React.FC<{ onNext: () => void }> = ({
+  onNext,
+}) => {
   const navigate = useNavigate();
   const [inviteCode, setInviteCode] = useState(""); // 초대코드 입력 상태
   const [teamName, setTeamName] = useState(""); // 팀 이름 상태
   const [teamLocation, setTeamLocation] = useState(""); // 팀 위치 상태
   const [profileImageUrl, setProfileImageUrl] = useState(""); // 팀 프로필 이미지 상태
   const validCodes = ["ABC123", "DEF456", "GHI789"];
-
-  useEffect(() => {
-    const fetchTeamData = async () => {
-      try {
-        const response = await axios.get("/api/team-info", {
-          params: { inviteCode },
-        });
-        const { teamName, matchLocation, profileImageUrl } = response.data;
-        setTeamName(teamName);
-        setTeamLocation(matchLocation);
-        setProfileImageUrl(profileImageUrl);
-      } catch (error) {
-        console.error("팀 정보를 가져오는 중 오류 발생", error);
-      }
-    };
-
-    if (inviteCode) {
-      fetchTeamData();
-    }
-  }, [inviteCode]);
 
   const handleCheckCode = () => {
     if (validCodes.includes(inviteCode.toUpperCase())) {
@@ -178,16 +212,3 @@ const ProfileImage = styled.img`
 `;
 const CardTeamName = styled.div``;
 const CardTeamLoc = styled.div``;
-
-// 컴포넌트들을 내보내기
-export const InvitePage = () => (
-  <Layout>
-    <InvitePageContent />
-  </Layout>
-);
-
-export const InvitePassPage = () => (
-  <Layout>
-    <InvitePassPageContent />
-  </Layout>
-);
