@@ -26,6 +26,14 @@ const InvitePage = () => {
     }
   };
 
+  const handleNextStep = () => {
+    setState(state + 1);
+  };
+
+  const handleSelectPosition = (e: any) => {
+    console.log(e.target.value);
+  };
+
   // useEffect(() => {
   //   const fetchTeamData = async () => {
   //     try {
@@ -94,7 +102,7 @@ const InvitePage = () => {
             </CardTeamLoc>
           </Card>
           <ContainerInput>
-            <MainButton onClick={handleCheckCode}>바로 가입하기</MainButton>
+            <MainButton onClick={handleNextStep}>바로 가입하기</MainButton>
             <MainButton
               bgColor="white"
               textColor="var(--color-main)"
@@ -105,61 +113,46 @@ const InvitePage = () => {
           </ContainerInput>
         </Container>
       )}
+      {state === 2 && (
+        <Container>
+          <ContainerHeader>
+            <ContainerTitle className="Title2">
+              가입을 위해 희망하는 포지션을 입력해주세요
+            </ContainerTitle>
+            <SelectPosition onChange={handleSelectPosition}>
+              <option>공격수</option>
+              <option>수비수</option>
+              <option>미드필더</option>
+              <option>골키퍼</option>
+            </SelectPosition>
+          </ContainerHeader>
+
+          <ContainerInput>
+            <MainButton onClick={() => navigate("/")}>홈으로 가기</MainButton>
+          </ContainerInput>
+        </Container>
+      )}
+      {state === 3 && (
+        <Container>
+          <ContainerHeader>
+            <ContainerTitle className="Title2">
+              가입이 완료됐어요
+            </ContainerTitle>
+            <ContainerCaption className="Footnote">
+              메뉴에 생긴 팀 정보를 확인해보세요
+            </ContainerCaption>
+          </ContainerHeader>
+
+          <ContainerInput>
+            <MainButton onClick={handleNextStep}>바로 가입하기</MainButton>
+          </ContainerInput>
+        </Container>
+      )}
     </>
   );
 };
 
 export default InvitePage;
-
-// 초대 코드 확인 페이지 컴포넌트
-const InvitePassPageContent: React.FC<{ onNext: () => void }> = ({
-  onNext,
-}) => {
-  const navigate = useNavigate();
-  const [inviteCode, setInviteCode] = useState(""); // 초대코드 입력 상태
-  const [teamName, setTeamName] = useState(""); // 팀 이름 상태
-  const [teamLocation, setTeamLocation] = useState(""); // 팀 위치 상태
-  const [profileImageUrl, setProfileImageUrl] = useState(""); // 팀 프로필 이미지 상태
-  const validCodes = ["ABC123", "DEF456", "GHI789"];
-
-  const handleCheckCode = () => {
-    if (validCodes.includes(inviteCode.toUpperCase())) {
-      navigate(`/invite-pass${inviteCode}`);
-    }
-  };
-
-  return (
-    <>
-      <ContainerHeader>
-        <ContainerTitle className="Title2">
-          초대받은 팀이 맞나요?
-        </ContainerTitle>
-      </ContainerHeader>
-      <Card className="shadow-df">
-        <ProfileImage
-          src={profileImageUrl || "/default-profile.png"}
-          alt="Profile"
-        />
-        <CardTeamName className="Headline">
-          {teamName || "팀 이름"}
-        </CardTeamName>
-        <CardTeamLoc className="Caption1">
-          {teamLocation || "주요 경기 장소"}
-        </CardTeamLoc>
-      </Card>
-      <ContainerInput>
-        <MainButton onClick={handleCheckCode}>바로 가입하기</MainButton>
-        <MainButton
-          bgColor="white"
-          textColor="var(--color-main)"
-          onClick={() => navigate("/invite")}
-        >
-          다시 검색하기
-        </MainButton>
-      </ContainerInput>
-    </>
-  );
-};
 
 // 공통 스타일 컴포넌트 정의
 const Container = styled.div`
@@ -212,3 +205,10 @@ const ProfileImage = styled.img`
 `;
 const CardTeamName = styled.div``;
 const CardTeamLoc = styled.div``;
+const SelectPosition = styled.select`
+  padding: 8px;
+  border-radius: 8px;
+  width: 50%;
+  margin: auto;
+  margin-top: 10px;
+`;
