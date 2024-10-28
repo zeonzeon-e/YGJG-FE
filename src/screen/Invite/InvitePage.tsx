@@ -18,6 +18,9 @@ const InvitePage = () => {
   const [teamName, setTeamName] = useState(""); // 팀 이름 상태
   const [teamLocation, setTeamLocation] = useState(""); // 팀 위치 상태
   const [profileImageUrl, setProfileImageUrl] = useState(""); // 팀 프로필 이미지 상태
+  const [isLoading, setIsLoading] = useState(false); //서버로 데이터 전송 중인지 아닌지
+  const [signupData, setSignupData] = useState<any>({}); // 데이터 정보
+
   const handleCheckCode = () => {
     if (validCodes.includes(inviteCode.toUpperCase())) {
       setState(1);
@@ -32,6 +35,26 @@ const InvitePage = () => {
 
   const handleSelectPosition = (e: any) => {
     console.log(e.target.value);
+  };
+
+  const handleinvite = async () => {
+    // const updatedData = { ...signupData, ...data };
+    // console.log(updatedData);
+    // setSignupData(updatedData);
+    setIsLoading(true);
+    try {
+      const response = axios.post("/api/sign/sign-up", "123");
+      if ((await response).status === 200) {
+        setState(state + 1); // 성공 시 완료 페이지로 이동
+      } else {
+        alert("회원가입에 실패했습니다. 다시 시도해주세요.");
+      }
+    } catch (error) {
+      console.error("회원가입 오류:", error);
+      alert("서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // useEffect(() => {
@@ -128,7 +151,7 @@ const InvitePage = () => {
           </ContainerHeader>
 
           <ContainerInput>
-            <MainButton onClick={() => navigate("/")}>홈으로 가기</MainButton>
+            <MainButton onClick={handleinvite}>바로 가입하기</MainButton>
           </ContainerInput>
         </Container>
       )}
@@ -144,10 +167,11 @@ const InvitePage = () => {
           </ContainerHeader>
 
           <ContainerInput>
-            <MainButton onClick={handleNextStep}>바로 가입하기</MainButton>
+            <MainButton onClick={() => navigate("/")}>홈으로 가기</MainButton>
           </ContainerInput>
         </Container>
       )}
+      {isLoading && <p>회원가입 중입니다. 잠시만 기다려주세요...</p>}
     </>
   );
 };
