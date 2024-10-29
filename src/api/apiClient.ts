@@ -13,6 +13,11 @@ import {
  */
 const apiClient: AxiosInstance = axios.create({
   // baseURL: 'http://your-api-base-url.com', // 필요한 경우 API 기본 URL 설정
+  baseURL: "http://localhost:3000/api",
+  headers: {
+    "Content-Type": "application/x-www-form-urlencoded",
+  },
+  withCredentials: true,
 });
 
 /**
