@@ -18,7 +18,6 @@ import FindPassWardEmailPage from "./screen/Auth/FindPassWardEmailPage";
 import SignUpPage from "./screen/Auth/SignUpPage";
 import IntroPage from "./screen/IntroPage";
 import InvitePage from "./screen/Invite/InvitePage";
-import InvitePassPage from "./screen/Invite/InvitePassPage";
 import KakaoRedirectHandler from "./screen/Auth/KakaoRedirectHandler";
 import GoogleRedirectHandler from "./screen/Auth/GoogleRedirectHandler";
 
@@ -60,7 +59,6 @@ root.render(
         {/* 팀 전략 생성 페이지*/}
         <Route path="/team-strategy/:id" element={<GameStrategy />} />
         <Route path="/invite" element={<InvitePage />} />
-        <Route path="/invite-pass/:invitecode" element={<InvitePassPage />} />
       </Routes>
     </BrowserRouter>
   </React.StrictMode>

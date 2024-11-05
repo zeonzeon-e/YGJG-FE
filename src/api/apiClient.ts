@@ -16,7 +16,7 @@ const apiClient: AxiosInstance = axios.create({
   headers: {
     "Content-Type": "application/x-www-form-urlencoded", // JSON 형식으로 전송
   },
-  withCredentials: false,
+  withCredentials: true,
 });
 
 /**
