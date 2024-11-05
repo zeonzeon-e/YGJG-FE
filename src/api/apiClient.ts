@@ -13,6 +13,7 @@ import {
  */
 const apiClient: AxiosInstance = axios.create({
   // baseURL: 'http://your-api-base-url.com', // 필요한 경우 API 기본 URL 설정
+  baseURL: "http://3.36.48.141:8080", // 필요한 경우 API 기본 URL 설정
 });
 
 /**
@@ -96,7 +97,7 @@ apiClient.interceptors.response.use(
       }
 
       try {
-        const response = await axios.post("/api/auth/refresh", {
+        const response = await axios.post("/auth/refresh", {
           refreshToken: refreshToken,
         });
 

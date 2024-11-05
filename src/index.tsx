@@ -19,6 +19,8 @@ import SignUpPage from "./screen/Auth/SignUpPage";
 import IntroPage from "./screen/IntroPage";
 import InvitePage from "./screen/Invite/InvitePage";
 import InvitePassPage from "./screen/Invite/InvitePassPage";
+import KakaoRedirectHandler from "./screen/Auth/KakaoRedirectHandler";
+import GoogleRedirectHandler from "./screen/Auth/GoogleRedirectHandler";
 
 const GlobalStyle = createGlobalStyle`
   body, #root, .app-container {
@@ -41,6 +43,11 @@ root.render(
         <Route path="/" element={<IntroPage />} />
         <Route path="/signup" element={<SignUpPage />} />
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/auth/kakao/callback" element={<KakaoRedirectHandler />} />
+        <Route
+          path="/auth/google/callback"
+          element={<GoogleRedirectHandler />}
+        />
         <Route path="/login/find-pw" element={<FindPassWardPage />} />
         <Route
           path="/login/find-pw/phone"

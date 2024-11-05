@@ -419,7 +419,7 @@ const SignupPage: React.FC = () => {
       // 마지막 단계에서 서버로 데이터를 전송
       setIsLoading(true);
       try {
-        const response = await axios.post("/api/sign/sign-up", updatedData);
+        const response = await axios.post("/sign/sign-up", updatedData);
         if (response.status === 200) {
           setStep(step + 1); // 성공 시 완료 페이지로 이동
         } else {
