@@ -1,5 +1,3 @@
-// src/pages/LoginPage/LoginPage.tsx
-
 import React, { useState } from "react";
 import styled from "styled-components";
 import { Link, useNavigate } from "react-router-dom";
@@ -7,142 +5,107 @@ import { FaEye, FaEyeSlash } from "react-icons/fa6";
 import { CgCloseO } from "react-icons/cg";
 import { RiKakaoTalkFill } from "react-icons/ri";
 import { FcGoogle } from "react-icons/fc";
-import axios, { AxiosResponse } from "axios";
+import { AxiosResponse } from "axios";
 import Header1 from "../../components/Header/Header1/Header1";
 import { setAccessToken, setRefreshToken } from "../../utils/authUtils";
 import apiClient from "../../api/apiClient";
 
-/**
- * 로그인 페이지 컴포넌트
- * @returns {JSX.Element} 로그인 페이지
- */
 const LoginPage: React.FC = () => {
-  // 상태 변수 설정
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [errorMessage, setErrorMessage] = useState<string>("");
   const navigate = useNavigate();
 
-  // OAuth 엔드포인트 URL
-  const KAKAO_AUTH_URL = "/api/auth/kakao/get-url";
-  const GOOGLE_AUTH_URL = "/api/auth/google/get-url";
+  const KAKAO_AUTH_URL = "/auth/kakao/get-url";
+  const GOOGLE_AUTH_URL = "/auth/google/get-url";
 
-  /**
-   * 비밀번호 표시/숨기기 토글 함수
-   * @returns {void}
-   */
+  // 이메일 유효성 검사 함수
+  const isValidEmail = (email: string): boolean => {
+    const emailRegex = /\S+@\S+\.\S+/;
+    return emailRegex.test(email);
+  };
+
+  // 비밀번호 유효성 검사 함수 (예: 최소 6자 이상)
+  const isValidPassword = (password: string): boolean => {
+    return password.length >= 4;
+  };
+
   const togglePasswordVisibility = (): void => {
     setShowPassword(!showPassword);
   };
 
-  /**
-   * 이메일 입력값 초기화 함수
-   * @returns {void}
-   */
   const clearEmail = (): void => {
     setEmail("");
   };
 
-  /**
-   * 비밀번호 입력값 초기화 함수
-   * @returns {void}
-   */
   const clearPassword = (): void => {
     setPassword("");
   };
 
-  /**
-   * 메인 페이지로 이동하는 함수
-   * @returns {void}
-   */
   const goToMainPage = (): void => {
-    navigate("/");
+    navigate("/my");
   };
 
-  /**
-   * 로그인 폼 제출 처리 함수
-   * @param {React.FormEvent} e - 폼 제출 이벤트
-   * @returns {Promise<void>}
-   */
   const handleSubmit = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
-    /*
-    const loginData: { email: string; password: string } = {
-      email: "abc123@naver.com",
-      password: "a1234",
-    };
-    const phoneData: { phoneNum: string } = {
-      phoneNum: "01057203471",
-    };
-    await axios
-      .post(
-        "/api/sign/send-sms",
-        { phoneNum: "01057203471" },
-        {
-          headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
-          },
-          withCredentials: true,
-        }
-      )
-      .then((res) => {
-        console.log("post 성공", res);
-      })
-      .catch((res) => {
-        console.log("error", res);
-      });
-*/
 
-    const loginData: { email: string; password: string } = {
-      email: email,
-      password: password,
-    };
+    // 입력 값 검증
+    if (!isValidEmail(email)) {
+      setErrorMessage("올바른 이메일 형식을 입력해주세요.");
+      return;
+    }
+
+    if (!isValidPassword(password)) {
+      setErrorMessage("비밀번호는 최소 6자 이상이어야 합니다.");
+      return;
+    }
+
+    const loginData = { email, password };
 
     try {
-      const response: AxiosResponse = await apiClient.post(
-        "/sign/sign-in",
-        loginData
-      );
+      // JSON 형식으로 데이터를 전송
+      const response: AxiosResponse<{ token: string; refreshToken: string }> =
+        await apiClient.post("/sign/sign-in", loginData);
 
       if (response.status === 200 || response.status === 201) {
         const { token, refreshToken } = response.data;
         setAccessToken(token);
         setRefreshToken(refreshToken);
-        console.log("로그인 성공", response.data);
+        setPassword(""); // 보안을 위해 비밀번호 초기화
+        console.log("로그인 성공:", response.data);
         goToMainPage();
       } else {
-        console.error("로그인 실패");
+        console.error("로그인 실패: 상태 코드", response.status);
+        setErrorMessage("로그인에 실패했습니다. 다시 시도해주세요.");
       }
     } catch (error) {
+      setErrorMessage(
+        "로그인에 실패했습니다. 이메일과 비밀번호를 확인해주세요."
+      );
       console.error("서버와의 통신 오류:", error);
     }
   };
-  /**
-   * 카카오 로그인 처리 함수
-   * @returns {Promise<void>}
-   */
+
   const handleKakaoLogin = async (): Promise<void> => {
     try {
-      const response: AxiosResponse<{ kakaoUrl: string }> = await axios.get(
+      const response: AxiosResponse<{ kakaoUrl: string }> = await apiClient.get(
         KAKAO_AUTH_URL
       );
       window.location.href = response.data.kakaoUrl;
     } catch (error) {
+      setErrorMessage("카카오 로그인에 실패했습니다. 다시 시도해주세요.");
       console.error("카카오 로그인 URL 가져오기 실패:", error);
     }
   };
 
-  /**
-   * 구글 로그인 처리 함수
-   * @returns {Promise<void>}
-   */
   const handleGoogleLogin = async (): Promise<void> => {
     try {
-      const response: AxiosResponse<{ googleUrl: string }> = await axios.get(
-        GOOGLE_AUTH_URL
-      );
+      const response: AxiosResponse<{ googleUrl: string }> =
+        await apiClient.get(GOOGLE_AUTH_URL);
       window.location.href = response.data.googleUrl;
     } catch (error) {
+      setErrorMessage("구글 로그인에 실패했습니다. 다시 시도해주세요.");
       console.error("구글 로그인 URL 가져오기 실패:", error);
     }
   };
@@ -155,6 +118,7 @@ const LoginPage: React.FC = () => {
         <Form onSubmit={handleSubmit}>
           <InputWrapper>
             <StyledInput
+              type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="이메일"
@@ -183,6 +147,7 @@ const LoginPage: React.FC = () => {
               {showPassword ? <FaEye /> : <FaEyeSlash />}
             </ShowPasswordIcon>
           </PasswordWrapper>
+          {errorMessage && <ErrorText>{errorMessage}</ErrorText>}
           <StyledButton primary type="submit">
             로그인
           </StyledButton>
@@ -209,10 +174,6 @@ export default LoginPage;
 
 // 스타일 컴포넌트 정의
 
-/**
- * 컨테이너 스타일 컴포넌트
- * @type {StyledComponent}
- */
 const Container = styled.div`
   display: flex;
   flex-direction: column;
@@ -221,18 +182,10 @@ const Container = styled.div`
   margin: auto;
 `;
 
-/**
- * 폼 스타일 컴포넌트
- * @type {StyledComponent}
- */
 const Form = styled.form`
   width: 100%;
 `;
 
-/**
- * 제목 스타일 컴포넌트
- * @type {StyledComponent}
- */
 const Title = styled.h2`
   font-size: 24px;
   font-weight: bold;
@@ -240,30 +193,18 @@ const Title = styled.h2`
   color: var(--color-dark2);
 `;
 
-/**
- * 입력 래퍼 스타일 컴포넌트
- * @type {StyledComponent}
- */
 const InputWrapper = styled.div`
   position: relative;
   width: 100%;
   margin-bottom: 10px;
 `;
 
-/**
- * 비밀번호 래퍼 스타일 컴포넌트
- * @type {StyledComponent}
- */
 const PasswordWrapper = styled.div`
   position: relative;
   width: 100%;
-  margin-bottom: 50px;
+  margin-bottom: 10px;
 `;
 
-/**
- * 입력 필드 스타일 컴포넌트
- * @type {StyledComponent}
- */
 const StyledInput = styled.input`
   width: 100%;
   padding: 15px;
@@ -279,10 +220,6 @@ const StyledInput = styled.input`
   }
 `;
 
-/**
- * 비밀번호 표시 아이콘 스타일 컴포넌트
- * @type {StyledComponent}
- */
 const ShowPasswordIcon = styled.span`
   position: absolute;
   right: 15px;
@@ -293,10 +230,6 @@ const ShowPasswordIcon = styled.span`
   color: #777;
 `;
 
-/**
- * 입력 필드 초기화 아이콘 스타일 컴포넌트
- * @type {StyledComponent}
- */
 const ClearIcon = styled.span`
   position: absolute;
   right: 15px;
@@ -307,19 +240,10 @@ const ClearIcon = styled.span`
   color: #bbb;
 `;
 
-/**
- * 비밀번호 입력 필드 초기화 아이콘 스타일 컴포넌트
- * @type {StyledComponent}
- */
 const ClearIconPassword = styled(ClearIcon)`
   right: 45px;
 `;
 
-/**
- * 버튼 스타일 컴포넌트
- * @param {object} props - 버튼 속성
- * @returns {StyledComponent} 스타일된 버튼 컴포넌트
- */
 const StyledButton = styled.button<{
   primary?: boolean;
   kakao?: boolean;
@@ -344,7 +268,7 @@ const StyledButton = styled.button<{
   }
 
   ${({ kakao, google }) =>
-    [kakao, google] &&
+    (kakao || google) &&
     `
     display: flex;
     align-items: center;
@@ -352,10 +276,6 @@ const StyledButton = styled.button<{
   `}
 `;
 
-/**
- * 링크 래퍼 스타일 컴포넌트
- * @type {StyledComponent}
- */
 const Links = styled.div`
   display: flex;
   justify-content: center;
@@ -363,10 +283,6 @@ const Links = styled.div`
   margin-top: 20px;
 `;
 
-/**
- * 스타일된 링크 컴포넌트
- * @type {StyledComponent}
- */
 const StyledLink = styled(Link)`
   font-size: 14px;
   color: #555;
@@ -378,11 +294,13 @@ const StyledLink = styled(Link)`
   }
 `;
 
-/**
- * 구분자 스타일 컴포넌트
- * @type {StyledComponent}
- */
 const Divider = styled.span`
   margin: 0 10px;
   color: #ccc;
+`;
+
+const ErrorText = styled.p`
+  color: red;
+  font-size: 14px;
+  margin-bottom: 10px;
 `;

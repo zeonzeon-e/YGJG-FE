@@ -12,12 +12,11 @@ import {
  * @type {AxiosInstance}
  */
 const apiClient: AxiosInstance = axios.create({
-  // baseURL: 'http://your-api-base-url.com', // 필요한 경우 API 기본 URL 설정
-  baseURL: "http://localhost:3000/api",
+  baseURL: "/api", // API 기본 URL
   headers: {
-    "Content-Type": "application/x-www-form-urlencoded",
+    "Content-Type": "application/x-www-form-urlencoded", // JSON 형식으로 전송
   },
-  withCredentials: true,
+  withCredentials: false,
 });
 
 /**
@@ -101,7 +100,7 @@ apiClient.interceptors.response.use(
       }
 
       try {
-        const response = await axios.post("/api/auth/refresh", {
+        const response = await axios.post("/auth/refresh", {
           refreshToken: refreshToken,
         });
 

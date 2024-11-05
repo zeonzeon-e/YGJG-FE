@@ -18,8 +18,9 @@ import FindPassWardEmailPage from "./screen/Auth/FindPassWardEmailPage";
 import SignUpPage from "./screen/Auth/SignUpPage";
 import IntroPage from "./screen/IntroPage";
 import InvitePage from "./screen/Invite/InvitePage";
-import CalendarPage from "./screen/Calendar/CalendarPage";
-import TeamInforPage from "./screen/Team/TeamInforPage";
+import InvitePassPage from "./screen/Invite/InvitePassPage";
+import KakaoRedirectHandler from "./screen/Auth/KakaoRedirectHandler";
+import GoogleRedirectHandler from "./screen/Auth/GoogleRedirectHandler";
 
 const GlobalStyle = createGlobalStyle`
   body, #root, .app-container {
@@ -42,6 +43,11 @@ root.render(
         <Route path="/" element={<IntroPage />} />
         <Route path="/signup" element={<SignUpPage />} />
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/auth/kakao/callback" element={<KakaoRedirectHandler />} />
+        <Route
+          path="/auth/google/callback"
+          element={<GoogleRedirectHandler />}
+        />
         <Route path="/login/find-pw" element={<FindPassWardPage />} />
         <Route
           path="/login/find-pw/phone"
@@ -49,13 +55,12 @@ root.render(
         />
         <Route path="/team/list" element={<TeamListPage />} />
         <Route path="/my" element={<MyPage />} />
-        <Route path="/my/joinstatus" element={<JoinApprovalStatus />} />
         {/* 팀 정보 수정 페이지 */}
         <Route path="/team-edit/:id" element={<TeamInfoEdit />} />
         {/* 팀 전략 생성 페이지*/}
         <Route path="/team-strategy/:id" element={<GameStrategy />} />
         <Route path="/invite" element={<InvitePage />} />
-        <Route path="/team/infor" element={<TeamInforPage />} />
+        <Route path="/invite-pass/:invitecode" element={<InvitePassPage />} />
       </Routes>
     </BrowserRouter>
   </React.StrictMode>
