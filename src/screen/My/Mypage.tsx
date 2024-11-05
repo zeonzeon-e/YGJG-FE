@@ -1,21 +1,57 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import GlobalStyles from "../../components/Styled/GlobalStyled";
 import Header1 from "../../components/Header/Header1/Header1";
 import styled from "styled-components";
 import MiniButton from "../../components/Button/MiniButton";
 import { FaCalendarAlt, FaClipboardCheck, FaEdit } from "react-icons/fa";
 import { useNavigate } from "react-router-dom"; // React Router 사용
+import apiClient from "../../api/apiClient"; // apiClient 임포트
 
 const MyPage: React.FC = () => {
-  const [teamList, setTeamList] = useState([
-    { color: "#000000", img: "", name: "코리아 팀", position: "LW" },
-    { color: "#00FF00", img: "", name: "호주 팀", position: "GK" },
-  ]);
+  const [teamList, setTeamList] = useState<
+    Array<{
+      id: number;
+      color: string;
+      img: string;
+      name: string;
+      position: string;
+    }>
+  >([]);
+  const [profile, setProfile] = useState<{
+    name: string;
+    email: string;
+    imageUrl: string;
+  } | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
   const navigate = useNavigate();
 
+  // useEffect(() => {
+  //   // 백엔드에서 팀 목록과 프로필 정보를 가져오는 함수
+  //   const fetchData = async () => {
+  //     try {
+  //       setLoading(true);
+  //       // 실제 API 엔드포인트에 맞게 수정하세요
+  //       const [teamResponse, profileResponse] = await Promise.all([
+  //         apiClient.get("/api/teams"), // 팀 목록을 가져오는 API
+  //         apiClient.get("/api/user/profile"), // 사용자 프로필을 가져오는 API
+  //       ]);
+  //       setTeamList(teamResponse.data);
+  //       setProfile(profileResponse.data);
+  //     } catch (err) {
+  //       console.error(err);
+  //       setError("데이터를 가져오는 중 에러가 발생했습니다.");
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
+
+  //   fetchData();
+  // }, []);
+
   const handleEditClick = (index: number) => {
-    navigate(`/team-edit/:id`, {
+    navigate(`/team-edit/${teamList[index].id}`, {
       state: {
         teamIndex: index,
         color: teamList[index].color,
@@ -24,6 +60,87 @@ const MyPage: React.FC = () => {
     });
   };
 
+  if (loading) {
+    return (
+      <>
+        <GlobalStyles />
+        <Header1 text="마이페이지" />
+        <Container>
+          <Profile>
+            <ProfileImage
+              src={profile?.imageUrl || "https://example.com/profile-image.jpg"}
+              alt="프로필 이미지"
+              className="shadow-df"
+            />
+            <ProfileName>{profile?.name || "이름 없음"}</ProfileName>
+            <ProfileEmail>{profile?.email || "이메일 없음"}</ProfileEmail>
+            <ProfileButton>프로필 설정</ProfileButton>
+          </Profile>
+
+          <SectionTitle>가입 중인 팀</SectionTitle>
+          {teamList.length !== 0 ? (
+            teamList.map((el, index) => (
+              <JoinTeamList key={index}>
+                <ColorCircle color={el.color} />
+                <div>{el.img}</div>
+                <div>{el.name}</div>
+                <PositionWrapper>
+                  <PositionText position={el.position}>
+                    {el.position}
+                  </PositionText>
+                  <span>으로 활동중</span>
+                </PositionWrapper>
+                <MiniButton onClick={() => handleEditClick(index)}>
+                  <FaEdit style={{ marginRight: "5px" }} />
+                  정보 수정
+                </MiniButton>
+              </JoinTeamList>
+            ))
+          ) : (
+            <JoinTeamList>가입 중인 팀이 없어요</JoinTeamList>
+          )}
+
+          <MenuList>
+            <MenuItem>
+              <FaCalendarAlt size={24} />
+              <MenuText onClick={() => navigate("/my/calendar")}>
+                내 경기 일정 보기
+              </MenuText>
+            </MenuItem>
+            <MenuItem>
+              <FaClipboardCheck size={24} />
+              <MenuText onClick={() => navigate("/my/joinstatus")}>
+                가입 승인 현황 보기
+              </MenuText>
+            </MenuItem>
+          </MenuList>
+
+          <Divider />
+
+          <FooterList>
+            <FooterTitle>고객센터</FooterTitle>
+            <FooterItem>공지사항</FooterItem>
+            <FooterItem>자주 묻는 질문</FooterItem>
+            <FooterItem>문의하기</FooterItem>
+          </FooterList>
+
+          <Divider />
+
+          <FooterList>
+            <FooterTitle>보안</FooterTitle>
+            <FooterItem>비밀번호 변경하기</FooterItem>
+            <FooterItem>로그아웃</FooterItem>
+            <FooterItem>서비스 탈퇴하기</FooterItem>
+          </FooterList>
+        </Container>
+      </>
+    );
+  }
+
+  if (error) {
+    return <div>{error}</div>;
+  }
+
   return (
     <>
       <GlobalStyles />
@@ -31,30 +148,37 @@ const MyPage: React.FC = () => {
       <Container>
         <Profile>
           <ProfileImage
-            src="https://example.com/profile-image.jpg"
+            src={profile?.imageUrl || "https://example.com/profile-image.jpg"}
             alt="프로필 이미지"
+            className="shadow-df"
           />
-          <ProfileName>홍길동</ProfileName>
-          <ProfileEmail>naver1234@naver.com</ProfileEmail>
+          <ProfileName>{profile?.name || "이름 없음"}</ProfileName>
+          <ProfileEmail>{profile?.email || "이메일 없음"}</ProfileEmail>
           <ProfileButton>프로필 설정</ProfileButton>
         </Profile>
 
         <SectionTitle>가입 중인 팀</SectionTitle>
-        {teamList.map((el, index) => (
-          <JoinTeamList key={index}>
-            <ColorCircle color={el.color} />
-            <div>{el.img}</div>
-            <div>{el.name}</div>
-            <PositionWrapper>
-              <PositionText position={el.position}>{el.position}</PositionText>
-              <span>으로 활동중</span>
-            </PositionWrapper>
-            <MiniButton onClick={() => handleEditClick(index)}>
-              <FaEdit style={{ marginRight: "5px" }} />
-              정보 수정
-            </MiniButton>
-          </JoinTeamList>
-        ))}
+        {teamList.length !== 0 ? (
+          teamList.map((el, index) => (
+            <JoinTeamList key={index}>
+              <ColorCircle color={el.color} />
+              <div>{el.img}</div>
+              <div>{el.name}</div>
+              <PositionWrapper>
+                <PositionText position={el.position}>
+                  {el.position}
+                </PositionText>
+                <span>으로 활동중</span>
+              </PositionWrapper>
+              <MiniButton onClick={() => handleEditClick(index)}>
+                <FaEdit style={{ marginRight: "5px" }} />
+                정보 수정
+              </MiniButton>
+            </JoinTeamList>
+          ))
+        ) : (
+          <JoinTeamList>가입 중인 팀이 없어요</JoinTeamList>
+        )}
 
         <MenuList>
           <MenuItem>

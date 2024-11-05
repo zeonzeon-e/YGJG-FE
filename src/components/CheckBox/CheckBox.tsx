@@ -141,8 +141,8 @@ const IconWrapper = styled.div`
 
   &.icon {
     border: 1px solid var(--color-dark1);
-    background-color: var(--color-subtle);
-    color: var(--color-dark2);
+    background-color: var(--color-main);
+    color: var(--color-light2);
   }
 `;
 

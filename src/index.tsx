@@ -18,7 +18,8 @@ import FindPassWardEmailPage from "./screen/Auth/FindPassWardEmailPage";
 import SignUpPage from "./screen/Auth/SignUpPage";
 import IntroPage from "./screen/IntroPage";
 import InvitePage from "./screen/Invite/InvitePage";
-import InvitePassPage from "./screen/Invite/InvitePassPage";
+import CalendarPage from "./screen/Calendar/CalendarPage";
+import TeamInforPage from "./screen/Team/TeamInforPage";
 
 const GlobalStyle = createGlobalStyle`
   body, #root, .app-container {
@@ -48,12 +49,13 @@ root.render(
         />
         <Route path="/team/list" element={<TeamListPage />} />
         <Route path="/my" element={<MyPage />} />
+        <Route path="/my/joinstatus" element={<JoinApprovalStatus />} />
         {/* 팀 정보 수정 페이지 */}
         <Route path="/team-edit/:id" element={<TeamInfoEdit />} />
         {/* 팀 전략 생성 페이지*/}
         <Route path="/team-strategy/:id" element={<GameStrategy />} />
         <Route path="/invite" element={<InvitePage />} />
-        <Route path="/invite-pass/:invitecode" element={<InvitePassPage />} />
+        <Route path="/team/infor" element={<TeamInforPage />} />
       </Routes>
     </BrowserRouter>
   </React.StrictMode>

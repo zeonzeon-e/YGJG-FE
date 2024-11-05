@@ -1,7 +1,8 @@
-import React from "react";
+import React, { useEffect } from "react";
 import styled from "styled-components";
 import GlobalStyles from "../../components/Styled/GlobalStyled";
 import Header2 from "../../components/Header/Header2/Header2";
+import axios from "axios";
 
 const JoinApprovalStatus: React.FC = () => {
   const approvalList = [
@@ -9,15 +10,31 @@ const JoinApprovalStatus: React.FC = () => {
       teamName: "코리아 팀",
       position: "공격수",
       status: "승인대기",
-      imageUrl: "https://example.com/profile-image.jpg",
+      teamImageUrl: "https://example.com/profile-image.jpg",
     },
     {
       teamName: "코리아 팀",
       position: "공격수",
       status: "거절",
-      imageUrl: "https://example.com/profile-image.jpg",
+      teamImageUrl: "https://example.com/profile-image.jpg",
     },
   ];
+
+  // const [approvalList, setApprovalList] = useState<ApprovalItemType[]>([]); // 상태 관리
+
+  // // API 호출
+  // useEffect(() => {
+  //   const fetchApprovalList = async () => {
+  //     try {
+  //       const response = await axios.get("/api/requests"); // 백엔드 API 엔드포인트
+  //       setApprovalList(response.data); // 응답 데이터를 상태에 저장
+  //     } catch (error) {
+  //       console.error("Error fetching approval list", error);
+  //     }
+  //   };
+
+  //   fetchApprovalList();
+  // }, []); // 컴포넌트가 처음 렌더링될 때 한 번만 실행
 
   return (
     <>
@@ -26,7 +43,7 @@ const JoinApprovalStatus: React.FC = () => {
         <Header2 text="가입 승인 현황" />
         {approvalList.map((item, index) => (
           <ApprovalItem key={index}>
-            <ProfileImage src={item.imageUrl} alt="팀 이미지" />
+            <ProfileImage src={item.teamImageUrl} alt="팀 이미지" />
             <TeamInfo>
               <TeamName>{item.teamName}</TeamName>
               <Position>{item.position}</Position>

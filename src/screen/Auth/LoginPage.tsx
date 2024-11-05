@@ -10,6 +10,7 @@ import { FcGoogle } from "react-icons/fc";
 import axios, { AxiosResponse } from "axios";
 import Header1 from "../../components/Header/Header1/Header1";
 import { setAccessToken, setRefreshToken } from "../../utils/authUtils";
+import apiClient from "../../api/apiClient";
 
 /**
  * 로그인 페이지 컴포넌트
@@ -65,6 +66,32 @@ const LoginPage: React.FC = () => {
    */
   const handleSubmit = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
+    /*
+    const loginData: { email: string; password: string } = {
+      email: "abc123@naver.com",
+      password: "a1234",
+    };
+    const phoneData: { phoneNum: string } = {
+      phoneNum: "01057203471",
+    };
+    await axios
+      .post(
+        "/api/sign/send-sms",
+        { phoneNum: "01057203471" },
+        {
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+          withCredentials: true,
+        }
+      )
+      .then((res) => {
+        console.log("post 성공", res);
+      })
+      .catch((res) => {
+        console.log("error", res);
+      });
+*/
 
     const loginData: { email: string; password: string } = {
       email: email,
@@ -72,8 +99,8 @@ const LoginPage: React.FC = () => {
     };
 
     try {
-      const response: AxiosResponse = await axios.post(
-        "/api/sign/sign-in",
+      const response: AxiosResponse = await apiClient.post(
+        "/sign/sign-in",
         loginData
       );
 
@@ -90,7 +117,6 @@ const LoginPage: React.FC = () => {
       console.error("서버와의 통신 오류:", error);
     }
   };
-
   /**
    * 카카오 로그인 처리 함수
    * @returns {Promise<void>}
