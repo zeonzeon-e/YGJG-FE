@@ -1,5 +1,3 @@
-// src/pages/LoginPage/LoginPage.tsx
-
 import React, { useState } from "react";
 import styled from "styled-components";
 import { Link, useNavigate } from "react-router-dom";
@@ -30,7 +28,7 @@ const LoginPage: React.FC = () => {
 
   // 비밀번호 유효성 검사 함수 (예: 최소 6자 이상)
   const isValidPassword = (password: string): boolean => {
-    return password.length >= 6;
+    return password.length >= 4;
   };
 
   const togglePasswordVisibility = (): void => {
@@ -46,7 +44,7 @@ const LoginPage: React.FC = () => {
   };
 
   const goToMainPage = (): void => {
-    navigate("/");
+    navigate("/my");
   };
 
   const handleSubmit = async (e: React.FormEvent): Promise<void> => {
@@ -66,6 +64,7 @@ const LoginPage: React.FC = () => {
     const loginData = { email, password };
 
     try {
+      // JSON 형식으로 데이터를 전송
       const response: AxiosResponse<{ token: string; refreshToken: string }> =
         await apiClient.post("/sign/sign-in", loginData);
 
