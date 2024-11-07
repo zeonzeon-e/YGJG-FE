@@ -12,11 +12,11 @@ import {
  * @type {AxiosInstance}
  */
 const apiClient: AxiosInstance = axios.create({
-  baseURL: "/api", // API 기본 URL
+  baseURL: "http://13.124.10.231:8080/api", // API 기본 URL
   headers: {
-    "Content-Type": "application/x-www-form-urlencoded", // JSON 형식으로 전송
+    "Content-Type": "application/x-www-form-urlencoded",
   },
-  withCredentials: true,
+  withCredentials: false,
 });
 
 /**
@@ -59,7 +59,7 @@ apiClient.interceptors.request.use(
     if (token) {
       // 헤더가 정의되어 있지 않을 경우 초기화
       config.headers = config.headers || {};
-      config.headers["Authorization"] = `Bearer ${token}`;
+      config.headers["X-AUTH-TOKEN"] = `${token}`;
     }
     return config;
   },
@@ -82,7 +82,7 @@ apiClient.interceptors.response.use(
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           subscribeTokenRefresh((token: string) => {
-            originalRequest.headers["Authorization"] = "Bearer " + token;
+            originalRequest.headers["X-AUTH-TOKEN"] = token;
             resolve(apiClient(originalRequest));
           });
         });
@@ -110,9 +110,9 @@ apiClient.interceptors.response.use(
         setAccessToken(newAccessToken);
         setRefreshToken(newRefreshToken);
 
-        apiClient.defaults.headers.common["Authorization"] =
+        apiClient.defaults.headers.common["X-AUTH-TOKEN"] =
           "Bearer " + newAccessToken;
-        originalRequest.headers["Authorization"] = "Bearer " + newAccessToken;
+        originalRequest.headers["X-AUTH-TOKEN"] = newAccessToken;
 
         isRefreshing = false;
         onRefreshed(newAccessToken);

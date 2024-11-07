@@ -72,6 +72,7 @@ const Overlay = styled.div`
   right: 0;
   bottom: 0;
   background-color: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(5px); /* 블러 처리 추가 */
   padding: 0 20px;
   display: flex;
   align-items: center;

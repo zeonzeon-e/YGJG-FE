@@ -6,6 +6,7 @@ import MiniButton from "../../components/Button/MiniButton";
 import { FaCalendarAlt, FaClipboardCheck, FaEdit } from "react-icons/fa";
 import { useNavigate } from "react-router-dom"; // React Router 사용
 import apiClient from "../../api/apiClient"; // apiClient 임포트
+import { getAccessToken } from "../../utils/authUtils";
 
 const MyPage: React.FC = () => {
   const [teamList, setTeamList] = useState<
