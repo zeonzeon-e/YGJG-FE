@@ -1,5 +1,4 @@
 // src/components/Input/Input.tsx
-import { realpath } from "fs";
 import React, { forwardRef } from "react";
 import styled from "styled-components";
 
@@ -16,6 +15,7 @@ interface InputProps {
   value?: string;
   maxLength?: number; // 추가: maxLength prop
   border?: string;
+  readOnly?: boolean; // 추가: readOnly prop
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
@@ -57,6 +57,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
       width,
       maxLength,
       border,
+      readOnly, // 추가: readOnly prop
     },
     ref
   ) => {
@@ -77,6 +78,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           width={width}
           maxLength={maxLength}
           border={border}
+          readOnly={readOnly} // 추가: readOnly 속성 전달
         />
       </div>
     );

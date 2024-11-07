@@ -20,6 +20,8 @@ import IntroPage from "./screen/IntroPage";
 import InvitePage from "./screen/Invite/InvitePage";
 import KakaoRedirectHandler from "./screen/Auth/KakaoRedirectHandler";
 import GoogleRedirectHandler from "./screen/Auth/GoogleRedirectHandler";
+import TeamCreationPage from "./screen/Team/TeamCreationPage";
+import TeamCreationIntroPage from "./screen/Team/TeamCreationIntroPage";
 
 const GlobalStyle = createGlobalStyle`
   body, #root, .app-container {
@@ -52,6 +54,8 @@ root.render(
           path="/login/find-pw/phone"
           element={<FindPassWardPhonePage />}
         />
+        <Route path="/team/create" element={<TeamCreationPage />} />
+        <Route path="/team/intro" element={<TeamCreationIntroPage />} />
         <Route path="/team/list" element={<TeamListPage />} />
         <Route path="/my" element={<MyPage />} />
         {/* 팀 정보 수정 페이지 */}

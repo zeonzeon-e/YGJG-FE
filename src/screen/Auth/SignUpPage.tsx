@@ -444,7 +444,7 @@ const SignupPage: React.FC = () => {
         </div>
       </Link>
       <div style={{ padding: "5px" }}>
-        <ScrollProgress targetWidth={step * 20} />
+        <ScrollProgress targetWidth={step * (100 / 5)} />
         <div style={{ padding: "10px" }} />
         {step === 1 && <PhoneVerification onNext={handleNextStep} />}
         {step === 2 && <TermsAgreement onNext={handleNextStep} />}
