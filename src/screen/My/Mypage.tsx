@@ -7,50 +7,92 @@ import { FaCalendarAlt, FaClipboardCheck, FaEdit } from "react-icons/fa";
 import { useNavigate } from "react-router-dom"; // React Router 사용
 import apiClient from "../../api/apiClient"; // apiClient 임포트
 import { getAccessToken } from "../../utils/authUtils";
+import axios, { AxiosResponse } from "axios";
+import { setAccessToken, setRefreshToken } from "../../utils/authUtils";
 
 const MyPage: React.FC = () => {
   const [teamList, setTeamList] = useState<
-    Array<{
-      id: number;
-      color: string;
-      img: string;
-      name: string;
-      position: string;
-    }>
-  >([]);
-  const [profile, setProfile] = useState<{
+  Array<{
+    id: number;
+    color: string;
+    img: string;
     name: string;
-    email: string;
-    imageUrl: string;
-  } | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+    position: string;
+  }>
+>([]);
+const [profile, setProfile] = useState<{
+  name: string;
+  email: string;
+  imageUrl: string;
+} | null>(null);
+const [loading, setLoading] = useState<boolean>(true);
+const [error, setError] = useState<string | null>(null);
 
-  const navigate = useNavigate();
+const navigate = useNavigate();
 
-  // useEffect(() => {
-  //   // 백엔드에서 팀 목록과 프로필 정보를 가져오는 함수
-  //   const fetchData = async () => {
-  //     try {
-  //       setLoading(true);
-  //       // 실제 API 엔드포인트에 맞게 수정하세요
-  //       const [teamResponse, profileResponse] = await Promise.all([
-  //         apiClient.get("/api/teams"), // 팀 목록을 가져오는 API
-  //         apiClient.get("/api/user/profile"), // 사용자 프로필을 가져오는 API
-  //       ]);
-  //       setTeamList(teamResponse.data);
-  //       setProfile(profileResponse.data);
-  //     } catch (err) {
-  //       console.error(err);
-  //       setError("데이터를 가져오는 중 에러가 발생했습니다.");
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
+// useEffect(() => {
+//   // 백엔드에서 팀 목록과 프로필 정보를 가져오는 함수
+//   const fetchData = async () => {
+//     try {
+//       setLoading(true);
+//       const accessToken = getAccessToken(); // accessToken 가져오기
+//       const headers = {
+//         Authorization: `Bearer ${accessToken}`,
+//       };
+      
+//       // 실제 API 엔드포인트에 맞게 수정하세요
+//       const [teamResponse, profileResponse] = await Promise.all([
+//         apiClient.get("/api/teams", { headers }), // 팀 목록을 가져오는 API
+//         apiClient.get("/api/user/profile", { headers }), // 사용자 프로필을 가져오는 API
+//       ]);
+//       setTeamList(teamResponse.data);
+//       setProfile(profileResponse.data);
+//     } catch (err) {
+//       console.error(err);
+//       setError("데이터를 가져오는 중 에러가 발생했습니다.");
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
 
-  //   fetchData();
-  // }, []);
+//   fetchData();
+// }, []);
 
+  useEffect(() => {
+    
+  const profileData = async () => {
+    try{
+      const accessToken = getAccessToken();
+      const headers = {
+        Authorization: `Bearer ${accessToken}`,
+      };
+
+      const response = await apiClient.get('/member/getUser', {headers});
+      console.log(response.data)
+      setProfile({name: response.data.name, email:response.data.email, imageUrl:response.data.profileUrl})
+      console.log('profile', profile)
+    }catch(err){console.error(err);
+      setError("데이터를 가져오는 중 에러가 발생했습니다.")
+    }
+  }
+  // const teamData = async () => {
+  //   try{
+  //     const accessToken = getAccessToken();
+  //     const headers = {
+  //       Authorization: `Bearer ${accessToken}`,
+  //     };
+
+  //     const team = await apiClient.get('/myPage/teams', {headers});
+  //     console.log(team.data)
+  //     //setTeamList({id: response.data.teamId, color:response.data.teamColor, position:response.data.position, img:response.data.teamImageUrl, name:response.data.teamName})
+  //     console.log('Team', teamList)
+  //   }catch(err){console.error(err);
+  //     setError("데이터를 가져오는 중 에러가 발생했습니다.")
+  //   }
+  // }
+  profileData();
+  //teamData();
+  }, [])
   const handleEditClick = (index: number) => {
     navigate(`/team-edit/${teamList[index].id}`, {
       state: {
@@ -59,7 +101,7 @@ const MyPage: React.FC = () => {
         position: teamList[index].position,
       },
     });
-  };
+  };  
 
   if (loading) {
     return (
