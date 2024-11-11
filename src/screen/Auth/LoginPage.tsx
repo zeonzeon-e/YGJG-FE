@@ -17,8 +17,10 @@ const LoginPage: React.FC = () => {
   const [errorMessage, setErrorMessage] = useState<string>("");
   const navigate = useNavigate();
 
-  const KAKAO_AUTH_URL = "/auth/kakao/get-url";
-  const GOOGLE_AUTH_URL = "/auth/google/get-url";
+  const KAKAO_AUTH_URL =
+    "https://kauth.kakao.com/oauth/authorize?response_type=code&client_id=6de9c9ef1556266bf0bab36b47b7360d&redirect_uri=http://localhost:8080/api/auth/kakao/callback";
+  const GOOGLE_AUTH_URL =
+    "https://kauth.kakao.com/oauth/authorize?response_type=code&client_id=6de9c9ef1556266bf0bab36b47b7360d&redirect_uri=http://localhost:8080/api/auth/kakao/callback";
 
   // 이메일 유효성 검사 함수
   const isValidEmail = (email: string): boolean => {
@@ -89,10 +91,7 @@ const LoginPage: React.FC = () => {
 
   const handleKakaoLogin = async (): Promise<void> => {
     try {
-      const response: AxiosResponse<{ kakaoUrl: string }> = await apiClient.get(
-        KAKAO_AUTH_URL
-      );
-      window.location.href = response.data.kakaoUrl;
+      window.location.href = KAKAO_AUTH_URL;
     } catch (error) {
       setErrorMessage("카카오 로그인에 실패했습니다. 다시 시도해주세요.");
       console.error("카카오 로그인 URL 가져오기 실패:", error);
@@ -101,9 +100,7 @@ const LoginPage: React.FC = () => {
 
   const handleGoogleLogin = async (): Promise<void> => {
     try {
-      const response: AxiosResponse<{ googleUrl: string }> =
-        await apiClient.get(GOOGLE_AUTH_URL);
-      window.location.href = response.data.googleUrl;
+      window.location.href = GOOGLE_AUTH_URL;
     } catch (error) {
       setErrorMessage("구글 로그인에 실패했습니다. 다시 시도해주세요.");
       console.error("구글 로그인 URL 가져오기 실패:", error);

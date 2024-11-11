@@ -3,20 +3,14 @@ import React, { forwardRef } from "react";
 import styled from "styled-components";
 
 // props 타입 정의
-interface InputProps {
+interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   bgColor?: string;
   height?: number;
   width?: number;
-  type: string;
-  placeholder?: string;
   fontSize?: number;
   title?: string;
   padding?: number;
-  value?: string;
-  maxLength?: number; // 추가: maxLength prop
   border?: string;
-  readOnly?: boolean; // 추가: readOnly prop
-  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
 // StyledInput 컴포넌트 정의
@@ -51,13 +45,10 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
       placeholder,
       fontSize,
       title,
-      value,
-      onChange,
       padding,
       width,
-      maxLength,
       border,
-      readOnly, // 추가: readOnly prop
+      ...rest // 추가: 나머지 props를 받아서 전달
     },
     ref
   ) => {
@@ -72,13 +63,10 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           type={type}
           placeholder={placeholder}
           fontSize={fontSize}
-          value={value}
-          onChange={onChange}
           padding={padding}
           width={width}
-          maxLength={maxLength}
           border={border}
-          readOnly={readOnly} // 추가: readOnly 속성 전달
+          {...rest} // 추가: 나머지 props 전달
         />
       </div>
     );
