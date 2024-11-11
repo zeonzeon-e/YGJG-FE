@@ -1,16 +1,18 @@
-import React, { useState } from "react";
+// src/components/Button/RadioButton.tsx
+
+import React from "react";
 import styled from "styled-components";
 
-/*
-  사용 예시
-  const [gender, setGender] = useState<string | null>(null);
-
-  
-  <RadioButton
-    items={["남성", "여성"]}
-    onChange={(value) => setGender(value)} // 선택된 성별 값을 설정
-  />
-*/
+interface RadioButtonProps {
+  title?: string;
+  items: string[];
+  selectedItem?: string | null;
+  textColor?: string;
+  fontSize?: number;
+  bgColor?: string;
+  selectedBgColor?: string;
+  onChange?: (value: string) => void;
+}
 
 /**
  * RadioButton 컴포넌트 - 단일 선택이 가능한 라디오 버튼을 렌더링합니다.
@@ -27,20 +29,18 @@ import styled from "styled-components";
 const RadioButton: React.FC<RadioButtonProps> = ({
   title,
   items,
+  selectedItem,
   textColor,
   fontSize,
   bgColor,
   selectedBgColor,
   onChange,
 }) => {
-  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
-
   /**
    * handleButtonClick - 라디오 버튼 클릭 시 선택 상태를 업데이트하고 부모 컴포넌트에 선택된 값을 전달하는 함수
    * @param {number} index - 클릭된 버튼의 인덱스
    */
   const handleButtonClick = (index: number) => {
-    setSelectedIndex(index);
     onChange && onChange(items[index]); // 선택된 값을 부모 컴포넌트로 전달
   };
 
@@ -52,7 +52,7 @@ const RadioButton: React.FC<RadioButtonProps> = ({
           <RadioItemButton
             key={index}
             onClick={() => handleButtonClick(index)}
-            isSelected={selectedIndex === index}
+            isSelected={selectedItem === item}
             textColor={textColor}
             fontSize={fontSize}
             bgColor={bgColor}
@@ -67,17 +67,6 @@ const RadioButton: React.FC<RadioButtonProps> = ({
 };
 
 export default RadioButton;
-
-// 인터페이스 정의
-interface RadioButtonProps {
-  title?: string;
-  items: string[];
-  textColor?: string;
-  fontSize?: number;
-  bgColor?: string;
-  selectedBgColor?: string;
-  onChange?: (value: string) => void;
-}
 
 // 스타일 컴포넌트 정의
 const Container = styled.div`

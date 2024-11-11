@@ -1,3 +1,5 @@
+// src/screen/Auth/KakaoRedirectHandler.tsx
+
 import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { AxiosResponse } from "axios";
@@ -15,15 +17,28 @@ const KakaoRedirectHandler: React.FC = () => {
       if (code) {
         try {
           const response: AxiosResponse<{
-            token: string;
-            refreshToken: string;
-          }> = await apiClient.get(`/api/auth/kakao/callback?code=${code}`);
+            token?: string;
+            refreshToken?: string;
+            isNewUser: boolean;
+            userData?: any;
+          }> = await apiClient.get(`/auth/kakao/callback?code=${code}`);
 
-          const { token, refreshToken } = response.data;
-          setAccessToken(token);
-          setRefreshToken(refreshToken);
+          const { token, refreshToken, isNewUser, userData } = response.data;
 
-          navigate("/"); // 메인 페이지로 이동
+          if (isNewUser) {
+            // 신규 사용자이면 회원가입 페이지로 이동
+            const socialData = encodeURIComponent(JSON.stringify(userData));
+            navigate(`/signup?socialData=${socialData}`);
+          } else {
+            // 기존 사용자이면 토큰 저장 후 메인 페이지로 이동
+            if (token && refreshToken) {
+              setAccessToken(token);
+              setRefreshToken(refreshToken);
+              navigate("/"); // 메인 페이지로 이동
+            } else {
+              navigate("/login"); // 로그인 페이지로 이동
+            }
+          }
         } catch (error) {
           console.error("카카오 로그인 처리 중 오류 발생:", error);
           navigate("/login"); // 로그인 페이지로 이동

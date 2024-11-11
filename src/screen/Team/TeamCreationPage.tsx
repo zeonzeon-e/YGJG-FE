@@ -79,30 +79,30 @@ const TeamProfileCreation: React.FC<{ onNext: (data: any) => void }> = ({
   const [teamName, setTeamName] = useState("");
   const [isNameValid, setIsNameValid] = useState(false);
   const [profileImage, setProfileImage] = useState<string | null>(null);
-  const [nameError, setNameError] = useState<string | null>(null);
+  // const [nameError, setNameError] = useState<string | null>(null);
   const DefaultProfileIcon = "https://example.com/profile-image.jpg";
 
-  const handleNameCheck = async () => {
-    // 팀 이름 중복 확인 로직 (예: 서버 요청 등)
-    if (teamName.length === 0) {
-      setNameError("팀 이름을 입력해주세요.");
-      return;
-    }
-    // 중복 확인 예시 (실제로는 서버에 요청해야 함)
-    try {
-      const response = await axios.post("/team/check-name", { teamName });
-      if (response.data.available) {
-        setIsNameValid(true);
-        setNameError(null);
-      } else {
-        setIsNameValid(false);
-        setNameError("이미 사용 중인 팀 이름입니다.");
-      }
-    } catch (error) {
-      console.error(error);
-      setNameError("팀 이름 확인 중 오류가 발생했습니다.");
-    }
-  };
+  // const handleNameCheck = async () => {
+  //   // 팀 이름 중복 확인 로직 (예: 서버 요청 등)
+  //   if (teamName.length === 0) {
+  //     setNameError("팀 이름을 입력해주세요.");
+  //     return;
+  //   }
+  //   // 중복 확인 예시 (실제로는 서버에 요청해야 함)
+  //   try {
+  //     const response = await axios.post("/team/check-name", { teamName });
+  //     if (response.data.available) {
+  //       setIsNameValid(true);
+  //       setNameError(null);
+  //     } else {
+  //       setIsNameValid(false);
+  //       setNameError("이미 사용 중인 팀 이름입니다.");
+  //     }
+  //   } catch (error) {
+  //     console.error(error);
+  //     setNameError("팀 이름 확인 중 오류가 발생했습니다.");
+  //   }
+  // };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -123,10 +123,10 @@ const TeamProfileCreation: React.FC<{ onNext: (data: any) => void }> = ({
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const handleNext = () => {
-    if (!isNameValid) {
-      setNameError("팀 이름 중복 확인을 해주세요.");
-      return;
-    }
+    // if (!isNameValid) {
+    //   setNameError("팀 이름 중복 확인을 해주세요.");
+    //   return;
+    // }
     onNext({ teamName, profileImage });
   };
 
@@ -142,11 +142,11 @@ const TeamProfileCreation: React.FC<{ onNext: (data: any) => void }> = ({
         padding={20}
         onChange={(e) => setTeamName(e.target.value)}
       />
-      {nameError && <ErrorMessage>{nameError}</ErrorMessage>}
+      {/* {nameError && <ErrorMessage>{nameError}</ErrorMessage>}
       <MainButton height={40} onClick={handleNameCheck}>
         중복 확인하기
       </MainButton>
-      {isNameValid && <SubTitle>사용할 수 있는 팀 이름입니다.</SubTitle>}
+      {isNameValid && <SubTitle>사용할 수 있는 팀 이름입니다.</SubTitle>} */}
       <div style={{ padding: "30px" }}></div>
       <SubTitle>팀의 프로필 사진을 정해주세요</SubTitle>
       <ImageWrapper>

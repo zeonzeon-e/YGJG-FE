@@ -16,7 +16,7 @@ const apiClient: AxiosInstance = axios.create({
   headers: {
     "Content-Type": "application/x-www-form-urlencoded",
   },
-  withCredentials: false,
+  withCredentials: true,
 });
 
 /**
@@ -110,8 +110,7 @@ apiClient.interceptors.response.use(
         setAccessToken(newAccessToken);
         setRefreshToken(newRefreshToken);
 
-        apiClient.defaults.headers.common["X-AUTH-TOKEN"] =
-          "Bearer " + newAccessToken;
+        apiClient.defaults.headers.common["X-AUTH-TOKEN"] = newAccessToken;
         originalRequest.headers["X-AUTH-TOKEN"] = newAccessToken;
 
         isRefreshing = false;
