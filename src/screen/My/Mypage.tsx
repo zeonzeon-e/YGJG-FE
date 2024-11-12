@@ -12,14 +12,15 @@ import { setAccessToken, setRefreshToken } from "../../utils/authUtils";
 
 const MyPage: React.FC = () => {
   const [teamList, setTeamList] = useState<
-  Array<{
-    id: number;
-    color: string;
-    img: string;
-    name: string;
-    position: string;
-  }>
->([]);
+    Array<{
+      position: string;
+      teamId: number;
+      teamColor: string;
+      teamImageUrl: string;
+      teamName: string;
+      
+    }>
+  >([]);
 const [profile, setProfile] = useState<{
   name: string;
   email: string;
@@ -75,29 +76,29 @@ const navigate = useNavigate();
       setError("데이터를 가져오는 중 에러가 발생했습니다.")
     }
   }
-  // const teamData = async () => {
-  //   try{
-  //     const accessToken = getAccessToken();
-  //     const headers = {
-  //       Authorization: `Bearer ${accessToken}`,
-  //     };
+  const teamData = async () => {
+    try{
+      const accessToken = getAccessToken();
+      const headers = {
+        Authorization: `Bearer ${accessToken}`,
+      };
 
-  //     const team = await apiClient.get('/myPage/teams', {headers});
-  //     console.log(team.data)
-  //     //setTeamList({id: response.data.teamId, color:response.data.teamColor, position:response.data.position, img:response.data.teamImageUrl, name:response.data.teamName})
-  //     console.log('Team', teamList)
-  //   }catch(err){console.error(err);
-  //     setError("데이터를 가져오는 중 에러가 발생했습니다.")
-  //   }
-  // }
+      const response = await apiClient.get('/myPage/teams', {headers});
+      console.log(response.data)
+      setTeamList(response.data)
+      console.log('Team', teamList)
+    }catch(err){console.error(err);
+      setError("데이터를 가져오는 중 에러가 발생했습니다.")
+    }
+  }
   profileData();
-  //teamData();
+  teamData();
   }, [])
   const handleEditClick = (index: number) => {
-    navigate(`/team-edit/${teamList[index].id}`, {
+    navigate(`/team-edit/${teamList[index].teamId}`, {
       state: {
-        teamIndex: index,
-        color: teamList[index].color,
+        teamId: teamList[index].teamId,
+        teamColor: teamList[index].teamColor,
         position: teamList[index].position,
       },
     });
@@ -120,13 +121,16 @@ const navigate = useNavigate();
             <ProfileButton>프로필 설정</ProfileButton>
           </Profile>
 
+          <TeamContainer>
           <SectionTitle>가입 중인 팀</SectionTitle>
           {teamList.length !== 0 ? (
             teamList.map((el, index) => (
               <JoinTeamList key={index}>
-                <ColorCircle color={el.color} />
-                <div>{el.img}</div>
-                <div>{el.name}</div>
+                <TeamDiv>
+                <ColorLine color={el.teamColor} />
+                <TeamProfileImg src={el.teamImageUrl}/>
+                </TeamDiv>
+                <div>{el.teamName}</div>
                 <PositionWrapper>
                   <PositionText position={el.position}>
                     {el.position}
@@ -142,7 +146,7 @@ const navigate = useNavigate();
           ) : (
             <JoinTeamList>가입 중인 팀이 없어요</JoinTeamList>
           )}
-
+</TeamContainer>
           <MenuList>
             <MenuItem>
               <FaCalendarAlt size={24} />
@@ -204,9 +208,9 @@ const navigate = useNavigate();
         {teamList.length !== 0 ? (
           teamList.map((el, index) => (
             <JoinTeamList key={index}>
-              <ColorCircle color={el.color} />
-              <div>{el.img}</div>
-              <div>{el.name}</div>
+              {/* <ColorCircle color={el.teamColor} /> */}
+              <div>{el.teamImageUrl}</div>
+              <div>{el.teamName}</div>
               <PositionWrapper>
                 <PositionText position={el.position}>
                   {el.position}
@@ -322,19 +326,34 @@ const JoinTeamList = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px;
-  border-radius: 8px;
-  background-color: var(--color-light1);
-  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
-  margin-bottom: 16px;
+  margin-bottom: 8px;
 `;
 
-const ColorCircle = styled.div<{ color: string }>`
-  width: 20px;
-  height: 20px;
+const TeamContainer = styled.div`
+  background-color: var(--color-light1);
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+`
+
+const TeamDiv = styled.div`
+  display: flex;
+  gap : 20px
+`
+
+const ColorLine = styled.div<{color:string}>`
+  height: 60px;
+  border-left: 5px solid ${({ color }) => color};
+  border-radius: 10%;
+`
+
+const TeamProfileImg = styled.img`
+  width: 60px;
+  height: 60px;
   border-radius: 50%;
-  background-color: ${({ color }) => color};
+  
 `;
+
 
 const PositionWrapper = styled.div`
   display: flex;
@@ -351,6 +370,7 @@ const PositionText = styled.span<{ position: string }>`
       case "RW":
         return "var(--color-sk)"; // 공격수
       case "DF":
+      case "CB":
         return "var(--color-dp)"; // 수비수
       case "MF":
         return "var(--color-mf)"; // 미드필더

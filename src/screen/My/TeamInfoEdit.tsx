@@ -1,25 +1,29 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import GlobalStyles from "../../components/Styled/GlobalStyled";
 import Header2 from "../../components/Header/Header2/Header2";
 import MiniButton from "../../components/Button/MiniButton";
 import { useLocation, useNavigate } from "react-router-dom";
+import { getAccessToken } from "../../utils/authUtils";
+import apiClient from "../../api/apiClient";
 import { CompactPicker } from "react-color";
 
 const TeamInfoEdit: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { teamIndex, color, position } = location.state || {
-    teamIndex: 0,
-    color: "#00FF00",
+  const { teamId, teamColor, position } = location.state || {
+    teamId: 1,
+    teamColor: "#00FF00",
     position: "ST",
   };
 
-  const [selectedColor, setSelectedColor] = useState<string>(color);
+  const [eroor, setError] = useState<string>("");
+  const [selectedColor, setSelectedColor] = useState<string>(teamColor);
   const [newPosition, setNewPosition] = useState<string>(position);
 
   const handleColorChange = (newColor: any) => {
     setSelectedColor(newColor.hex);
+    console.log(selectedColor)
   };
 
   const handlePositionChange = (
@@ -28,12 +32,33 @@ const TeamInfoEdit: React.FC = () => {
     setNewPosition(event.target.value);
   };
 
-  const handleSubmit = () => {
-    navigate("/my", {
-      state: {
-        updatedTeam: { teamIndex, color: selectedColor, position: newPosition },
-      },
-    });
+
+  const handleSubmit = async () => {
+
+
+    try{
+      const accessToken = getAccessToken();
+      const headers = {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json', 
+      };
+      const body = {
+        position: newPosition,
+        teamColor: selectedColor 
+      }
+      await apiClient.put(`/myPage/teamMember/${teamId}`, body, {
+        headers, // headers를 config에 포함
+      });
+      console.log(headers, body)
+        console.log("sy")
+        navigate("/my", {
+          state: {
+            updatedTeam: { teamId, teamColor: selectedColor, position: newPosition },
+          },
+        });
+      }catch(err){console.error(err);
+        setError("데이터를 가져오는 중 에러가 발생했습니다.")
+      }
   };
 
   return (
@@ -41,13 +66,13 @@ const TeamInfoEdit: React.FC = () => {
       <GlobalStyles />
       <Container>
         <Header2 text="팀 정보 수정" />
-        <Profile>
+        {/* <Profile>
           <ProfileImage
             src="https://example.com/team-image.jpg"
             alt="팀 프로필 이미지"
           />
           <ProfileName>코리아 팀</ProfileName>
-        </Profile>
+        </Profile> */}
 
         <Section>
           <SectionTitle>팀 내 희망 포지션 변경하기</SectionTitle>
