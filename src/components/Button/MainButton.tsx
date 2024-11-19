@@ -29,6 +29,7 @@ const StyledButton = styled.button<MainButtonProps>`
   border-radius: 8px;
   box-shabow: 0 1.5px 1.5px 0 var(--color-shabow);
   letter-spacing: 0px;
+  transition: 0.2s;
   ${({ isClick }) =>
     isClick &&
     css`
