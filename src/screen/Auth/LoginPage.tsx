@@ -18,9 +18,9 @@ const LoginPage: React.FC = () => {
   const navigate = useNavigate();
 
   const KAKAO_AUTH_URL =
-    "https://kauth.kakao.com/oauth/authorize?response_type=code&client_id=6de9c9ef1556266bf0bab36b47b7360d&redirect_uri=http://localhost:8080/api/auth/kakao/callback";
+    "https://kauth.kakao.com/oauth/authorize?response_type=code&client_id=6de9c9ef1556266bf0bab36b47b7360d&redirect_uri=http://localhost:3000/auth/kakao/callback";
   const GOOGLE_AUTH_URL =
-    "https://kauth.kakao.com/oauth/authorize?response_type=code&client_id=6de9c9ef1556266bf0bab36b47b7360d&redirect_uri=http://localhost:8080/api/auth/kakao/callback";
+    "https://accounts.google.com/o/oauth2/v2/auth?response_type=code&client_id=405167826298-s3a0rdn0e407de1upa54vvrhrshaiu18.apps.googleusercontent.com&redirect_uri=http://localhost:3000/auth/google/callback&scope=email%20profile";
 
   // 이메일 유효성 검사 함수
   const isValidEmail = (email: string): boolean => {

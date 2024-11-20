@@ -1,5 +1,3 @@
-// src/screen/Auth/KakaoRedirectHandler.tsx
-
 import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { AxiosResponse } from "axios";
@@ -16,26 +14,29 @@ const KakaoRedirectHandler: React.FC = () => {
 
       if (code) {
         try {
+          const accessToken = code;
           const response: AxiosResponse<{
-            token?: string;
-            refreshToken?: string;
-            isNewUser: boolean;
-            userData?: any;
-          }> = await apiClient.get(`/auth/kakao/callback?code=${code}`);
+            token: string;
+            refreshToken: string;
+            newUser: boolean;
+          }> = await apiClient.post("/auth/kakao/signin", { accessToken });
 
-          const { token, refreshToken, isNewUser, userData } = response.data;
+          // const { token, refreshToken, isNewUser, userData } = response.data;
+          const { token, refreshToken, newUser } = response.data;
+          console.log("응답: ", response.data);
 
-          if (isNewUser) {
+          if (newUser) {
             // 신규 사용자이면 회원가입 페이지로 이동
-            const socialData = encodeURIComponent(JSON.stringify(userData));
-            navigate(`/signup?socialData=${socialData}`);
+            // const socialData = encodeURIComponent(JSON.stringify(userData));
+            navigate(`/signup?socialData=${newUser}`);
           } else {
             // 기존 사용자이면 토큰 저장 후 메인 페이지로 이동
             if (token && refreshToken) {
               setAccessToken(token);
               setRefreshToken(refreshToken);
-              navigate("/"); // 메인 페이지로 이동
+              navigate("/my"); // 메인 페이지로 이동
             } else {
+              console.error("토큰이 정의되지 않음");
               navigate("/login"); // 로그인 페이지로 이동
             }
           }
@@ -44,6 +45,7 @@ const KakaoRedirectHandler: React.FC = () => {
           navigate("/login"); // 로그인 페이지로 이동
         }
       } else {
+        console.error("인증 코드가 없습니다.");
         navigate("/login"); // 로그인 페이지로 이동
       }
     };

@@ -1,5 +1,3 @@
-// src/screen/Auth/SignUpPage.tsx
-
 import React, { useState, useRef, useEffect } from "react";
 import styled from "styled-components";
 import axios from "axios";
@@ -12,6 +10,7 @@ import { MdClose, MdVisibility, MdVisibilityOff } from "react-icons/md";
 import { setAccessToken, setRefreshToken } from "../../utils/authUtils";
 import RadioButton from "../../components/Button/RadioButton";
 import KakaoMapModal from "../../components/Modal/KakaoAddress";
+import apiClient from "../../api/apiClient";
 
 // Styled Components 정의
 const Container = styled.div`
@@ -39,18 +38,6 @@ const ButtonWrapper = styled.div`
   margin-top: 20px;
 `;
 
-const SubContainer = styled.div`
-  height: 70vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-`;
-
-const IconWrapper = styled.div`
-  margin: 50px 0;
-`;
-
 const SelectedAddress = styled.div`
   margin: 10px 0;
   font-size: 14px;
@@ -65,6 +52,16 @@ const ErrorMessage = styled.p`
 
 const ProgressBar = styled.div`
   margin-bottom: 20px;
+`;
+
+const ShowPasswordIcon = styled.span`
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  font-size: 18px;
+  color: #777;
 `;
 
 // Step 1: 휴대폰 인증 컴포넌트
@@ -190,7 +187,7 @@ const PhoneVerification: React.FC<{
         인증하기
       </MainButton>
       <div style={{ margin: "20px" }}></div>
-      <MainButton height={50} onClick={handleNext}>
+      <MainButton height={50} onClick={handleNext} disabled={!isVerified}>
         다음
       </MainButton>
     </Container>
@@ -278,23 +275,11 @@ const PersonalInfo: React.FC<PersonalInfoProps> = ({
   const [email, setEmail] = useState(signupData.email || "");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [birth, setBirth] = useState(signupData.birth || "");
-  const [gender, setGender] = useState<string | null>(
-    signupData.gender || null
-  );
-  const [selectedAddress, setSelectedAddress] = useState<string>(
-    signupData.selectedAddress || ""
-  );
-  const [detailAddress, setDetailAddress] = useState<string>(
-    signupData.detailAddress || ""
-  );
-  const [showMapModal, setShowMapModal] = useState(false);
   const [emailError, setEmailError] = useState<string | null>(null);
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [confirmPasswordError, setConfirmPasswordError] = useState<
     string | null
   >(null);
-  const [birthError, setBirthError] = useState<string | null>(null);
   const [generalError, setGeneralError] = useState<string | null>(null);
   const [emailChecked, setEmailChecked] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -302,7 +287,6 @@ const PersonalInfo: React.FC<PersonalInfoProps> = ({
   const emailInputRef = useRef<HTMLInputElement>(null);
   const passwordInputRef = useRef<HTMLInputElement>(null);
   const confirmPasswordInputRef = useRef<HTMLInputElement>(null);
-  const birthInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (isSocialLogin) {
@@ -346,6 +330,146 @@ const PersonalInfo: React.FC<PersonalInfoProps> = ({
       setConfirmPasswordError(null);
     }
 
+    return isValid;
+  };
+
+  const handleEmailCheck = async () => {
+    if (!email) {
+      setEmailError("이메일을 입력해주세요.");
+      return;
+    }
+    try {
+      // 서버에 이메일 중복 확인 요청
+      const response = await apiClient.get(`api/sign/checkEmail/${email}`);
+      if (response.data.exists) {
+        setEmailError("이미 사용 중인 이메일입니다.");
+        setEmailChecked(false);
+      } else {
+        setEmailError(null);
+        setEmailChecked(true);
+      }
+    } catch (error) {
+      console.error(error);
+      setEmailError("사용할 수 없는 이메일입니다.");
+    }
+  };
+
+  const handleSubmit = () => {
+    if (validateFields()) {
+      onNext({
+        email,
+        password,
+      });
+    }
+  };
+
+  return (
+    <Container>
+      <Title>개인정보 입력</Title>
+      <SubTitle>서비스 이용에 필요한 정보를 입력해주세요</SubTitle>
+      {generalError && <ErrorMessage>{generalError}</ErrorMessage>}
+      <InputTitle>이메일</InputTitle>
+      <div style={{ display: "flex", gap: "2px", alignItems: "center" }}>
+        <div style={{ flexGrow: "1" }}>
+          <Input
+            ref={emailInputRef}
+            type="email"
+            height={45}
+            placeholder="이메일"
+            value={email}
+            onChange={(e) => {
+              setEmail(e.target.value);
+              setEmailChecked(false);
+            }}
+            disabled={isSocialLogin} // 소셜 로그인 사용자는 입력 불가
+          />
+        </div>
+        <div style={{ right: "0" }}>
+          {!isSocialLogin && (
+            <MainButton
+              width={100}
+              height={45}
+              fontSize={15}
+              onClick={handleEmailCheck}
+            >
+              중복 확인
+            </MainButton>
+          )}
+        </div>
+      </div>
+      {emailError && <ErrorMessage>{emailError}</ErrorMessage>}
+      <InputTitle>비밀번호</InputTitle>
+      <div style={{ position: "relative" }}>
+        <Input
+          ref={passwordInputRef}
+          type={showPassword ? "text" : "password"}
+          height={45}
+          placeholder="비밀번호"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          disabled={isSocialLogin} // 소셜 로그인 사용자는 입력 불가
+        />
+        <ShowPasswordIcon onClick={() => setShowPassword(!showPassword)}>
+          {showPassword ? <MdVisibilityOff /> : <MdVisibility />}
+        </ShowPasswordIcon>
+      </div>
+      {passwordError && <ErrorMessage>{passwordError}</ErrorMessage>}
+      <InputTitle>비밀번호 확인</InputTitle>
+      <Input
+        ref={confirmPasswordInputRef}
+        type="password"
+        height={45}
+        placeholder="비밀번호 확인"
+        value={confirmPassword}
+        onChange={(e) => setConfirmPassword(e.target.value)}
+        disabled={isSocialLogin} // 소셜 로그인 사용자는 입력 불가
+      />
+      {confirmPasswordError && (
+        <ErrorMessage>{confirmPasswordError}</ErrorMessage>
+      )}
+      <div style={{ margin: "20px" }}></div>
+      <MainButton height={50} onClick={handleSubmit}>
+        다음
+      </MainButton>
+    </Container>
+  );
+};
+
+// Step 4: 개인정보2 입력 컴포넌트
+interface PersonalInfo2Props {
+  onNext: (data: any) => void;
+  signupData: any;
+  isSocialLogin?: boolean;
+}
+
+const PersonalInfo2: React.FC<PersonalInfo2Props> = ({
+  onNext,
+  signupData,
+  isSocialLogin = false,
+}) => {
+  const [birth, setBirth] = useState(signupData.birth || "");
+  const [gender, setGender] = useState<string | null>(
+    signupData.gender || null
+  );
+  const [selectedAddress, setSelectedAddress] = useState<string>(
+    signupData.selectedAddress || ""
+  );
+  const [detailAddress, setDetailAddress] = useState<string>(
+    signupData.detailAddress || ""
+  );
+  const [showMapModal, setShowMapModal] = useState(false);
+  const [birthError, setBirthError] = useState<string | null>(null);
+  const [generalError, setGeneralError] = useState<string | null>(null);
+  const birthInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (isSocialLogin) {
+    }
+  }, [isSocialLogin]);
+
+  const validateFields = () => {
+    let isValid = true;
+
     const birthRegex = /^\d{6}$/;
     if (!birthRegex.test(birth)) {
       setBirthError("생년월일은 6자리 숫자로 입력해주세요.");
@@ -365,32 +489,9 @@ const PersonalInfo: React.FC<PersonalInfoProps> = ({
     return isValid;
   };
 
-  const handleEmailCheck = async () => {
-    if (!email) {
-      setEmailError("이메일을 입력해주세요.");
-      return;
-    }
-    try {
-      // 서버에 이메일 중복 확인 요청
-      const response = await axios.post("/sign/check-email", { email });
-      if (response.data.exists) {
-        setEmailError("이미 사용 중인 이메일입니다.");
-        setEmailChecked(false);
-      } else {
-        setEmailError(null);
-        setEmailChecked(true);
-      }
-    } catch (error) {
-      console.error(error);
-      setEmailError("이메일 중복 확인 중 오류가 발생했습니다.");
-    }
-  };
-
   const handleSubmit = () => {
     if (validateFields()) {
       onNext({
-        email,
-        password,
         gender,
         birth,
         selectedAddress,
@@ -408,68 +509,6 @@ const PersonalInfo: React.FC<PersonalInfoProps> = ({
       <Title>개인정보 입력</Title>
       <SubTitle>서비스 이용에 필요한 정보를 입력해주세요</SubTitle>
       {generalError && <ErrorMessage>{generalError}</ErrorMessage>}
-      <InputTitle>이메일</InputTitle>
-      <div style={{ display: "flex", alignItems: "center" }}>
-        <Input
-          ref={emailInputRef}
-          type="email"
-          height={45}
-          placeholder="이메일"
-          value={email}
-          onChange={(e) => {
-            setEmail(e.target.value);
-            setEmailChecked(false);
-          }}
-          style={{ flex: 1, marginRight: "10px" }}
-          disabled={isSocialLogin} // 소셜 로그인 사용자는 이메일 입력 불가
-        />
-        {!isSocialLogin && (
-          <MainButton
-            width={100}
-            height={45}
-            fontSize={15}
-            onClick={handleEmailCheck}
-          >
-            중복 확인
-          </MainButton>
-        )}
-      </div>
-      {emailError && <ErrorMessage>{emailError}</ErrorMessage>}
-      <InputTitle>비밀번호</InputTitle>
-      <div style={{ position: "relative" }}>
-        <Input
-          ref={passwordInputRef}
-          type={showPassword ? "text" : "password"}
-          height={45}
-          placeholder="비밀번호"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
-        <div
-          style={{
-            position: "absolute",
-            right: "10px",
-            top: "12px",
-            cursor: "pointer",
-          }}
-          onClick={() => setShowPassword(!showPassword)}
-        >
-          {showPassword ? <MdVisibilityOff /> : <MdVisibility />}
-        </div>
-      </div>
-      {passwordError && <ErrorMessage>{passwordError}</ErrorMessage>}
-      <InputTitle>비밀번호 확인</InputTitle>
-      <Input
-        ref={confirmPasswordInputRef}
-        type="password"
-        height={45}
-        placeholder="비밀번호 확인"
-        value={confirmPassword}
-        onChange={(e) => setConfirmPassword(e.target.value)}
-      />
-      {confirmPasswordError && (
-        <ErrorMessage>{confirmPasswordError}</ErrorMessage>
-      )}
       <InputTitle>생년월일 (6자리)</InputTitle>
       <Input
         ref={birthInputRef}
@@ -518,7 +557,7 @@ const PersonalInfo: React.FC<PersonalInfoProps> = ({
   );
 };
 
-// Step 4: 추가정보 입력 컴포넌트
+// Step 5: 추가정보 입력 컴포넌트
 const SubPersonalInfo: React.FC<{
   onNext: (data: any) => void;
   signupData: any;
@@ -601,38 +640,42 @@ const SignupPage: React.FC = () => {
 
   useEffect(() => {
     // 소셜 로그인 데이터를 쿼리 파라미터에서 추출
+    // const params = new URLSearchParams(location.search);
+    // const socialData = params.get("socialData");
     const params = new URLSearchParams(location.search);
     const socialData = params.get("socialData");
 
     if (socialData) {
-      const parsedData = JSON.parse(decodeURIComponent(socialData));
-      setSignupData(parsedData);
+      // const parsedData = JSON.parse(decodeURIComponent(socialData));
+      // setSignupData(parsedData);
       setIsSocialLogin(true);
-      setStep(3); // 전화번호 인증과 약관 동의 건너뛰기
+      setStep(4); // 전화번호 인증과 약관 동의, 이메일, 비밀번호 건너뛰기
     }
   }, [location.search]);
 
   const handleNextStep = async (data: any = {}) => {
     const updatedData = { ...signupData, ...data };
     setSignupData(updatedData);
+    console.log(updatedData);
 
-    if (step === 4 || (isSocialLogin && step === 3)) {
+    if (step === 5) {
       // 마지막 단계에서 서버로 데이터를 전송
       setIsLoading(true);
       try {
         const dataToSend = { ...updatedData };
         if (!isSocialLogin) {
-          dataToSend.phone = phone;
-        }
-        const response = await axios.post("/sign/sign-up", dataToSend);
-        if (response.status === 200 || response.status === 201) {
-          // 회원가입 성공 시 로그인 처리 및 메인 페이지로 이동
-          const { token, refreshToken } = response.data;
-          setAccessToken(token);
-          setRefreshToken(refreshToken);
-          navigate("/"); // 메인 페이지로 이동
+          // dataToSend.phone = phone;
         } else {
-          alert("회원가입에 실패했습니다. 다시 시도해주세요.");
+          const response = await apiClient.post("api/sign/sign-up", dataToSend);
+          if (response.status === 200 || response.status === 201) {
+            // 회원가입 성공 시 로그인 처리 및 메인 페이지로 이동
+            const { token, refreshToken } = response.data;
+            setAccessToken(token);
+            setRefreshToken(refreshToken);
+            navigate("/"); // 메인 페이지로 이동
+          } else {
+            alert("회원가입에 실패했습니다. 다시 시도해주세요.");
+          }
         }
       } catch (error) {
         console.error("회원가입 오류:", error);
@@ -653,13 +696,13 @@ const SignupPage: React.FC = () => {
     <div style={{ padding: "20px" }}>
       <Link to="/login">
         <div style={{ padding: "10px 0" }}>
-          <MdClose size={30} />
+          <MdClose color="black" size={30} />
         </div>
       </Link>
       <ProgressBar>
         <ScrollProgress
           targetWidth={
-            isSocialLogin ? ((step - 2) * 100) / 2 : (step * 100) / 5
+            isSocialLogin ? ((step - 3) * 100) / 2 : (step * 100) / 5
           }
         />
       </ProgressBar>
@@ -674,14 +717,21 @@ const SignupPage: React.FC = () => {
         {!isSocialLogin && step === 2 && (
           <TermsAgreement onNext={handleNextStep} />
         )}
-        {((!isSocialLogin && step === 3) || (isSocialLogin && step === 3)) && (
+        {!isSocialLogin && step === 3 && (
           <PersonalInfo
             onNext={handleNextStep}
             signupData={signupData}
             isSocialLogin={isSocialLogin}
           />
         )}
-        {!isSocialLogin && step === 4 && (
+        {step === 4 && (
+          <PersonalInfo2
+            onNext={handleNextStep}
+            signupData={signupData}
+            isSocialLogin={isSocialLogin}
+          />
+        )}
+        {step === 5 && (
           <SubPersonalInfo onNext={handleNextStep} signupData={signupData} />
         )}
         {isLoading && <p>회원가입 중입니다. 잠시만 기다려주세요...</p>}

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { FaAngleDown, FaAngleUp, FaCheck } from "react-icons/fa6";
 import styled from "styled-components";
+import HorizontalLine from "../Styled/HorizontalLine";
 
 /* #################### 사용 예시 #######################
 
