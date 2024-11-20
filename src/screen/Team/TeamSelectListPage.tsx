@@ -153,7 +153,7 @@ const TeamSelectListPage: React.FC = () => {
 
   const fetchTeams = async () => {
     try {
-      const response = await apiClient.get("/search/join-team");
+      const response = await apiClient.get("api/search/join-team");
       setTeams(response.data);
       setFilteredTeams(response.data);
     } catch (error) {
