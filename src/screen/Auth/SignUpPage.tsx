@@ -702,7 +702,7 @@ const SignupPage: React.FC = () => {
       <ProgressBar>
         <ScrollProgress
           targetWidth={
-            isSocialLogin ? ((step - 3) * 100) / 2 : (step * 100) / 5
+            isSocialLogin ? ((step - 3) * 100) / 3 : (step * 100) / 6
           }
         />
       </ProgressBar>
