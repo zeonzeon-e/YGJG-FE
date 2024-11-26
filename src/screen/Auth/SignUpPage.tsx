@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
 import styled from "styled-components";
-import axios from "axios";
 import CheckBox from "../../components/CheckBox/CheckBox";
 import Input from "../../components/Input/Input";
 import MainButton from "../../components/Button/MainButton";
@@ -50,6 +49,12 @@ const ErrorMessage = styled.p`
   margin-top: 2px;
 `;
 
+const SuccessMessage = styled.p`
+  color: green;
+  font-size: 12px;
+  margin-top: 2px;
+`;
+
 const ProgressBar = styled.div`
   margin-bottom: 20px;
 `;
@@ -73,13 +78,16 @@ const PhoneVerification: React.FC<{
   const [verificationCode, setVerificationCode] = useState("");
   const [isVerified, setIsVerified] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
   const handleVerify = () => {
     if (verificationCode === "1234") {
       setIsVerified(true);
       setError(null);
+      setSuccess("인증이 완료되었습니다.");
     } else {
       setError("인증번호가 일치하지 않습니다.");
+      setSuccess(null);
     }
   };
 
@@ -88,6 +96,7 @@ const PhoneVerification: React.FC<{
       onNext();
     } else {
       setError("휴대폰 인증을 완료해주세요.");
+      setSuccess(null);
     }
   };
 
@@ -183,6 +192,7 @@ const PhoneVerification: React.FC<{
         disabled={isVerified}
       />
       {error && <ErrorMessage>{error}</ErrorMessage>}
+      {success && <SuccessMessage>{success}</SuccessMessage>}
       <MainButton height={50} onClick={handleVerify} disabled={isVerified}>
         인증하기
       </MainButton>
@@ -235,6 +245,10 @@ const TermsAgreement: React.FC<{
       .filter((_, index) => checkedState[index]);
   };
 
+  const handleSubmit = () => {
+    onNext(getSelectedTerms());
+  };
+
   return (
     <Container>
       <Title>약관 동의</Title>
@@ -249,10 +263,7 @@ const TermsAgreement: React.FC<{
         onAllClick={handleAllClick}
       />
       <ButtonWrapper>
-        <MainButton
-          disabled={!isNextButtonEnabled}
-          onClick={() => onNext(getSelectedTerms())}
-        >
+        <MainButton disabled={!isNextButtonEnabled} onClick={handleSubmit}>
           다음
         </MainButton>
       </ButtonWrapper>
@@ -282,7 +293,7 @@ const PersonalInfo: React.FC<PersonalInfoProps> = ({
   >(null);
   const [generalError, setGeneralError] = useState<string | null>(null);
   const [emailChecked, setEmailChecked] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
+  const [success, setSuccess] = useState<string | null>(null); // 성공 메시지 상태 추가
 
   const emailInputRef = useRef<HTMLInputElement>(null);
   const passwordInputRef = useRef<HTMLInputElement>(null);
@@ -336,29 +347,43 @@ const PersonalInfo: React.FC<PersonalInfoProps> = ({
   const handleEmailCheck = async () => {
     if (!email) {
       setEmailError("이메일을 입력해주세요.");
+      setSuccess(null);
       return;
     }
     try {
       // 서버에 이메일 중복 확인 요청
       const response = await apiClient.get(`api/sign/checkEmail/${email}`);
-      if (response.data.exists) {
-        setEmailError("이미 사용 중인 이메일입니다.");
+      if (response.data.code) {
+        setEmailError("사용할 수 없는 이메일입니다.");
         setEmailChecked(false);
+        setSuccess(null);
       } else {
-        setEmailError(null);
-        setEmailChecked(true);
+        const pattern = /^[A-Za-z0-9_\.\-]+@[A-Za-z0-9\-]+\.[A-za-z0-9\-]+/;
+        if (pattern.test(email) === true) {
+          setEmailError(null);
+          setEmailChecked(true);
+          setSuccess("사용 가능한 이메일입니다.");
+        } else {
+          setEmailError("올바른 이메일 형식을 입력해주세요.");
+          setEmailChecked(false);
+          setSuccess(null);
+        }
       }
     } catch (error) {
       console.error(error);
       setEmailError("사용할 수 없는 이메일입니다.");
+      setEmailChecked(false);
+      setSuccess(null);
     }
   };
 
   const handleSubmit = () => {
     if (validateFields()) {
+      const passwordCheck = confirmPassword;
       onNext({
         email,
         password,
+        passwordCheck,
       });
     }
   };
@@ -380,6 +405,7 @@ const PersonalInfo: React.FC<PersonalInfoProps> = ({
             onChange={(e) => {
               setEmail(e.target.value);
               setEmailChecked(false);
+              setSuccess(null); // 성공 메시지 초기화
             }}
             disabled={isSocialLogin} // 소셜 로그인 사용자는 입력 불가
           />
@@ -398,21 +424,17 @@ const PersonalInfo: React.FC<PersonalInfoProps> = ({
         </div>
       </div>
       {emailError && <ErrorMessage>{emailError}</ErrorMessage>}
+      {success && <SuccessMessage>{success}</SuccessMessage>}
       <InputTitle>비밀번호</InputTitle>
-      <div style={{ position: "relative" }}>
-        <Input
-          ref={passwordInputRef}
-          type={showPassword ? "text" : "password"}
-          height={45}
-          placeholder="비밀번호"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          disabled={isSocialLogin} // 소셜 로그인 사용자는 입력 불가
-        />
-        <ShowPasswordIcon onClick={() => setShowPassword(!showPassword)}>
-          {showPassword ? <MdVisibilityOff /> : <MdVisibility />}
-        </ShowPasswordIcon>
-      </div>
+      <Input
+        ref={passwordInputRef}
+        type={"password"}
+        height={45}
+        placeholder="비밀번호"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        disabled={isSocialLogin} // 소셜 로그인 사용자는 입력 불가
+      />
       {passwordError && <ErrorMessage>{passwordError}</ErrorMessage>}
       <InputTitle>비밀번호 확인</InputTitle>
       <Input
@@ -447,6 +469,7 @@ const PersonalInfo2: React.FC<PersonalInfo2Props> = ({
   signupData,
   isSocialLogin = false,
 }) => {
+  const [name, setName] = useState(signupData.name || "");
   const [birth, setBirth] = useState(signupData.birth || "");
   const [gender, setGender] = useState<string | null>(
     signupData.gender || null
@@ -458,17 +481,24 @@ const PersonalInfo2: React.FC<PersonalInfo2Props> = ({
     signupData.detailAddress || ""
   );
   const [showMapModal, setShowMapModal] = useState(false);
+  const [nameError, setNameError] = useState<string | null>(null);
   const [birthError, setBirthError] = useState<string | null>(null);
   const [generalError, setGeneralError] = useState<string | null>(null);
+  const [addressError, setAddressError] = useState<string | null>(null);
+  const nameInputRef = useRef<HTMLInputElement>(null);
   const birthInputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (isSocialLogin) {
-    }
-  }, [isSocialLogin]);
+  const addressInputRef = useRef<HTMLInputElement>(null);
 
   const validateFields = () => {
     let isValid = true;
+
+    if (!name) {
+      setNameError("이름을 입력해주세요.");
+      nameInputRef.current?.focus();
+      isValid = false;
+    } else {
+      setNameError(null);
+    }
 
     const birthRegex = /^\d{6}$/;
     if (!birthRegex.test(birth)) {
@@ -477,6 +507,14 @@ const PersonalInfo2: React.FC<PersonalInfo2Props> = ({
       isValid = false;
     } else {
       setBirthError(null);
+    }
+
+    if (!selectedAddress) {
+      setAddressError("주소를 찾아주세요.");
+      addressInputRef.current?.focus();
+      isValid = false;
+    } else {
+      setAddressError(null);
     }
 
     if (!gender || !selectedAddress) {
@@ -491,12 +529,24 @@ const PersonalInfo2: React.FC<PersonalInfo2Props> = ({
 
   const handleSubmit = () => {
     if (validateFields()) {
-      onNext({
-        gender,
-        birth,
-        selectedAddress,
-        detailAddress,
-      });
+      const birthDate = birth;
+      const address = selectedAddress;
+      if (isSocialLogin) {
+        onNext({
+          name,
+          gender,
+          birthDate,
+          address,
+          detailAddress,
+        });
+      } else {
+        onNext({
+          gender,
+          birthDate,
+          address,
+          detailAddress,
+        });
+      }
     }
   };
 
@@ -509,6 +559,16 @@ const PersonalInfo2: React.FC<PersonalInfo2Props> = ({
       <Title>개인정보 입력</Title>
       <SubTitle>서비스 이용에 필요한 정보를 입력해주세요</SubTitle>
       {generalError && <ErrorMessage>{generalError}</ErrorMessage>}
+      <InputTitle>이름</InputTitle>
+      <Input
+        ref={nameInputRef}
+        type="text"
+        height={45}
+        placeholder="이름"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+      />
+      {nameError && <ErrorMessage>{nameError}</ErrorMessage>}
       <InputTitle>생년월일 (6자리)</InputTitle>
       <Input
         ref={birthInputRef}
@@ -535,6 +595,7 @@ const PersonalInfo2: React.FC<PersonalInfo2Props> = ({
       >
         주소 찾기
       </MainButton>
+      {addressError && <ErrorMessage>{addressError}</ErrorMessage>}
       <SelectedAddress>{selectedAddress}</SelectedAddress>
       {showMapModal && (
         <KakaoMapModal
@@ -562,26 +623,27 @@ const SubPersonalInfo: React.FC<{
   onNext: (data: any) => void;
   signupData: any;
 }> = ({ onNext, signupData }) => {
-  const [experience, setExperience] = useState<string | null>(
-    signupData.experience || null
-  );
-  const [former, setFormer] = useState<string | null>(
-    signupData.former || null
-  );
-  const [level, setLevel] = useState<string | null>(signupData.level || null);
+  const [experience, setExperience] = useState<string | null>(null);
+  const [level, setLevel] = useState<string | null>(null);
   const [generalError, setGeneralError] = useState<string | null>(null);
 
   const handleSubmit = () => {
-    if (!experience || !level) {
+    if (!experience) {
       setGeneralError("모든 필수 항목을 선택해주세요.");
       return;
     }
-    if (experience === "있다" && !former) {
+    if (experience === "있다" && !level) {
       setGeneralError("선수 경력을 선택해주세요.");
       return;
     }
+    if (experience === "없다" && !level) {
+      setGeneralError("레벨을 선택해주세요.");
+      return;
+    }
     setGeneralError(null);
-    onNext({ experience, former, level });
+
+    const hasExperience = experience === "있다" ? true : false;
+    onNext({ hasExperience, level });
   };
 
   return (
@@ -596,29 +658,32 @@ const SubPersonalInfo: React.FC<{
         selectedItem={experience}
         onChange={(value) => {
           setExperience(value);
-          if (value !== "있다") {
-            setFormer(null);
-          }
+          setLevel(null);
         }}
       />
       {experience === "있다" && (
         <>
           <InputTitle>선수 경력</InputTitle>
           <RadioButton
-            fontSize={14}
+            fontSize={13}
             items={["초등학교 선출", "중학교 선출", "고등학교 선출"]}
-            selectedItem={former}
-            onChange={(value) => setFormer(value)}
+            selectedItem={level}
+            onChange={(value) => setLevel(value)}
           />
         </>
       )}
-      <InputTitle>레벨</InputTitle>
-      <RadioButton
-        fontSize={14}
-        items={["상", "중", "하"]}
-        selectedItem={level}
-        onChange={(value) => setLevel(value)}
-      />
+      {experience === "없다" && (
+        <>
+          <InputTitle>레벨</InputTitle>
+          <RadioButton
+            fontSize={14}
+            items={["상", "중", "하"]}
+            selectedItem={level}
+            onChange={(value) => setLevel(value)}
+          />
+        </>
+      )}
+
       <div style={{ margin: "20px" }}></div>
       <MainButton height={50} onClick={handleSubmit}>
         다음

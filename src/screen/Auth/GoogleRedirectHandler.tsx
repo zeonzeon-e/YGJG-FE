@@ -37,7 +37,7 @@ const GoogleRedirectHandler: React.FC = () => {
               navigate("/my"); // 메인 페이지로 이동
             } else {
               console.error("토큰이 정의되지 않음");
-              navigate("/login"); // 로그인 페이지로 이동
+              navigate(`/signup?socialData=${newUser}`);
             }
           }
         } catch (error) {
