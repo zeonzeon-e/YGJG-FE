@@ -5,7 +5,8 @@ import Input from "../../components/Input/Input";
 import MainButton from "../../components/Button/MainButton";
 import ScrollProgress from "../../components/ScrollProgress/ScrollProgress";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { MdClose, MdVisibility, MdVisibilityOff } from "react-icons/md";
+import { MdClose } from "react-icons/md";
+import { FaCheck } from "react-icons/fa6";
 import { setAccessToken, setRefreshToken } from "../../utils/authUtils";
 import RadioButton from "../../components/Button/RadioButton";
 import KakaoMapModal from "../../components/Modal/KakaoAddress";
@@ -44,7 +45,7 @@ const SelectedAddress = styled.div`
 `;
 
 const ErrorMessage = styled.p`
-  color: red;
+  color: var(--color-error);
   font-size: 12px;
   margin-top: 2px;
 `;
@@ -59,14 +60,15 @@ const ProgressBar = styled.div`
   margin-bottom: 20px;
 `;
 
-const ShowPasswordIcon = styled.span`
-  position: absolute;
-  right: 15px;
-  top: 50%;
-  transform: translateY(-50%);
-  cursor: pointer;
-  font-size: 18px;
-  color: #777;
+const SuccessContainer = styled.div`
+  display: flex;
+  flexdirection: column;
+  alignitems: center;
+`;
+
+const SuccessTitle = styled.div`
+  font-size: 22px;
+  font-weight: 500;
 `;
 
 // Step 1: 휴대폰 인증 컴포넌트
@@ -359,6 +361,7 @@ const PersonalInfo: React.FC<PersonalInfoProps> = ({
         setSuccess(null);
       } else {
         const pattern = /^[A-Za-z0-9_\.\-]+@[A-Za-z0-9\-]+\.[A-za-z0-9\-]+/;
+
         if (pattern.test(email) === true) {
           setEmailError(null);
           setEmailChecked(true);
@@ -692,6 +695,31 @@ const SubPersonalInfo: React.FC<{
   );
 };
 
+// Step 6: 가입 완료 페이지
+const SuccessSignUpInfo: React.FC = () => {
+  const navigate = useNavigate();
+
+  const handleSubmit = () => {
+    navigate("/login");
+  };
+
+  return (
+    <Container>
+      <SuccessContainer>
+        <div style={{ margin: "50px" }}></div>
+        <SuccessTitle>회원가입이 완료됐어요!</SuccessTitle>
+        <SubTitle>이제 원하는 팀에 가입할 수 있어요</SubTitle>
+        <div style={{ margin: "40px" }}></div>
+        <FaCheck size={50} color="var(--color-main)" />
+        <div style={{ margin: "40px" }}></div>
+        <MainButton height={50} width={270} onClick={handleSubmit}>
+          로그인 하러가기
+        </MainButton>
+      </SuccessContainer>
+    </Container>
+  );
+};
+
 // 전체 회원가입 페이지 컴포넌트
 const SignupPage: React.FC = () => {
   const [step, setStep] = useState(1);
@@ -721,15 +749,24 @@ const SignupPage: React.FC = () => {
   const handleNextStep = async (data: any = {}) => {
     const updatedData = { ...signupData, ...data };
     setSignupData(updatedData);
-    console.log(updatedData);
 
     if (step === 5) {
       // 마지막 단계에서 서버로 데이터를 전송
       setIsLoading(true);
       try {
         const dataToSend = { ...updatedData };
-        if (!isSocialLogin) {
-          // dataToSend.phone = phone;
+
+        if (isSocialLogin) {
+          const response = await apiClient.post("/auth/add-info", dataToSend);
+          if (response.status === 200 || response.status === 201) {
+            // 회원가입 성공 시 로그인 처리 및 메인 페이지로 이동
+            const { token, refreshToken } = response.data;
+            setAccessToken(token);
+            setRefreshToken(refreshToken);
+            setStep(step + 1);
+          } else {
+            alert("회원가입에 실패했습니다. 다시 시도해주세요.");
+          }
         } else {
           const response = await apiClient.post("api/sign/sign-up", dataToSend);
           if (response.status === 200 || response.status === 201) {
@@ -737,7 +774,7 @@ const SignupPage: React.FC = () => {
             const { token, refreshToken } = response.data;
             setAccessToken(token);
             setRefreshToken(refreshToken);
-            navigate("/"); // 메인 페이지로 이동
+            setStep(step + 1);
           } else {
             alert("회원가입에 실패했습니다. 다시 시도해주세요.");
           }
@@ -745,6 +782,7 @@ const SignupPage: React.FC = () => {
       } catch (error) {
         console.error("회원가입 오류:", error);
         alert("서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+        navigate("/login");
       } finally {
         setIsLoading(false);
       }
@@ -799,6 +837,7 @@ const SignupPage: React.FC = () => {
         {step === 5 && (
           <SubPersonalInfo onNext={handleNextStep} signupData={signupData} />
         )}
+        {step === 6 && <SuccessSignUpInfo />}
         {isLoading && <p>회원가입 중입니다. 잠시만 기다려주세요...</p>}
       </div>
     </div>
