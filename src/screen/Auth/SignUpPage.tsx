@@ -257,6 +257,7 @@ const TermsAgreement: React.FC<{
       <SubTitle>
         서비스 이용에 필요한 필수 약관과 선택 약관에 동의해주세요
       </SubTitle>
+      <div style={{ padding: "20px" }}></div>
       <CheckBox
         content={content}
         checkedState={checkedState}

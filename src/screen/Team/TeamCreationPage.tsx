@@ -20,15 +20,18 @@ const Container = styled.div`
 
 const Title = styled.h2`
   padding: 10px 0;
-  font-size: 20px;
-  font-weight: bold;
 `;
 
 const SubTitle = styled.p`
   color: black;
-  margin: 8px 0;
-  font-size: 17px;
-  font-weight: bold;
+  margin-top: 8px;
+  font-size: 14px;
+`;
+
+const InputTitle = styled.p`
+  color: black;
+  margin-top: 10px;
+  margin-left: 3px;
 `;
 
 const IconWrapper = styled.div`
@@ -77,32 +80,9 @@ const TeamProfileCreation: React.FC<{ onNext: (data: any) => void }> = ({
   onNext,
 }) => {
   const [teamName, setTeamName] = useState("");
-  const [isNameValid, setIsNameValid] = useState(false);
   const [profileImage, setProfileImage] = useState<string | null>(null);
-  // const [nameError, setNameError] = useState<string | null>(null);
+  const [nameError, setNameError] = useState<string | null>(null);
   const DefaultProfileIcon = "https://example.com/profile-image.jpg";
-
-  // const handleNameCheck = async () => {
-  //   // 팀 이름 중복 확인 로직 (예: 서버 요청 등)
-  //   if (teamName.length === 0) {
-  //     setNameError("팀 이름을 입력해주세요.");
-  //     return;
-  //   }
-  //   // 중복 확인 예시 (실제로는 서버에 요청해야 함)
-  //   try {
-  //     const response = await axios.post("/team/check-name", { teamName });
-  //     if (response.data.available) {
-  //       setIsNameValid(true);
-  //       setNameError(null);
-  //     } else {
-  //       setIsNameValid(false);
-  //       setNameError("이미 사용 중인 팀 이름입니다.");
-  //     }
-  //   } catch (error) {
-  //     console.error(error);
-  //     setNameError("팀 이름 확인 중 오류가 발생했습니다.");
-  //   }
-  // };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -123,10 +103,16 @@ const TeamProfileCreation: React.FC<{ onNext: (data: any) => void }> = ({
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const handleNext = () => {
-    // if (!isNameValid) {
-    //   setNameError("팀 이름 중복 확인을 해주세요.");
-    //   return;
-    // }
+    if (!teamName) {
+      setNameError("팀 이름을 입력해주세요.");
+      return;
+    } else if (teamName.length > 10) {
+      setNameError("10자 이내로 입력해주세요.");
+      return;
+    } else {
+      setNameError(null);
+    }
+
     onNext({ teamName, profileImage });
   };
 
@@ -142,11 +128,7 @@ const TeamProfileCreation: React.FC<{ onNext: (data: any) => void }> = ({
         padding={20}
         onChange={(e) => setTeamName(e.target.value)}
       />
-      {/* {nameError && <ErrorMessage>{nameError}</ErrorMessage>}
-      <MainButton height={40} onClick={handleNameCheck}>
-        중복 확인하기
-      </MainButton>
-      {isNameValid && <SubTitle>사용할 수 있는 팀 이름입니다.</SubTitle>} */}
+      {nameError && <ErrorMessage>{nameError}</ErrorMessage>}
       <div style={{ padding: "30px" }}></div>
       <SubTitle>팀의 프로필 사진을 정해주세요</SubTitle>
       <ImageWrapper>
@@ -195,22 +177,32 @@ const TeamDetailOne: React.FC<{ onNext: (data: any) => void }> = ({
   const [activityDays, setActivityDays] = useState<boolean[]>(
     Array(7).fill(false)
   );
-  const [activityTime, setActivityTime] = useState<boolean[]>(
-    Array(6).fill(false)
+  const [activityTime1, setActivityTime1] = useState<boolean[]>(
+    Array(3).fill(false)
+  );
+  const [activityTime2, setActivityTime2] = useState<boolean[]>(
+    Array(3).fill(false)
   );
   const [selectedAddress, setSelectedAddress] = useState<string>("");
   const [showMapModal, setShowMapModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const handleButtonClick = (index: number, type: "days" | "time") => {
+  const handleButtonClick = (
+    index: number,
+    type: "days" | "time1" | "time2"
+  ) => {
     if (type === "days") {
       const updated = [...activityDays];
       updated[index] = !updated[index];
       setActivityDays(updated);
-    } else if (type === "time") {
-      const updated = [...activityTime];
+    } else if (type === "time1") {
+      const updated = [...activityTime1];
       updated[index] = !updated[index];
-      setActivityTime(updated);
+      setActivityTime1(updated);
+    } else if (type === "time2") {
+      const updated = [...activityTime2];
+      updated[index - 3] = !updated[index - 3];
+      setActivityTime2(updated);
     }
   };
 
@@ -224,6 +216,7 @@ const TeamDetailOne: React.FC<{ onNext: (data: any) => void }> = ({
       setErrorMessage("모든 필수 항목을 입력해주세요.");
       return;
     }
+    const activityTime = [...activityTime1, ...activityTime2];
     onNext({
       region,
       selectedAddress,
@@ -256,7 +249,7 @@ const TeamDetailOne: React.FC<{ onNext: (data: any) => void }> = ({
       <SelectedAddress>{selectedAddress}</SelectedAddress>
       <SubTitle>주요 활동 요일</SubTitle>
       <CheckButton
-        title="주요 활동 요일"
+        fontSize={14}
         items={["월", "화", "수", "목", "금", "토", "일"]}
         selectedBgColor="var(--color-main)"
         textColor="var(--color-dark1)"
@@ -265,19 +258,28 @@ const TeamDetailOne: React.FC<{ onNext: (data: any) => void }> = ({
       />
       <SubTitle>주요 활동 시간</SubTitle>
       <CheckButton
-        title="주요 활동 시간"
         items={[
-          "아침 6시~9시",
-          "오전 9시~12시",
-          "점심 12시~15시",
-          "오후 15시~18시",
-          "저녁 18시~21시",
-          "밤 21시~24시",
+          "아침<br />6시~9시",
+          "오전<br />9시~12시",
+          "점심<br />12시~15시",
         ]}
+        fontSize={14}
         selectedBgColor="var(--color-main)"
         textColor="var(--color-dark1)"
-        selectedStates={activityTime}
-        onItemClick={(index: number) => handleButtonClick(index, "time")}
+        selectedStates={activityTime1}
+        onItemClick={(index: number) => handleButtonClick(index, "time1")}
+      />
+      <CheckButton
+        items={[
+          "오후<br />15시~18시",
+          "저녁<br />8시~21시",
+          "밤<br />21시~24시",
+        ]}
+        fontSize={14}
+        selectedBgColor="var(--color-main)"
+        textColor="var(--color-dark1)"
+        selectedStates={activityTime2}
+        onItemClick={(index: number) => handleButtonClick(index + 3, "time2")}
       />
       <MainButton height={50} onClick={handleNext}>
         다음
@@ -311,12 +313,16 @@ const TeamDetailTwo: React.FC<{ onNext: (data: any) => void }> = ({
       {errorMessage && <ErrorMessage>{errorMessage}</ErrorMessage>}
       <SubTitle>성별</SubTitle>
       <RadioButton
+        fontSize={14}
         items={["남성만", "여성만", "남녀 모두"]}
+        selectedItem={gender}
         onChange={(value) => setGender(value)}
       />
       <SubTitle>나이대</SubTitle>
       <RadioButton
+        fontSize={14}
         items={["20대", "30대", "40대", "50대", "60대", "70대 이상"]}
+        selectedItem={ageGroup}
         onChange={(value) => setAgeGroup(value)}
       />
       <SubTitle>월 회비</SubTitle>
@@ -328,7 +334,9 @@ const TeamDetailTwo: React.FC<{ onNext: (data: any) => void }> = ({
       />
       <SubTitle>팀 수준</SubTitle>
       <RadioButton
+        fontSize={14}
         items={["상", "중", "하"]}
+        selectedItem={teamLevel}
         onChange={(value) => setTeamLevel(value)}
       />
       <MainButton height={50} onClick={handleNext}>
@@ -424,6 +432,7 @@ const TeamCreationPage: React.FC = () => {
   const handleNextStep = async (data: any = {}) => {
     const updatedData = { ...teamData, ...data };
     setTeamData(updatedData);
+    console.log(updatedData);
 
     if (step === 4) {
       // 마지막 단계에서 서버로 데이터를 전송
@@ -451,7 +460,7 @@ const TeamCreationPage: React.FC = () => {
     <div style={{ padding: "20px" }}>
       <Link to="/login">
         <div style={{ padding: "10px 0" }}>
-          <MdClose size={30} />
+          <MdClose size={30} color="#000" />
         </div>
       </Link>
       <div style={{ padding: "5px" }}>

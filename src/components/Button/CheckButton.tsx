@@ -35,8 +35,9 @@ const CheckButton: React.FC<CheckButtonProps> = ({
             fontSize={fontSize}
             bgColor={bgColor}
             selectedBgColor={selectedBgColor}
+            dangerouslySetInnerHTML={{ __html: item }} // HTML 태그 렌더링
           >
-            {item}
+            {/* {item} */}
           </CheckItemButton>
         ))}
       </ButtonContainer>
@@ -74,7 +75,7 @@ interface CheckItemButtonProps {
 const CheckItemButton = styled.button<CheckItemButtonProps>`
   border: 1px solid var(--color-dark1);
   padding: 10px;
-  margin: 4px;
+  margin: 3px;
   border-radius: 8px;
   color: ${({ isSelected, textColor }) =>
     isSelected ? "var(--color-light1)" : textColor || "var(--color-main)"};
@@ -86,6 +87,6 @@ const CheckItemButton = styled.button<CheckItemButtonProps>`
   cursor: pointer;
   width: 100%;
   text-align: center;
-
+  white-space: pre-wrap; /* 줄넘김 허용 */
   transition: all 0.3s ease;
 `;

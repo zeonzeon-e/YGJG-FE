@@ -97,7 +97,7 @@ interface RadioItemButtonProps {
 const RadioItemButton = styled.button<RadioItemButtonProps>`
   border: 1px solid var(--color-dark1);
   padding: 10px;
-  margin: 4px;
+  margin: 3px;
   border-radius: 8px;
   color: ${({ isSelected, textColor }) =>
     isSelected ? "var(--color-light1)" : textColor || "var(--color-main)"};
