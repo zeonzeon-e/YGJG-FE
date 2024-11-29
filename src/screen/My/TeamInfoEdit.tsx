@@ -46,11 +46,9 @@ const TeamInfoEdit: React.FC = () => {
         position: newPosition,
         teamColor: selectedColor 
       }
-      await apiClient.put(`/myPage/teamMember/${teamId}`, body, {
+      await apiClient.put(`api/myPage/teamMember/${teamId}`, body, {
         headers, // headers를 config에 포함
-      });
-      console.log(headers, body)
-        console.log("sy")
+      });  
         navigate("/my", {
           state: {
             updatedTeam: { teamId, teamColor: selectedColor, position: newPosition },

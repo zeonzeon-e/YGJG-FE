@@ -45,6 +45,9 @@ const GameStrategy: React.FC = () => {
     setFormationCircles(circles); // Save formation circles
   };
 
+  console.log(selectedDate)
+  console.log(selectedTime)
+
   return (
     <>
       <GlobalStyles />
@@ -67,6 +70,7 @@ const GameStrategy: React.FC = () => {
             >
               {selectedTime || "시간을 선택하세요"}
             </StrategyButton>
+            
           </PickerButton>
           {showDatePicker && (
             <CalendarModal

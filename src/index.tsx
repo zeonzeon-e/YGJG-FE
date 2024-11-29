@@ -23,6 +23,7 @@ import GoogleRedirectHandler from "./screen/Auth/GoogleRedirectHandler";
 import TeamCreationPage from "./screen/Team/TeamCreationPage";
 import TeamCreationIntroPage from "./screen/Team/TeamCreationIntroPage";
 import TeamSelectListPage from "./screen/Team/TeamSelectListPage";
+import TeamInfoPage from "./screen/Team/TeamInforPage";
 
 const GlobalStyle = createGlobalStyle`
   body, #root, .app-container {
@@ -59,6 +60,7 @@ root.render(
         <Route path="/team/intro" element={<TeamCreationIntroPage />} />
         <Route path="/team/select/list" element={<TeamSelectListPage />} />
         <Route path="/team/list" element={<TeamListPage />} />
+        <Route path="/team" element={<TeamInfoPage/>}/>
         <Route path="/my" element={<MyPage />} />
         {/* 팀 정보 수정 페이지 */}
         <Route path="/team-edit/:id" element={<TeamInfoEdit />} />

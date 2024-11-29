@@ -68,7 +68,7 @@ const LoginPage: React.FC = () => {
     try {
       // JSON 형식으로 데이터를 전송
       const response: AxiosResponse<{ token: string; refreshToken: string }> =
-        await apiClient.post("/sign/sign-in", loginData);
+        await apiClient.post("api/sign/sign-in", loginData);
 
       if (response.status === 200 || response.status === 201) {
         const { token, refreshToken } = response.data;
