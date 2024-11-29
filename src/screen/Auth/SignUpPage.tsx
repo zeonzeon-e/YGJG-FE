@@ -1,12 +1,12 @@
 import React, { useState, useRef, useEffect } from "react";
 import styled from "styled-components";
-import axios from "axios";
 import CheckBox from "../../components/CheckBox/CheckBox";
 import Input from "../../components/Input/Input";
 import MainButton from "../../components/Button/MainButton";
 import ScrollProgress from "../../components/ScrollProgress/ScrollProgress";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { MdClose, MdVisibility, MdVisibilityOff } from "react-icons/md";
+import { MdClose } from "react-icons/md";
+import { FaCheck } from "react-icons/fa6";
 import { setAccessToken, setRefreshToken } from "../../utils/authUtils";
 import RadioButton from "../../components/Button/RadioButton";
 import KakaoMapModal from "../../components/Modal/KakaoAddress";
@@ -45,7 +45,13 @@ const SelectedAddress = styled.div`
 `;
 
 const ErrorMessage = styled.p`
-  color: red;
+  color: var(--color-error);
+  font-size: 12px;
+  margin-top: 2px;
+`;
+
+const SuccessMessage = styled.p`
+  color: green;
   font-size: 12px;
   margin-top: 2px;
 `;
@@ -54,14 +60,15 @@ const ProgressBar = styled.div`
   margin-bottom: 20px;
 `;
 
-const ShowPasswordIcon = styled.span`
-  position: absolute;
-  right: 15px;
-  top: 50%;
-  transform: translateY(-50%);
-  cursor: pointer;
-  font-size: 18px;
-  color: #777;
+const SuccessContainer = styled.div`
+  display: flex;
+  flexdirection: column;
+  alignitems: center;
+`;
+
+const SuccessTitle = styled.div`
+  font-size: 22px;
+  font-weight: 500;
 `;
 
 // Step 1: 휴대폰 인증 컴포넌트
@@ -73,13 +80,16 @@ const PhoneVerification: React.FC<{
   const [verificationCode, setVerificationCode] = useState("");
   const [isVerified, setIsVerified] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
   const handleVerify = () => {
     if (verificationCode === "1234") {
       setIsVerified(true);
       setError(null);
+      setSuccess("인증이 완료되었습니다.");
     } else {
       setError("인증번호가 일치하지 않습니다.");
+      setSuccess(null);
     }
   };
 
@@ -88,6 +98,7 @@ const PhoneVerification: React.FC<{
       onNext();
     } else {
       setError("휴대폰 인증을 완료해주세요.");
+      setSuccess(null);
     }
   };
 
@@ -183,6 +194,7 @@ const PhoneVerification: React.FC<{
         disabled={isVerified}
       />
       {error && <ErrorMessage>{error}</ErrorMessage>}
+      {success && <SuccessMessage>{success}</SuccessMessage>}
       <MainButton height={50} onClick={handleVerify} disabled={isVerified}>
         인증하기
       </MainButton>
@@ -235,12 +247,17 @@ const TermsAgreement: React.FC<{
       .filter((_, index) => checkedState[index]);
   };
 
+  const handleSubmit = () => {
+    onNext(getSelectedTerms());
+  };
+
   return (
     <Container>
       <Title>약관 동의</Title>
       <SubTitle>
         서비스 이용에 필요한 필수 약관과 선택 약관에 동의해주세요
       </SubTitle>
+      <div style={{ padding: "20px" }}></div>
       <CheckBox
         content={content}
         checkedState={checkedState}
@@ -249,10 +266,7 @@ const TermsAgreement: React.FC<{
         onAllClick={handleAllClick}
       />
       <ButtonWrapper>
-        <MainButton
-          disabled={!isNextButtonEnabled}
-          onClick={() => onNext(getSelectedTerms())}
-        >
+        <MainButton disabled={!isNextButtonEnabled} onClick={handleSubmit}>
           다음
         </MainButton>
       </ButtonWrapper>
@@ -282,7 +296,7 @@ const PersonalInfo: React.FC<PersonalInfoProps> = ({
   >(null);
   const [generalError, setGeneralError] = useState<string | null>(null);
   const [emailChecked, setEmailChecked] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
+  const [success, setSuccess] = useState<string | null>(null); // 성공 메시지 상태 추가
 
   const emailInputRef = useRef<HTMLInputElement>(null);
   const passwordInputRef = useRef<HTMLInputElement>(null);
@@ -336,29 +350,44 @@ const PersonalInfo: React.FC<PersonalInfoProps> = ({
   const handleEmailCheck = async () => {
     if (!email) {
       setEmailError("이메일을 입력해주세요.");
+      setSuccess(null);
       return;
     }
     try {
       // 서버에 이메일 중복 확인 요청
       const response = await apiClient.get(`api/sign/checkEmail/${email}`);
-      if (response.data.exists) {
-        setEmailError("이미 사용 중인 이메일입니다.");
+      if (response.data.code) {
+        setEmailError("사용할 수 없는 이메일입니다.");
         setEmailChecked(false);
+        setSuccess(null);
       } else {
-        setEmailError(null);
-        setEmailChecked(true);
+        const pattern = /^[A-Za-z0-9_\.\-]+@[A-Za-z0-9\-]+\.[A-za-z0-9\-]+/;
+
+        if (pattern.test(email) === true) {
+          setEmailError(null);
+          setEmailChecked(true);
+          setSuccess("사용 가능한 이메일입니다.");
+        } else {
+          setEmailError("올바른 이메일 형식을 입력해주세요.");
+          setEmailChecked(false);
+          setSuccess(null);
+        }
       }
     } catch (error) {
       console.error(error);
       setEmailError("사용할 수 없는 이메일입니다.");
+      setEmailChecked(false);
+      setSuccess(null);
     }
   };
 
   const handleSubmit = () => {
     if (validateFields()) {
+      const passwordCheck = confirmPassword;
       onNext({
         email,
         password,
+        passwordCheck,
       });
     }
   };
@@ -380,6 +409,7 @@ const PersonalInfo: React.FC<PersonalInfoProps> = ({
             onChange={(e) => {
               setEmail(e.target.value);
               setEmailChecked(false);
+              setSuccess(null); // 성공 메시지 초기화
             }}
             disabled={isSocialLogin} // 소셜 로그인 사용자는 입력 불가
           />
@@ -398,21 +428,17 @@ const PersonalInfo: React.FC<PersonalInfoProps> = ({
         </div>
       </div>
       {emailError && <ErrorMessage>{emailError}</ErrorMessage>}
+      {success && <SuccessMessage>{success}</SuccessMessage>}
       <InputTitle>비밀번호</InputTitle>
-      <div style={{ position: "relative" }}>
-        <Input
-          ref={passwordInputRef}
-          type={showPassword ? "text" : "password"}
-          height={45}
-          placeholder="비밀번호"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          disabled={isSocialLogin} // 소셜 로그인 사용자는 입력 불가
-        />
-        <ShowPasswordIcon onClick={() => setShowPassword(!showPassword)}>
-          {showPassword ? <MdVisibilityOff /> : <MdVisibility />}
-        </ShowPasswordIcon>
-      </div>
+      <Input
+        ref={passwordInputRef}
+        type={"password"}
+        height={45}
+        placeholder="비밀번호"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        disabled={isSocialLogin} // 소셜 로그인 사용자는 입력 불가
+      />
       {passwordError && <ErrorMessage>{passwordError}</ErrorMessage>}
       <InputTitle>비밀번호 확인</InputTitle>
       <Input
@@ -447,6 +473,7 @@ const PersonalInfo2: React.FC<PersonalInfo2Props> = ({
   signupData,
   isSocialLogin = false,
 }) => {
+  const [name, setName] = useState(signupData.name || "");
   const [birth, setBirth] = useState(signupData.birth || "");
   const [gender, setGender] = useState<string | null>(
     signupData.gender || null
@@ -458,17 +485,24 @@ const PersonalInfo2: React.FC<PersonalInfo2Props> = ({
     signupData.detailAddress || ""
   );
   const [showMapModal, setShowMapModal] = useState(false);
+  const [nameError, setNameError] = useState<string | null>(null);
   const [birthError, setBirthError] = useState<string | null>(null);
   const [generalError, setGeneralError] = useState<string | null>(null);
+  const [addressError, setAddressError] = useState<string | null>(null);
+  const nameInputRef = useRef<HTMLInputElement>(null);
   const birthInputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (isSocialLogin) {
-    }
-  }, [isSocialLogin]);
+  const addressInputRef = useRef<HTMLInputElement>(null);
 
   const validateFields = () => {
     let isValid = true;
+
+    if (!name) {
+      setNameError("이름을 입력해주세요.");
+      nameInputRef.current?.focus();
+      isValid = false;
+    } else {
+      setNameError(null);
+    }
 
     const birthRegex = /^\d{6}$/;
     if (!birthRegex.test(birth)) {
@@ -477,6 +511,14 @@ const PersonalInfo2: React.FC<PersonalInfo2Props> = ({
       isValid = false;
     } else {
       setBirthError(null);
+    }
+
+    if (!selectedAddress) {
+      setAddressError("주소를 찾아주세요.");
+      addressInputRef.current?.focus();
+      isValid = false;
+    } else {
+      setAddressError(null);
     }
 
     if (!gender || !selectedAddress) {
@@ -491,12 +533,24 @@ const PersonalInfo2: React.FC<PersonalInfo2Props> = ({
 
   const handleSubmit = () => {
     if (validateFields()) {
-      onNext({
-        gender,
-        birth,
-        selectedAddress,
-        detailAddress,
-      });
+      const birthDate = birth;
+      const address = selectedAddress;
+      if (isSocialLogin) {
+        onNext({
+          name,
+          gender,
+          birthDate,
+          address,
+          detailAddress,
+        });
+      } else {
+        onNext({
+          gender,
+          birthDate,
+          address,
+          detailAddress,
+        });
+      }
     }
   };
 
@@ -509,6 +563,16 @@ const PersonalInfo2: React.FC<PersonalInfo2Props> = ({
       <Title>개인정보 입력</Title>
       <SubTitle>서비스 이용에 필요한 정보를 입력해주세요</SubTitle>
       {generalError && <ErrorMessage>{generalError}</ErrorMessage>}
+      <InputTitle>이름</InputTitle>
+      <Input
+        ref={nameInputRef}
+        type="text"
+        height={45}
+        placeholder="이름"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+      />
+      {nameError && <ErrorMessage>{nameError}</ErrorMessage>}
       <InputTitle>생년월일 (6자리)</InputTitle>
       <Input
         ref={birthInputRef}
@@ -535,6 +599,7 @@ const PersonalInfo2: React.FC<PersonalInfo2Props> = ({
       >
         주소 찾기
       </MainButton>
+      {addressError && <ErrorMessage>{addressError}</ErrorMessage>}
       <SelectedAddress>{selectedAddress}</SelectedAddress>
       {showMapModal && (
         <KakaoMapModal
@@ -562,26 +627,27 @@ const SubPersonalInfo: React.FC<{
   onNext: (data: any) => void;
   signupData: any;
 }> = ({ onNext, signupData }) => {
-  const [experience, setExperience] = useState<string | null>(
-    signupData.experience || null
-  );
-  const [former, setFormer] = useState<string | null>(
-    signupData.former || null
-  );
-  const [level, setLevel] = useState<string | null>(signupData.level || null);
+  const [experience, setExperience] = useState<string | null>(null);
+  const [level, setLevel] = useState<string | null>(null);
   const [generalError, setGeneralError] = useState<string | null>(null);
 
   const handleSubmit = () => {
-    if (!experience || !level) {
+    if (!experience) {
       setGeneralError("모든 필수 항목을 선택해주세요.");
       return;
     }
-    if (experience === "있다" && !former) {
+    if (experience === "있다" && !level) {
       setGeneralError("선수 경력을 선택해주세요.");
       return;
     }
+    if (experience === "없다" && !level) {
+      setGeneralError("레벨을 선택해주세요.");
+      return;
+    }
     setGeneralError(null);
-    onNext({ experience, former, level });
+
+    const hasExperience = experience === "있다" ? true : false;
+    onNext({ hasExperience, level });
   };
 
   return (
@@ -596,33 +662,61 @@ const SubPersonalInfo: React.FC<{
         selectedItem={experience}
         onChange={(value) => {
           setExperience(value);
-          if (value !== "있다") {
-            setFormer(null);
-          }
+          setLevel(null);
         }}
       />
       {experience === "있다" && (
         <>
           <InputTitle>선수 경력</InputTitle>
           <RadioButton
-            fontSize={14}
+            fontSize={13}
             items={["초등학교 선출", "중학교 선출", "고등학교 선출"]}
-            selectedItem={former}
-            onChange={(value) => setFormer(value)}
+            selectedItem={level}
+            onChange={(value) => setLevel(value)}
           />
         </>
       )}
-      <InputTitle>레벨</InputTitle>
-      <RadioButton
-        fontSize={14}
-        items={["상", "중", "하"]}
-        selectedItem={level}
-        onChange={(value) => setLevel(value)}
-      />
+      {experience === "없다" && (
+        <>
+          <InputTitle>레벨</InputTitle>
+          <RadioButton
+            fontSize={14}
+            items={["상", "중", "하"]}
+            selectedItem={level}
+            onChange={(value) => setLevel(value)}
+          />
+        </>
+      )}
+
       <div style={{ margin: "20px" }}></div>
       <MainButton height={50} onClick={handleSubmit}>
         다음
       </MainButton>
+    </Container>
+  );
+};
+
+// Step 6: 가입 완료 페이지
+const SuccessSignUpInfo: React.FC = () => {
+  const navigate = useNavigate();
+
+  const handleSubmit = () => {
+    navigate("/login");
+  };
+
+  return (
+    <Container>
+      <SuccessContainer>
+        <div style={{ margin: "50px" }}></div>
+        <SuccessTitle>회원가입이 완료됐어요!</SuccessTitle>
+        <SubTitle>이제 원하는 팀에 가입할 수 있어요</SubTitle>
+        <div style={{ margin: "40px" }}></div>
+        <FaCheck size={50} color="var(--color-main)" />
+        <div style={{ margin: "40px" }}></div>
+        <MainButton height={50} width={270} onClick={handleSubmit}>
+          로그인 하러가기
+        </MainButton>
+      </SuccessContainer>
     </Container>
   );
 };
@@ -656,15 +750,24 @@ const SignupPage: React.FC = () => {
   const handleNextStep = async (data: any = {}) => {
     const updatedData = { ...signupData, ...data };
     setSignupData(updatedData);
-    console.log(updatedData);
 
     if (step === 5) {
       // 마지막 단계에서 서버로 데이터를 전송
       setIsLoading(true);
       try {
         const dataToSend = { ...updatedData };
-        if (!isSocialLogin) {
-          // dataToSend.phone = phone;
+
+        if (isSocialLogin) {
+          const response = await apiClient.post("/auth/add-info", dataToSend);
+          if (response.status === 200 || response.status === 201) {
+            // 회원가입 성공 시 로그인 처리 및 메인 페이지로 이동
+            const { token, refreshToken } = response.data;
+            setAccessToken(token);
+            setRefreshToken(refreshToken);
+            setStep(step + 1);
+          } else {
+            alert("회원가입에 실패했습니다. 다시 시도해주세요.");
+          }
         } else {
           const response = await apiClient.post("api/sign/sign-up", dataToSend);
           if (response.status === 200 || response.status === 201) {
@@ -672,7 +775,7 @@ const SignupPage: React.FC = () => {
             const { token, refreshToken } = response.data;
             setAccessToken(token);
             setRefreshToken(refreshToken);
-            navigate("/"); // 메인 페이지로 이동
+            setStep(step + 1);
           } else {
             alert("회원가입에 실패했습니다. 다시 시도해주세요.");
           }
@@ -680,6 +783,7 @@ const SignupPage: React.FC = () => {
       } catch (error) {
         console.error("회원가입 오류:", error);
         alert("서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+        navigate("/login");
       } finally {
         setIsLoading(false);
       }
@@ -702,7 +806,7 @@ const SignupPage: React.FC = () => {
       <ProgressBar>
         <ScrollProgress
           targetWidth={
-            isSocialLogin ? ((step - 3) * 100) / 2 : (step * 100) / 5
+            isSocialLogin ? ((step - 3) * 100) / 3 : (step * 100) / 6
           }
         />
       </ProgressBar>
@@ -734,6 +838,7 @@ const SignupPage: React.FC = () => {
         {step === 5 && (
           <SubPersonalInfo onNext={handleNextStep} signupData={signupData} />
         )}
+        {step === 6 && <SuccessSignUpInfo />}
         {isLoading && <p>회원가입 중입니다. 잠시만 기다려주세요...</p>}
       </div>
     </div>
