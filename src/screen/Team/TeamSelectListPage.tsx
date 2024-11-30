@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from "react";
 import styled from "styled-components";
-import { FaPlus, FaFilter, FaSearch, FaPaperPlane } from "react-icons/fa";
+import { FaFilter, FaSearch, FaPaperPlane } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import apiClient from "../../api/apiClient";
 import Modal1 from "../../components/Modal/Modal1";
 import { getAccessToken } from "../../utils/authUtils";
 import CheckButton from "../../components/Button/CheckButton";
 import MainButton from "../../components/Button/MainButton";
+import { BsFillPlusCircleFill } from "react-icons/bs";
 
 const Container = styled.div`
   padding: 30px 20px 20px 20px;
@@ -24,6 +25,9 @@ const Title = styled.h2`
 `;
 
 const AddTeamButton = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 5px;
   background: none;
   border: none;
   font-size: 15px;
@@ -290,7 +294,7 @@ const TeamSelectListPage: React.FC = () => {
       <Header>
         <Title>가입할 팀 찾기</Title>
         <AddTeamButton onClick={() => navigate("/team/intro")}>
-          팀 생성하기 <FaPlus />
+          팀 생성하기 <BsFillPlusCircleFill />
         </AddTeamButton>
       </Header>
 

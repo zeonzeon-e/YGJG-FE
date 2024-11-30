@@ -30,7 +30,7 @@ const RadioButton: React.FC<RadioButtonProps> = ({
   title,
   items,
   selectedItem,
-  textColor,
+  textColor: textcolor,
   fontSize,
   bgColor,
   selectedBgColor,
@@ -53,7 +53,7 @@ const RadioButton: React.FC<RadioButtonProps> = ({
             key={index}
             onClick={() => handleButtonClick(index)}
             isSelected={selectedItem === item}
-            textColor={textColor}
+            textcolor={textcolor}
             fontSize={fontSize}
             bgColor={bgColor}
             selectedBgColor={selectedBgColor}
@@ -88,7 +88,7 @@ const ButtonContainer = styled.div`
 
 interface RadioItemButtonProps {
   isSelected: boolean;
-  textColor?: string;
+  textcolor?: string;
   fontSize?: number;
   bgColor?: string;
   selectedBgColor?: string;
@@ -99,8 +99,8 @@ const RadioItemButton = styled.button<RadioItemButtonProps>`
   padding: 10px;
   margin: 3px;
   border-radius: 8px;
-  color: ${({ isSelected, textColor }) =>
-    isSelected ? "var(--color-light1)" : textColor || "var(--color-main)"};
+  color: ${({ isSelected, textcolor }) =>
+    isSelected ? "var(--color-light1)" : textcolor || "var(--color-main)"};
   background-color: ${({ isSelected, bgColor, selectedBgColor }) =>
     isSelected
       ? selectedBgColor || "var(--color-main)"

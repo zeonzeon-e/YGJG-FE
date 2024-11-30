@@ -212,11 +212,16 @@ const TeamDetailOne: React.FC<{ onNext: (data: any) => void }> = ({
   };
 
   const handleNext = () => {
-    if (!region || !selectedAddress) {
+    const activityTime = [...activityTime1, ...activityTime2];
+    if (
+      !region ||
+      !selectedAddress ||
+      !activityDays.includes(true) ||
+      !activityTime.includes(true)
+    ) {
       setErrorMessage("모든 필수 항목을 입력해주세요.");
       return;
     }
-    const activityTime = [...activityTime1, ...activityTime2];
     onNext({
       region,
       selectedAddress,
@@ -458,7 +463,7 @@ const TeamCreationPage: React.FC = () => {
 
   return (
     <div style={{ padding: "20px" }}>
-      <Link to="/login">
+      <Link to="/team/select/list">
         <div style={{ padding: "10px 0" }}>
           <MdClose size={30} color="#000" />
         </div>
