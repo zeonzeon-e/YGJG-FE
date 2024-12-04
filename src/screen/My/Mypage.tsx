@@ -3,63 +3,150 @@ import GlobalStyles from "../../components/Styled/GlobalStyled";
 import Header1 from "../../components/Header/Header1/Header1";
 import styled from "styled-components";
 import MiniButton from "../../components/Button/MiniButton";
-import { FaCalendarAlt, FaClipboardCheck, FaEdit } from "react-icons/fa";
+import { FaCalendarAlt, FaClipboardCheck, FaEdit,FaBell } from "react-icons/fa";
 import { useNavigate } from "react-router-dom"; // React Router 사용
 import apiClient from "../../api/apiClient"; // apiClient 임포트
 import { getAccessToken } from "../../utils/authUtils";
+import axios, { AxiosResponse } from "axios";
+import { setAccessToken, setRefreshToken } from "../../utils/authUtils";
 
 const MyPage: React.FC = () => {
   const [teamList, setTeamList] = useState<
     Array<{
-      id: number;
-      color: string;
-      img: string;
-      name: string;
       position: string;
+      teamId: number;
+      teamColor: string;
+      teamImageUrl: string;
+      teamName: string;
+      
     }>
   >([]);
-  const [profile, setProfile] = useState<{
-    name: string;
-    email: string;
-    imageUrl: string;
-  } | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+const [profile, setProfile] = useState<{
+  name: string;
+  email: string;
+  imageUrl: string;
+} | null>(null);
+const [loading, setLoading] = useState<boolean>(true);
+const [error, setError] = useState<string | null>(null);
 
-  const navigate = useNavigate();
+const navigate = useNavigate();
 
-  // useEffect(() => {
-  //   // 백엔드에서 팀 목록과 프로필 정보를 가져오는 함수
-  //   const fetchData = async () => {
-  //     try {
-  //       setLoading(true);
-  //       // 실제 API 엔드포인트에 맞게 수정하세요
-  //       const [teamResponse, profileResponse] = await Promise.all([
-  //         apiClient.get("/api/teams"), // 팀 목록을 가져오는 API
-  //         apiClient.get("/api/user/profile"), // 사용자 프로필을 가져오는 API
-  //       ]);
-  //       setTeamList(teamResponse.data);
-  //       setProfile(profileResponse.data);
-  //     } catch (err) {
-  //       console.error(err);
-  //       setError("데이터를 가져오는 중 에러가 발생했습니다.");
-  //     } finally {
-  //       setLoading(false);
+// useEffect(() => {
+//   // 백엔드에서 팀 목록과 프로필 정보를 가져오는 함수
+//   const fetchData = async () => {
+//     try {
+//       setLoading(true);
+//       const accessToken = getAccessToken(); // accessToken 가져오기
+//       const headers = {
+//         Authorization: `Bearer ${accessToken}`,
+//       };
+      
+//       // 실제 API 엔드포인트에 맞게 수정하세요
+//       const [teamResponse, profileResponse] = await Promise.all([
+//         apiClient.get("/api/teams", { headers }), // 팀 목록을 가져오는 API
+//         apiClient.get("/api/user/profile", { headers }), // 사용자 프로필을 가져오는 API
+//       ]);
+//       setTeamList(teamResponse.data);
+//       setProfile(profileResponse.data);
+//     } catch (err) {
+//       console.error(err);
+//       setError("데이터를 가져오는 중 에러가 발생했습니다.");
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   fetchData();
+// }, []);
+
+  useEffect(() => {
+    
+  const profileData = async () => {
+    try{
+      const accessToken = getAccessToken();
+      const headers = {
+        Authorization: `Bearer ${accessToken}`,
+      };
+
+      const response = await apiClient.get('api/member/getUser');
+      console.log(response.data)
+      setProfile({name: response.data.name, email:response.data.email, imageUrl:response.data.profileUrl})
+      console.log('profile', profile)
+    }catch(err){console.error(err);
+      setError("데이터를 가져오는 중 에러가 발생했습니다.")
+    }
+  }
+  const teamData = async () => {
+    try{
+      const response = await apiClient.get('api/myPage/teams');
+      console.log(response.data)
+      setTeamList(response.data)
+      console.log('Team', teamList)
+    }catch(err){console.error(err);
+      setError("데이터를 가져오는 중 에러가 발생했습니다.")
+    }
+  }
+
+
+  profileData();
+  teamData();
+  }, [])
+
+
+// // API 호출 결과 타입 정의
+// interface ApiResponse {
+//   id: number;
+//   name: string;
+//   email: string;
+// }
+// const accessToken = getAccessToken(); // 여기에 실제 토큰을 입력하세요.
+// console.log('accessToken', accessToken)
+
+//   const [data, setData] = useState<ApiResponse[]>([]);
+
+
+  // // API 데이터 가져오기 함수
+  // const fetchData = async () => {
+  //   setLoading(true);
+  //   setError(null);
+
+  //   try {
+  //     const response = await fetch('http://13.124.10.231:8080/api/team', {
+  //       method: 'GET',
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //         Authorization: `bearer ${accessToken}`,
+  //       },
+  //     });
+
+  //     if (!response.ok) {
+  //       throw new Error(`HTTP error! status: ${response.status}`);
   //     }
-  //   };
 
+  //     const result: ApiResponse[] = await response.json();
+  //     setData(result);
+  //   } catch (err) {
+  //     setError((err as Error).message);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+  // // 컴포넌트가 처음 렌더링될 때 데이터 가져오기
+  // useEffect(() => {
   //   fetchData();
   // }, []);
 
+
   const handleEditClick = (index: number) => {
-    navigate(`/team-edit/${teamList[index].id}`, {
+    navigate(`/team-edit/${teamList[index].teamId}`, {
       state: {
-        teamIndex: index,
-        color: teamList[index].color,
+        teamId: teamList[index].teamId,
+        teamColor: teamList[index].teamColor,
         position: teamList[index].position,
       },
     });
-  };
+  };  
 
   if (loading) {
     return (
@@ -78,29 +165,32 @@ const MyPage: React.FC = () => {
             <ProfileButton>프로필 설정</ProfileButton>
           </Profile>
 
+          <TeamContainer className="border-df">
           <SectionTitle>가입 중인 팀</SectionTitle>
           {teamList.length !== 0 ? (
             teamList.map((el, index) => (
               <JoinTeamList key={index}>
-                <ColorCircle color={el.color} />
-                <div>{el.img}</div>
-                <div>{el.name}</div>
+                <TeamDiv>
+                <ColorLine color={el.teamColor} />
+                <TeamProfileImg src={el.teamImageUrl}/>
+                <TeamNameText>{el.teamName}</TeamNameText>
+                </TeamDiv>
                 <PositionWrapper>
                   <PositionText position={el.position}>
                     {el.position}
                   </PositionText>
-                  <span>으로 활동중</span>
+                  
                 </PositionWrapper>
                 <MiniButton onClick={() => handleEditClick(index)}>
                   <FaEdit style={{ marginRight: "5px" }} />
-                  정보 수정
+                  
                 </MiniButton>
               </JoinTeamList>
             ))
           ) : (
             <JoinTeamList>가입 중인 팀이 없어요</JoinTeamList>
           )}
-
+</TeamContainer>
           <MenuList>
             <MenuItem>
               <FaCalendarAlt size={24} />
@@ -112,6 +202,12 @@ const MyPage: React.FC = () => {
               <FaClipboardCheck size={24} />
               <MenuText onClick={() => navigate("/my/joinstatus")}>
                 가입 승인 현황 보기
+              </MenuText>
+            </MenuItem>
+            <MenuItem>
+              <FaBell size={24} />
+              <MenuText onClick={() => navigate("/my/alarm")}>
+                알림 설정하기
               </MenuText>
             </MenuItem>
           </MenuList>
@@ -162,14 +258,13 @@ const MyPage: React.FC = () => {
         {teamList.length !== 0 ? (
           teamList.map((el, index) => (
             <JoinTeamList key={index}>
-              <ColorCircle color={el.color} />
-              <div>{el.img}</div>
-              <div>{el.name}</div>
+              {/* <ColorCircle color={el.teamColor} /> */}
+              <div>{el.teamImageUrl}</div>
+              <TeamNameText>{el.teamName}</TeamNameText>
               <PositionWrapper>
                 <PositionText position={el.position}>
-                  {el.position}
+                  {el.position}으로 활동중
                 </PositionText>
-                <span>으로 활동중</span>
               </PositionWrapper>
               <MiniButton onClick={() => handleEditClick(index)}>
                 <FaEdit style={{ marginRight: "5px" }} />
@@ -231,12 +326,11 @@ const Profile = styled.div`
   flex-direction: column;
   align-items: center;
   margin-bottom: 20px;
-  margin-top: 20px;
 `;
 
 const ProfileImage = styled.img`
-  width: 120px;
-  height: 120px;
+  width: 20vw;
+  height: 20vw;
   border-radius: 50%;
   margin-bottom: 10px;
 `;
@@ -271,7 +365,7 @@ const ProfileButton = styled.button`
 `;
 
 const SectionTitle = styled.h2`
-  font-size: 18px;
+  font-size: 16px;
   font-family: "Pretendard-Bold";
   margin-bottom: 20px;
 `;
@@ -280,23 +374,41 @@ const JoinTeamList = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px;
-  border-radius: 8px;
-  background-color: var(--color-light1);
-  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
-  margin-bottom: 16px;
+  margin-bottom: 8px;
 `;
 
-const ColorCircle = styled.div<{ color: string }>`
-  width: 20px;
-  height: 20px;
+const TeamContainer = styled.div`
+  background-color: white;
+  border-radius: 8px;
+  padding: 16px;
+  
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+`
+
+const TeamDiv = styled.div`
+  display: flex;
+  gap : 2vw;
+  align-items: center;
+`
+
+const ColorLine = styled.div<{color:string}>`
+  height: 60px;
+  border-left: 5px solid ${({ color }) => color};
+  border-radius: 10px;
+`
+
+const TeamProfileImg = styled.img`
+  width: 10vw;
+  height: 10vw;
   border-radius: 50%;
-  background-color: ${({ color }) => color};
+  
 `;
+
+const TeamNameText = styled.div`
+  font-size: 14px;
+`
 
 const PositionWrapper = styled.div`
-  display: flex;
-  align-items: center;
   font-size: 14px;
   color: var(--color-dark2);
 `;
@@ -309,6 +421,7 @@ const PositionText = styled.span<{ position: string }>`
       case "RW":
         return "var(--color-sk)"; // 공격수
       case "DF":
+      case "CB":
         return "var(--color-dp)"; // 수비수
       case "MF":
         return "var(--color-mf)"; // 미드필더
