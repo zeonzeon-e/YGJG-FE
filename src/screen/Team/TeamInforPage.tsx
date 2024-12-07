@@ -4,6 +4,7 @@ import Header3 from "../../components/Header/Header3";
 import apiClient from "../../api/apiClient";
 import { FaLocationDot, FaPeopleGroup,FaHeart } from "react-icons/fa6";
 import { IoSettingsSharp } from "react-icons/io5";
+import { useNavigate } from "react-router-dom";
 
 const TeamInfoPage: React.FC = () => {
   const [selectedTeam, setselectedTeam] = useState<{teamId: number, teamName: string}>({teamId: 0, teamName: ""});
@@ -38,12 +39,12 @@ const TeamInfoPage: React.FC = () => {
   const activityDays = ['월요일', '화요일', '수요일', '목요일', '금요일', '토요일', '일요일']
   const timeSlots = [6, 9, 12, 15, 18, 21, 0, 3]; // 시간대 배열
   const timeBlock = [6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,0,1,2,3]
-  
+  const navigate = useNavigate();
   useEffect(() => {
     const fetchTeamList = async () => {
       try {
         const response = await apiClient.get("api/myPage/teams");
-        console.log("teamListData", response.data);
+        //console.log("teamListData", response.data);
         setTeamList(response.data);
         if (response.data.length > 0) {
           const firstTeam = response.data[0];
@@ -79,6 +80,27 @@ const TeamInfoPage: React.FC = () => {
     console.log(`현재 선택된 팀: ${teamId}`);
   };
 
+  const handleEditClick = (teamId: number) => {
+    const teamEdit = teamList.find((item) => item.teamId === teamId)
+    console.log("teamEdit", teamEdit)
+    navigate(`/team-edit/${teamId}`, {
+      state: {
+        teamId: teamEdit?.teamId ,
+        teamColor: teamEdit?.teamColor,
+        position: teamEdit?.position,
+      },
+    });
+  };  
+  const handleNoticeClick = (teamId: number) => {
+    const teamEdit = teamList.find((item) => item.teamId === teamId)
+    
+    navigate(`notice`, {
+      state: {
+        teamId: teamEdit?.teamId
+      },
+    });
+  };  
+
   const handleToggleFavorite = (teamId: number) => {
     setFavoriteTeams((prevFavorites) => {
       if (prevFavorites.includes(teamId)) {
@@ -111,13 +133,13 @@ const TeamInfoPage: React.FC = () => {
             <TeamProfileText><FaHeart/>   포지션</TeamProfileText>
           </TeamProfileInfor>
           </TeamProfile>
-          <TeamProfileSetting><IoSettingsSharp/></TeamProfileSetting>
+          <TeamProfileSetting  onClick={() => handleEditClick(selectedTeam.teamId)}><IoSettingsSharp/></TeamProfileSetting>
         </ProfileWrapper>
         <TeamDetails>
           {/* <p>팀 이름: {teamData.teamName}</p> */}
           {/* <p>소개: {teamData.team_introduce}</p> */}
           <>
-          <div>활동 요일</div>
+          <TeamTitle>활동 요일</TeamTitle>
           <ItemWrapper>
           {
             activityDays.map((item)=> {
@@ -127,8 +149,8 @@ const TeamInfoPage: React.FC = () => {
           }
           </ItemWrapper>
           </>
-          <>
-          <div>활동 시간</div>
+          {/* <>
+          <TeamTitle>활동 시간</TeamTitle>
           <TimeWrapper>
         {timeBlock.map((hour, idx) => {
           const isActive = teamData.activityTime.includes(hour); // 활성 상태 확인
@@ -143,12 +165,12 @@ const TeamInfoPage: React.FC = () => {
           );
         })}
       </TimeWrapper>
-          </>
+          </> */}
         </TeamDetails>
         <TeamDetails>
           <TeamTitle>
           <div>공지사항</div>       
-          <div style={{color: "var(--color-info)"}} className="h5" onClick={()=> console.log("공지사항으로 이동")}>더보기</div>
+          <div style={{color: "var(--color-info)"}} className="h5" onClick={() => handleNoticeClick(selectedTeam.teamId)}>더보기</div>
           </TeamTitle>
           
           
@@ -197,6 +219,7 @@ const TeamTitle = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-bottom: 10px;
 `
 const TeamProfileImg = styled.img`
   width: 50px;
