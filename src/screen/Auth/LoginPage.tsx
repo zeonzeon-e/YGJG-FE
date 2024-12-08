@@ -149,6 +149,7 @@ const LoginPage: React.FC = () => {
             로그인
           </StyledButton>
         </Form>
+        <Horizontal />
         <StyledButton kakao onClick={handleKakaoLogin}>
           <RiKakaoTalkFill size={24} />
           &nbsp;카카오로 3초 만에 시작하기
@@ -239,6 +240,13 @@ const ClearIcon = styled.span`
 
 const ClearIconPassword = styled(ClearIcon)`
   right: 45px;
+`;
+
+const Horizontal = styled.div`
+  height: 1px;
+  width: 100%;
+  background-color: #ccc;
+  margin: 20px;
 `;
 
 const StyledButton = styled.button<{
