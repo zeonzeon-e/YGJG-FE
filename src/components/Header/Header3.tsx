@@ -16,7 +16,7 @@ const HeaderContainer = styled.header`
   display: flex;
   align-items: center;
   justify-content: center; /* 가운데 정렬 */
-  height: 60px;
+  height: 44px;
   background-color: white;
   position: relative;
 `;
@@ -147,7 +147,9 @@ const Header3: React.FC<HeaderProps> = ({
           </DropdownButton>
           <HorizontalLine />
         </TeamNameWrapper>
+        
       </HeaderContainer>
+      
 
       <ModalBackground isOpen={isModalOpen} onClick={toggleModal}>
         <ModalContent className="border-df shadow-df" onClick={(e) => e.stopPropagation()}>
@@ -195,8 +197,11 @@ const Header3: React.FC<HeaderProps> = ({
               </TeamListItem>
             ))}
           </TeamList>
+          
         </ModalContent>
+        
       </ModalBackground>
+      
     </>
   );
 };

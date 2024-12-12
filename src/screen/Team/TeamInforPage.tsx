@@ -5,6 +5,7 @@ import apiClient from "../../api/apiClient";
 import { FaLocationDot, FaPeopleGroup,FaHeart } from "react-icons/fa6";
 import { IoSettingsSharp } from "react-icons/io5";
 import { useNavigate } from "react-router-dom";
+import HorizontalLine from "../../components/Styled/HorizontalLine";
 
 const TeamInfoPage: React.FC = () => {
   const [selectedTeam, setselectedTeam] = useState<{teamId: number, teamName: string}>({teamId: 0, teamName: ""});
@@ -121,6 +122,7 @@ const TeamInfoPage: React.FC = () => {
         favoriteTeams={favoriteTeams}
         onToggleFavorite={handleToggleFavorite}
       />
+      
       <Container>
       {teamData && (
         <>

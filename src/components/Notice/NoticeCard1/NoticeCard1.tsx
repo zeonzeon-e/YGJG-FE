@@ -7,6 +7,7 @@ interface NoticeCard1Props {
   createDate: string;
   updateDate?: string;
   children?: React.ReactNode;
+  writer: string;
 }
 
 /**
@@ -15,10 +16,11 @@ interface NoticeCard1Props {
  * @param {string} props.title - 공지사항의 제목
  * @param {string} props.createDate - 공지사항의 생성 날짜
  * @param {string} props.updateDate - 공지사항의 수정 날짜
+ * @param {string} props.writer - 공지사항의 작성자
  * @param {React.ReactNode} [props.children] - 공지사항의 내용 (선택적)
  * @returns {JSX.Element} NoticeCard 컴포넌트
  */
-const NoticeCard1: React.FC<NoticeCard1Props> = ({ title, createDate, updateDate, children }) => {
+const NoticeCard1: React.FC<NoticeCard1Props> = ({ title, createDate, updateDate, children,writer }) => {
   return (
     <div className="notice-card">
       <div className="notice-card-header">
@@ -28,6 +30,7 @@ const NoticeCard1: React.FC<NoticeCard1Props> = ({ title, createDate, updateDate
         </div>
         <div className="notice-card-date">{createDate} 생성</div>
         {updateDate && <div className="notice-card-date">{updateDate} 수정</div>}
+        <div className="notice-card-date">작성자 : {writer}</div>
       </div>
       <div className="notice-card-content">{children}</div>
     </div>

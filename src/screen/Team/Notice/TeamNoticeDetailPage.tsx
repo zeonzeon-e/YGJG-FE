@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
-import Header2 from "../../components/Header/Header2/Header2";
-import NoticeCard1 from "../../components/Notice/NoticeCard1/NoticeCard1";
-import BottomNavBar from "../../components/Nevigation/BottomNavBar";
+import Header2 from "../../../components/Header/Header2/Header2";
+import NoticeCard1 from "../../../components/Notice/NoticeCard1/NoticeCard1";
+import BottomNavBar from "../../../components/Nevigation/BottomNavBar";
 
 const TeamNoticeDetailPage: React.FC = () => {
   const location = useLocation();
@@ -74,23 +74,16 @@ const TeamNoticeDetailPage: React.FC = () => {
   return (
     <div>
       <Header2 text="" line={true} />
-      <div style={{ padding: "20px" }}>
+      <div>
         {noticeDetail ? (
-          <div>
+          <div style={{padding:"20px"}}>
             <NoticeCard1
               title={noticeDetail.title}
               createDate={noticeDetail.createdAt}
               updateDate={noticeDetail.updatedAt || ""}
+              writer={noticeDetail.writer}
             >
               <p>{noticeDetail.content}</p>
-              <p>
-                <strong>작성자:</strong> {noticeDetail.writer}
-              </p>
-              {noticeDetail.updatedAt && (
-                <p>
-                  <strong>업데이트일:</strong> {noticeDetail.updatedAt}
-                </p>
-              )}
             </NoticeCard1>
           </div>
         ) : (

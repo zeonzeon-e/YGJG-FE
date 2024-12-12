@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
-import Header2 from "../../components/Header/Header2/Header2";
-import apiClient from "../../api/apiClient";
+import Header2 from "../../../components/Header/Header2/Header2";
+import apiClient from "../../../api/apiClient";
 import { useLocation, useNavigate } from "react-router-dom";
-import Searchbar from "../../components/Searchbar/Searchbar";
-import MiniButton from "../../components/Button/MiniButton";
+import Searchbar from "../../../components/Searchbar/Searchbar";
+import MiniButton from "../../../components/Button/MiniButton";
 
 const TeamNoticePage: React.FC = () => {
   const location = useLocation();
