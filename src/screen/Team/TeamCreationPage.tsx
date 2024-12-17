@@ -437,7 +437,6 @@ const TeamCreationPage: React.FC = () => {
   const handleNextStep = async (data: any = {}) => {
     const updatedData = { ...teamData, ...data };
     setTeamData(updatedData);
-    console.log(updatedData);
 
     if (step === 4) {
       // 마지막 단계에서 서버로 데이터를 전송
