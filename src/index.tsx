@@ -24,6 +24,9 @@ import TeamCreationPage from "./screen/Team/TeamCreationPage";
 import TeamCreationIntroPage from "./screen/Team/TeamCreationIntroPage";
 import TeamSelectListPage from "./screen/Team/TeamSelectListPage";
 import TeamInfoPage from "./screen/Team/TeamInforPage";
+import TeamNoticePage from "./screen/Team/Notice/TeamNoticePage";
+import TeamNoticeDetailPage from "./screen/Team/Notice/TeamNoticeDetailPage";
+import TeamNoticeCreatePage from "./screen/Team/Notice/TeamNoticeCreatePage";
 
 const GlobalStyle = createGlobalStyle`
   body, #root, .app-container {
@@ -62,6 +65,9 @@ root.render(
         <Route path="/team/list" element={<TeamListPage />} />
         <Route path="/team" element={<TeamInfoPage/>}/>
         <Route path="/my" element={<MyPage />} />
+        <Route path="/team/notice" element={<TeamNoticePage/>}/>
+        <Route path="/team/notice/:noticeId" element={<TeamNoticeDetailPage/>}/>
+        <Route path="/team/notice/create" element={<TeamNoticeCreatePage/>}/>
         {/* 팀 정보 수정 페이지 */}
         <Route path="/team-edit/:id" element={<TeamInfoEdit />} />
         {/* 팀 전략 생성 페이지*/}

@@ -8,9 +8,7 @@ const Notice: React.FC = () => {
     <div>
       <Header2 text="최씨 민석" line={true} />
       <div style={{ padding: "20px" }}></div>
-      <NoticeCard1 title="필독 공지사항" date="2024.06.13 12:00 AM">
-        공지사항입니다 ^^
-      </NoticeCard1>
+    
       <BottomNavBar />
     </div>
   );

@@ -1,11 +1,10 @@
 .notice-card {
   background-color: #fff;
-  margin: 20px 0;
 }
 
 .notice-card-header {
   align-items: center;
-  margin: 10px;
+  margin-bottom: 10px;
 }
 
 .notice-card-title {
@@ -32,4 +31,6 @@
   padding: 20px;
   height: 300px; /* 적절한 높이 설정 */
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  font-size: 14px;
+  line-height: 18px;
 }
