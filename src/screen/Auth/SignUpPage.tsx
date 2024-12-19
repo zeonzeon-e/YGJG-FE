@@ -76,13 +76,23 @@ const PhoneVerification: React.FC<{
   phone: string;
   setPhone: (value: string) => void;
 }> = ({ onNext, phone, setPhone }) => {
+  const [realVerificationCode, setRealVerificationCode] = useState("");
   const [verificationCode, setVerificationCode] = useState("");
   const [isVerified, setIsVerified] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
+  const handleSMS = async (phone: string) => {
+    try {
+      const response = await apiClient.post("/api/sign/send-sms", phone);
+      setRealVerificationCode(response.data.certificationNum);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   const handleVerify = () => {
-    if (verificationCode === "1234") {
+    if (verificationCode === realVerificationCode) {
       setIsVerified(true);
       setError(null);
       setSuccess("인증이 완료되었습니다.");
@@ -171,7 +181,7 @@ const PhoneVerification: React.FC<{
       />
       <MainButton
         height={50}
-        onClick={() => console.log("인증번호 발송")}
+        onClick={() => handleSMS(phone)}
         disabled={isVerified}
       >
         인증번호 받기
@@ -765,9 +775,11 @@ const SignupPage: React.FC = () => {
             dataWithoutName
           );
           if (response.status === 200 || response.status === 201) {
-            const { token, refreshToken } = response.data;
-            setAccessToken(token);
-            setRefreshToken(refreshToken);
+            // const { token, refreshToken } = response.data;
+            // console.log(response.data);
+            // setAccessToken(token);
+            // setRefreshToken(refreshToken);
+            alert("회원가입에 성공했습니다. 로그인 해주세요.");
             setStep(step + 1);
           } else {
             alert("회원가입에 실패했습니다. 다시 시도해주세요.");
@@ -776,9 +788,7 @@ const SignupPage: React.FC = () => {
           // 일반 회원가입
           const response = await apiClient.post("api/sign/sign-up", dataToSend);
           if (response.status === 200 || response.status === 201) {
-            const { token, refreshToken } = response.data;
-            setAccessToken(token);
-            setRefreshToken(refreshToken);
+            alert("회원가입에 성공했습니다. 로그인 해주세요.");
             setStep(step + 1);
           } else {
             alert("회원가입에 실패했습니다. 다시 시도해주세요.");

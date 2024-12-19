@@ -97,7 +97,7 @@ const TeamProfileCreation: React.FC<{ onNext: (data: any) => void }> = ({
   };
 
   const resetToDefaultImage = () => {
-    setProfileImage(null);
+    setProfileImage(DefaultProfileIcon);
   };
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -384,7 +384,6 @@ const PlayerRecruitment: React.FC<{ onNext: (data: any) => void }> = ({
       {errorMessage && <ErrorMessage>{errorMessage}</ErrorMessage>}
       <SubTitle>팀에 필요한 포지션을 모두 선택해주세요</SubTitle>
       <CheckButton
-        title="팀에 필요한 포지션을 모두 선택해주세요"
         items={["공격수", "수비수", "미드필더", "골키퍼"]}
         selectedBgColor="var(--color-main)"
         textColor="var(--color-dark1)"

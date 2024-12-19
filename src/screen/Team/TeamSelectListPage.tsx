@@ -148,7 +148,6 @@ const TeamSelectListPage: React.FC = () => {
   const [selectedGender, setSelectedGender] = useState([false, false, false]);
   const [selectedAge, setSelectedAge] = useState(Array(6).fill(false));
   const [selectedDays, setSelectedDays] = useState(Array(7).fill(false));
-  const [selectedTime, setSelectedTime] = useState(Array(6).fill(false));
   const [selectedLevel, setSelectedLevel] = useState(Array(5).fill(false));
 
   useEffect(() => {
@@ -244,11 +243,6 @@ const TeamSelectListPage: React.FC = () => {
         break;
       case "요일":
         setSelectedDays((prev) =>
-          prev.map((selected, i) => (i === index ? isSelected : selected))
-        );
-        break;
-      case "시간대":
-        setSelectedTime((prev) =>
           prev.map((selected, i) => (i === index ? isSelected : selected))
         );
         break;
@@ -430,57 +424,16 @@ const TeamSelectListPage: React.FC = () => {
               />
             </Section>
             <Section>
-              <h3>시간대</h3>
-              <CheckButton
-                items={[
-                  "아침(6시~9시)",
-                  "오전(9시~12시)",
-                  "점심(12시~15시)",
-                  "오후(15시~18시)",
-                  "저녁(18시~21시)",
-                  "밤(21시~24시)",
-                ]}
-                selectedStates={selectedTime}
-                onItemClick={(index) =>
-                  toggleSelection(
-                    setSelectedTime,
-                    index,
-                    "시간대",
-                    [
-                      "아침(6시~9시)",
-                      "오전(9시~12시)",
-                      "점심(12시~15시)",
-                      "오후(15시~18시)",
-                      "저녁(18시~21시)",
-                      "밤(21시~24시)",
-                    ][index]
-                  )
-                }
-              />
-            </Section>
-            <Section>
               <h3>실력</h3>
               <CheckButton
-                items={[
-                  "하(초보자)",
-                  "중하(배우면서 익히기)",
-                  "중(경기 원활)",
-                  "중상(지역 구단 입단 실력)",
-                  "상(선수 출신)",
-                ]}
+                items={["하", "중하", "중", "중상", "상"]}
                 selectedStates={selectedLevel}
                 onItemClick={(index) =>
                   toggleSelection(
                     setSelectedLevel,
                     index,
                     "실력",
-                    [
-                      "하(초보자)",
-                      "중하(배우면서 익히기)",
-                      "중(경기 원활)",
-                      "중상(지역 구단 입단 실력)",
-                      "상(선수 출신)",
-                    ][index]
+                    ["하", "중하", "중", "중상", "상"][index]
                   )
                 }
               />
@@ -521,4 +474,5 @@ const FilterContainer = styled.div`
 
 const Section = styled.div`
   margin-bottom: 20px;
+  font-size: 14px;
 `;
