@@ -108,6 +108,7 @@ const GameStrategy: React.FC = () => {
             )}
 
             <MainButton
+            fontSize={12}
               width={100}
               height={35}
               onClick={() => setShowMapModal(true)}
@@ -228,12 +229,14 @@ const PickerButton = styled.div`
   display: flex;
   width: 100%;
   margin-top: 5px;
+  gap:10px;
 `;
 
 const Formation = styled.div`
   display: flex;
   width: 100%;
   margin-top: 10px;
+  gap:10px;
 `;
 
 const FormationImageContainer = styled.div`

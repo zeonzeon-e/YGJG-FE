@@ -66,8 +66,9 @@ const handleOutClick = () =>  {
   return (
     <>
       <GlobalStyles />
+      <Header2 text="팀 정보 수정" />
       <Container>
-        <Header2 text="팀 정보 수정" />
+        
         {/* <Profile>
           <ProfileImage
             src="https://example.com/team-image.jpg"
