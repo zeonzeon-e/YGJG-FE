@@ -3,13 +3,13 @@ import styled from "styled-components";
 import Header2 from "../../../components/Header/Header2/Header2";
 import MainButton from "../../../components/Button/MainButton";
 import { FaBoxOpen } from "react-icons/fa6";
-import axios from "axios";
 import apiClient from "../../../api/apiClient";
 
 const TeamNoticeCreatePage: React.FC = () => {
   const [title, setTitle] = useState<string>("");
   const [content, setContent] = useState<string>("");
   const [image, setImage] = useState<File | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
   const [teamId] = useState<number>(1); // 팀 ID (고정값 또는 동적으로 받을 수 있음)
 
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -22,8 +22,15 @@ const TeamNoticeCreatePage: React.FC = () => {
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      setImage(e.target.files[0]);
+      const file = e.target.files[0];
+      setImage(file);
+      setPreview(URL.createObjectURL(file)); // 이미지 미리보기 URL 생성
     }
+  };
+
+  const handleImageRemove = () => {
+    setImage(null);
+    setPreview(null);
   };
 
   const handleSubmit = async () => {
@@ -41,7 +48,7 @@ const TeamNoticeCreatePage: React.FC = () => {
     }
 
     try {
-      const response = await apiClient.post("api/announcement/manager/create", formData);
+      const response = await apiClient.post("/api/announcement/manager/create", formData);
 
       if (response.status === 200) {
         alert("공지사항이 성공적으로 등록되었습니다.");
@@ -49,6 +56,7 @@ const TeamNoticeCreatePage: React.FC = () => {
         setTitle("");
         setContent("");
         setImage(null);
+        setPreview(null);
       }
     } catch (error) {
       console.error("공지사항 등록 중 오류 발생:", error);
@@ -74,6 +82,12 @@ const TeamNoticeCreatePage: React.FC = () => {
               <FileInput type="file" onChange={handleImageChange} />
               <FaBoxOpen /> 사진 첨부하기
             </FileLabel>
+            {preview && (
+              <PreviewWrapper>
+                <PreviewImage src={preview} alt="미리보기 이미지" />
+                <RemoveButton onClick={handleImageRemove}>삭제</RemoveButton>
+              </PreviewWrapper>
+            )}
           </FileInputWrapper>
           <Label>내용</Label>
           <Textarea
@@ -116,8 +130,8 @@ const Input = styled.input`
 
 const FileInputWrapper = styled.div`
   display: flex;
-  justify-content: flex-start;
-  align-items: center;
+  flex-direction: column;
+  gap: 10px;
 `;
 
 const FileLabel = styled.label`
@@ -141,6 +155,34 @@ const FileInput = styled.input`
   display: none;
 `;
 
+const PreviewWrapper = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+`;
+
+const PreviewImage = styled.img`
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+`;
+
+const RemoveButton = styled.button`
+  padding: 5px 10px;
+  font-size: 12px;
+  color: white;
+  background-color: red;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+
+  :hover {
+    background-color: darkred;
+  }
+`;
+
 const Textarea = styled.textarea`
   padding: 8px;
   border-radius: 8px;
@@ -150,16 +192,3 @@ const Textarea = styled.textarea`
   resize: none;
 `;
 
-const SubmitButton = styled.button`
-  padding: 12px 20px;
-  font-size: 16px;
-  color: white;
-  background-color: var(--color-main);
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-
-  :hover {
-    background-color: #0056b3;
-  }
-`;
