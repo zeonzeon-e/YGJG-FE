@@ -28,6 +28,7 @@ import TeamNoticePage from "./screen/Team/Notice/TeamNoticePage";
 import TeamNoticeDetailPage from "./screen/Team/Notice/TeamNoticeDetailPage";
 import TeamNoticeCreatePage from "./screen/Team/Notice/TeamNoticeCreatePage";
 import TeamOutPage from "./screen/My/TeamOutPage";
+import TeamNoticeRewritePage from "./screen/Team/Notice/TeamNoticeRewritePage";
 
 const GlobalStyle = createGlobalStyle`
   body, #root, .app-container {
@@ -64,17 +65,24 @@ root.render(
         <Route path="/team/intro" element={<TeamCreationIntroPage />} />
         <Route path="/team/select/list" element={<TeamSelectListPage />} />
         <Route path="/team/list" element={<TeamListPage />} />
-        <Route path="/team" element={<TeamInfoPage/>}/>
+        <Route path="/team" element={<TeamInfoPage />} />
         <Route path="/my" element={<MyPage />} />
-        <Route path="/team/notice" element={<TeamNoticePage/>}/>
-        <Route path="/team/notice/:noticeId" element={<TeamNoticeDetailPage/>}/>
-        <Route path="/team/notice/create" element={<TeamNoticeCreatePage/>}/>
-        <Route path="/out/:id" element={<TeamOutPage/>}/>
+        <Route path="/team/notice" element={<TeamNoticePage />} />
+        <Route
+          path="/team/notice/:noticeId"
+          element={<TeamNoticeDetailPage />}
+        />
+        <Route path="/team/notice/create" element={<TeamNoticeCreatePage />} />
+        <Route path="/out/:id" element={<TeamOutPage />} />
         {/* 팀 정보 수정 페이지 */}
         <Route path="/team-edit/:id" element={<TeamInfoEdit />} />
         {/* 팀 전략 생성 페이지*/}
         <Route path="/team-strategy/:id" element={<GameStrategy />} />
         <Route path="/invite" element={<InvitePage />} />
+        <Route
+          path="/team/notice/rewrite/:id"
+          element={<TeamNoticeRewritePage />}
+        />
       </Routes>
     </BrowserRouter>
   </React.StrictMode>

@@ -36,19 +36,17 @@ const NoticeCard1: React.FC<NoticeCard1Props> = ({
           <FaThumbtack className="notice-card-icon" />
           {title}
         </div>
-        <div className="notice-card-date">{createDate} 생성</div>
-        {updateDate && (
-          <div className="notice-card-date">{updateDate} 수정</div>
-        )}
-        <div className="notice-card-date">작성자 : {writer}</div>
       </div>
 
-      {img && (
-        <div>
+      {img !== "" && (
+        <div className="notice-card-img">
           <img src={img} width={"100%"} />
         </div>
       )}
-      <div className="notice-card-content">{children}</div>
+      <div className="border-df shadow-df notice-card-content">{children}</div>
+      <div className="notice-card-date">{createDate} 생성</div>
+      {updateDate && <div className="notice-card-date">{updateDate} 수정</div>}
+      <div className="notice-card-date">작성자 : {writer}</div>
     </div>
   );
 };
