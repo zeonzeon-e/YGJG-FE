@@ -62,12 +62,15 @@ root.render(
         <Route path="/team/create" element={<TeamCreationPage />} />
         <Route path="/team/intro" element={<TeamCreationIntroPage />} />
         <Route path="/team/select/list" element={<TeamSelectListPage />} />
-        <Route path="/team/list" element={<TeamListPage />} />
-        <Route path="/team" element={<TeamInfoPage/>}/>
+        <Route path="/team/list/:teamId" element={<TeamListPage />} />
+        <Route path="/team" element={<TeamInfoPage />} />
         <Route path="/my" element={<MyPage />} />
-        <Route path="/team/notice" element={<TeamNoticePage/>}/>
-        <Route path="/team/notice/:noticeId" element={<TeamNoticeDetailPage/>}/>
-        <Route path="/team/notice/create" element={<TeamNoticeCreatePage/>}/>
+        <Route path="/team/notice" element={<TeamNoticePage />} />
+        <Route
+          path="/team/notice/:noticeId"
+          element={<TeamNoticeDetailPage />}
+        />
+        <Route path="/team/notice/create" element={<TeamNoticeCreatePage />} />
         {/* 팀 정보 수정 페이지 */}
         <Route path="/team-edit/:id" element={<TeamInfoEdit />} />
         {/* 팀 전략 생성 페이지*/}

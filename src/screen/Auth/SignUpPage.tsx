@@ -84,8 +84,10 @@ const PhoneVerification: React.FC<{
 
   const handleSMS = async (phone: string) => {
     try {
-      const response = await apiClient.post("/api/sign/send-sms", phone);
+      const phoneNum = phone;
+      const response = await apiClient.post("/api/sign/send-sms", phoneNum);
       setRealVerificationCode(response.data.certificationNum);
+      console.log(response.data.certificationNum);
     } catch (error) {
       console.error(error);
     }
