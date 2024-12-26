@@ -107,8 +107,8 @@ const TeamInfoPage: React.FC = () => {
     }
   }, [selectedTeam]); // `currentTeam` 변경 시에만 호출
 
-  const handleTeamChange = (teamId: number) => {
-    // setCurrentTeam(teamId);
+  const handleTeamChange = (teamId: number, teamName: string) => {
+    setselectedTeam({teamId, teamName});
   };
 
   const handleEditClick = (teamId: number) => {

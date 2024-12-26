@@ -94,8 +94,10 @@ apiClient.interceptors.response.use(
       const refreshToken = getRefreshToken();
 
       if (!refreshToken) {
+        alert("refreshToken 없음")
         removeTokens();
         window.location.href = "/login"; // 로그인 페이지로 리다이렉트
+        alert("refreshToken 없음")
         return Promise.reject(error);
       }
 
@@ -118,6 +120,7 @@ apiClient.interceptors.response.use(
 
         return apiClient(originalRequest);
       } catch (err) {
+        alert("refreshToken이 있지만 에러 발생")
         isRefreshing = false;
         removeTokens();
         window.location.href = "/login"; // 로그인 페이지로 리다이렉트
