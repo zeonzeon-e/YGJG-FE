@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import styled from "styled-components";
 import { Link, useNavigate } from "react-router-dom";
 import { FaEye, FaEyeSlash } from "react-icons/fa6";
@@ -28,13 +28,13 @@ const LoginPage: React.FC = () => {
     return emailRegex.test(email);
   };
 
-  // 비밀번호 유효성 검사 함수 (예: 최소 6자 이상)
+  // 비밀번호 유효성 검사 함수 (예: 최소 4자 이상)
   const isValidPassword = (password: string): boolean => {
     return password.length >= 4;
   };
 
   const togglePasswordVisibility = (): void => {
-    setShowPassword(!showPassword);
+    setShowPassword((prev) => !prev);
   };
 
   const clearEmail = (): void => {
@@ -66,7 +66,6 @@ const LoginPage: React.FC = () => {
     const loginData = { email, password };
 
     try {
-      // JSON 형식으로 데이터를 전송
       const response: AxiosResponse<{ token: string; refreshToken: string }> =
         await apiClient.post("api/sign/sign-in", loginData);
 
@@ -74,36 +73,37 @@ const LoginPage: React.FC = () => {
         const { token, refreshToken } = response.data;
         setAccessToken(token);
         setRefreshToken(refreshToken);
-        setPassword(""); // 보안을 위해 비밀번호 초기화
-        console.log("로그인 성공:", response.data);
+        setPassword("");
         goToMainPage();
       } else {
-        console.error("로그인 실패: 상태 코드", response.status);
         setErrorMessage("로그인에 실패했습니다. 다시 시도해주세요.");
       }
     } catch (error) {
       setErrorMessage(
         "로그인에 실패했습니다. 이메일과 비밀번호를 확인해주세요."
       );
-      console.error("서버와의 통신 오류:", error);
     }
   };
 
-  const handleKakaoLogin = async (): Promise<void> => {
+  /**
+   * 카카오 로그인 핸들러를 useCallback으로 감싼 예시
+   */
+  const handleKakaoLogin = useCallback((): void => {
     try {
       window.location.href = KAKAO_AUTH_URL;
     } catch (error) {
       setErrorMessage("카카오 로그인에 실패했습니다. 다시 시도해주세요.");
-      console.error("카카오 로그인 URL 가져오기 실패:", error);
     }
-  };
+  }, [KAKAO_AUTH_URL]);
 
+  /**
+   * 구글 로그인 핸들러 (필요시 useCallback 적용 가능)
+   */
   const handleGoogleLogin = async (): Promise<void> => {
     try {
       window.location.href = GOOGLE_AUTH_URL;
     } catch (error) {
       setErrorMessage("구글 로그인에 실패했습니다. 다시 시도해주세요.");
-      console.error("구글 로그인 URL 가져오기 실패:", error);
     }
   };
 
@@ -171,7 +171,6 @@ const LoginPage: React.FC = () => {
 export default LoginPage;
 
 // 스타일 컴포넌트 정의
-
 const Container = styled.div`
   display: flex;
   flex-direction: column;
