@@ -64,7 +64,7 @@ root.render(
         <Route path="/team/create" element={<TeamCreationPage />} />
         <Route path="/team/intro" element={<TeamCreationIntroPage />} />
         <Route path="/team/select/list" element={<TeamSelectListPage />} />
-        <Route path="/team/list" element={<TeamListPage />} />
+        <Route path="/team/list/:teamId" element={<TeamListPage />} />
         <Route path="/team" element={<TeamInfoPage />} />
         <Route path="/my" element={<MyPage />} />
         <Route path="/team/notice" element={<TeamNoticePage />} />
