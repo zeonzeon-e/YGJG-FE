@@ -1,44 +1,21 @@
 import React, { useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import Header2 from "../../../components/Header/Header2/Header2";
 import NoticeCard1 from "../../../components/Notice/NoticeCard1/NoticeCard1";
 import BottomNavBar from "../../../components/Nevigation/BottomNavBar";
+import apiClient from "../../../api/apiClient";
+import MiniButton from "../../../components/Button/MiniButton";
+import Modal2 from "../../../components/Modal/Modal2";
+import styled from "styled-components";
+import { FaPen, FaRegTrashCan } from "react-icons/fa6";
 
 const TeamNoticeDetailPage: React.FC = () => {
   const location = useLocation();
-  const { id } = location.state || {
+  const navigate = useNavigate();
+  const { id, teamId } = location.state || {
     id: 1,
+    teamId: 1,
   };
-
-  // 더미 데이터
-  const dummyData = [
-    {
-      announcementId: 1,
-      title: "필독 공지사항",
-      content: "팀원 전체가 꼭 확인해야 할 중요한 공지사항입니다. 회의 일정과 준비물에 대해 자세히 적혀 있습니다.",
-      createdAt: "2024-06-13T12:00:00.000Z",
-      writer: "관리자 최씨",
-      imageUrl: "https://via.placeholder.com/800x400.png?text=필독+공지사항",
-    },
-    {
-      announcementId: 2,
-      title: "포지션 안내",
-      content: "새로운 포지션 배정에 대한 공지사항입니다. 각 팀원별 역할과 책임에 대해 상세히 설명하고 있습니다.",
-      createdAt: "2024-06-13T15:00:00.000Z",
-      updatedAt: "2024-06-13T16:00:00.000Z",
-      writer: "관리자 민석",
-      imageUrl: "https://via.placeholder.com/800x400.png?text=포지션+안내",
-    },
-    {
-      announcementId: 3,
-      title: "2024년 하반기 회비 안내",
-      content: "2024년 하반기 팀 회비 납부 일정과 금액에 대한 공지입니다. 납부 기한과 계좌 정보를 확인하세요.",
-      createdAt: "2024-06-13T18:00:00.000Z",
-      updatedAt: "2024-06-14T10:00:00.000Z",
-      writer: "관리자 민석",
-      imageUrl: "https://via.placeholder.com/800x400.png?text=회비+안내",
-    },
-  ];
 
   const [noticeDetail, setNoticeDetail] = useState<{
     title: string;
@@ -49,39 +26,107 @@ const TeamNoticeDetailPage: React.FC = () => {
     imageUrl?: string;
   } | null>(null);
 
-  useEffect(() => {
-    // URL의 id와 dummyData의 announcementId를 비교하여 데이터 로드
-    const fetchedDetail = dummyData.find(
-      (notice) => notice.announcementId === Number(id)
-    );
+  const [isModalOpen, setIsModalOpen] = useState(false); // 모달 열림 상태 관리
 
-    if (fetchedDetail) {
-      setNoticeDetail({
-        title: fetchedDetail.title,
-        content: fetchedDetail.content,
-        createdAt: new Date(fetchedDetail.createdAt).toLocaleString("ko-KR"),
-        updatedAt: fetchedDetail.updatedAt
-          ? new Date(fetchedDetail.updatedAt).toLocaleString("ko-KR")
-          : undefined, // updatedAt이 없는 경우 undefined로 설정
-        writer: fetchedDetail.writer,
-        imageUrl: fetchedDetail.imageUrl,
+  const handleRewrite = () => {
+    navigate(`/team/notice/rewrite/${id}`, {
+      state: {
+        id: id,
+        teamId: teamId,
+      },
+    });
+  };
+
+  const handleRemove = () => {
+    setIsModalOpen(true); // 모달 열기
+  };
+
+  const handleConfirmRemove = async () => {
+    try {
+      const response = await apiClient.get(`api/announcement/manager/delete`, {
+        params: {
+          announcementId: Number(id),
+          teamId: Number(teamId),
+        },
       });
-    } else {
-      setNoticeDetail(null); // 데이터가 없을 경우 null로 설정
+
+      if (response.status === 200) {
+        alert("공지사항이 성공적으로 삭제되었습니다.");
+        navigate("/team/notice"); // 공지사항 목록으로 이동
+      }
+    } catch (err) {
+      console.error("공지사항 삭제 중 에러가 발생했습니다.", err);
+      alert("공지사항 삭제에 실패했습니다.");
+    } finally {
+      setIsModalOpen(false); // 모달 닫기
     }
-  }, [id]);
+  };
+
+  const formatDate = (isoDate: string): string => {
+    const date = new Date(isoDate);
+    const options: Intl.DateTimeFormatOptions = {
+      year: "numeric",
+      month: "numeric",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    };
+    const formatter = new Intl.DateTimeFormat("ko-KR", options);
+    return (
+      formatter
+        .format(date)
+        .replace(/년 /g, "년 ")
+        .replace(/월 /g, "월 ")
+        .replace(/일 /, "일 ")
+        .replace(/:/, "시 ") + "분"
+    );
+  };
+
+  useEffect(() => {
+    if (id !== "" && teamId !== "") {
+      const fetchedDetail = async () => {
+        try {
+          const response = await apiClient.get(
+            `api/announcement/manager/detail`,
+            {
+              params: {
+                announcementId: Number(id),
+                teamId: Number(teamId),
+              },
+            }
+          );
+          setNoticeDetail(response.data);
+          return response.data;
+        } catch (err) {
+          console.error("데이터를 가져오는 중 에러가 발생했습니다.", err);
+        }
+      };
+      fetchedDetail();
+    }
+  }, [id, teamId]);
 
   return (
     <div>
       <Header2 text="" line={true} />
       <div>
         {noticeDetail ? (
-          <div style={{padding:"20px"}}>
+          <div style={{ padding: "0px 20px", marginBottom: "100px" }}>
+            <ButtonWrapper>
+              <MiniButton onClick={() => handleRemove()}>
+                <FaRegTrashCan /> 삭제하기
+              </MiniButton>
+              <MiniButton onClick={() => handleRewrite()}>
+                <FaPen /> 수정하기
+              </MiniButton>
+            </ButtonWrapper>
             <NoticeCard1
               title={noticeDetail.title}
-              createDate={noticeDetail.createdAt}
-              updateDate={noticeDetail.updatedAt || ""}
+              createDate={formatDate(noticeDetail.createdAt)}
+              updateDate={
+                noticeDetail.updatedAt ? formatDate(noticeDetail.updatedAt) : ""
+              }
               writer={noticeDetail.writer}
+              img={noticeDetail.imageUrl || ""}
             >
               <p>{noticeDetail.content}</p>
             </NoticeCard1>
@@ -91,8 +136,29 @@ const TeamNoticeDetailPage: React.FC = () => {
         )}
       </div>
       <BottomNavBar />
+
+      {/* 모달 컴포넌트 */}
+      <Modal2
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)} // 모달 닫기
+        title="공지사항을 삭제하시겠습니까?"
+        confirmText="삭제"
+        cancelText="취소"
+        onConfirm={handleConfirmRemove} // 확인 버튼 클릭 시 삭제 수행
+      >
+        <p>삭제 시 복구할 수 없습니다.</p>
+        <p>그래도 삭제하시겠습니까?</p>
+      </Modal2>
     </div>
   );
 };
+
+const ButtonWrapper = styled.div`
+  display: flex;
+  width: 100%;
+  flex-direction: row-reverse;
+  margin: 10px 0px;
+  gap: 5px;
+`;
 
 export default TeamNoticeDetailPage;

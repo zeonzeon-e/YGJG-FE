@@ -14,18 +14,19 @@ const TeamNoticePage: React.FC = () => {
   };
 
   const [noticeList, setNoticeList] = useState([
-    { id: 1, title: "필독 공지사항", createAt: new Date() },
-    { id: 2, title: "포지션 안내", createAt: new Date() },
-    { id: 3, title: "2024년 하반기 회비 안내", createAt: new Date() },
+    { id: 1, title: "", createAt: new Date() },
   ]);
   const [filteredNotices, setFilteredNotices] = useState(noticeList);
 
   useEffect(() => {
     const fetchNoticeList = async () => {
       try {
-        const response = await apiClient.get(`/api/announcement/member/get-all`, {
-          params: { teamId },
-        });
+        const response = await apiClient.get(
+          `/api/announcement/member/get-all`,
+          {
+            params: { teamId },
+          }
+        );
         setNoticeList(response.data);
         setFilteredNotices(response.data);
       } catch (err) {
@@ -49,7 +50,9 @@ const TeamNoticePage: React.FC = () => {
       <Container>
         <Searchbar onSearch={handleSearch} />
         <Wrapper>
-          <MiniButton onClick={() => navigate("create")}>공지 작성하기</MiniButton>
+          <MiniButton onClick={() => navigate("create")}>
+            공지 작성하기
+          </MiniButton>
         </Wrapper>
         {filteredNotices.length > 0 ? (
           <NoticeList>
@@ -57,9 +60,14 @@ const TeamNoticePage: React.FC = () => {
               <NoticeItem
                 className="shadow-df border-df"
                 key={notice.id}
-                onClick={() => navigate(`${notice.id}`,{state: {
-                  id: notice.id
-                }})}
+                onClick={() =>
+                  navigate(`${notice.id}`, {
+                    state: {
+                      id: notice.id,
+                      teamId: teamId,
+                    },
+                  })
+                }
               >
                 <NoticeTitle>{notice.title}</NoticeTitle>
                 <NoticeDate>
@@ -102,13 +110,13 @@ const NoticeItem = styled.li`
 `;
 
 const NoticeTitle = styled.div`
-  font-size: 16px;
-  font-weight: bold;
+  font-size: 14px;
 `;
 
 const NoticeDate = styled.div`
-  font-size: 14px;
+  font-size: 12px;
   color: #888;
+  white-space: nowrap;
 `;
 
 const Wrapper = styled.div`

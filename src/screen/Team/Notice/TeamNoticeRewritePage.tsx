@@ -1,18 +1,24 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import Header2 from "../../../components/Header/Header2/Header2";
 import MainButton from "../../../components/Button/MainButton";
 import { FaBoxOpen } from "react-icons/fa6";
 import apiClient from "../../../api/apiClient";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
-const TeamNoticeCreatePage: React.FC = () => {
+const TeamNoticeRewritePage: React.FC = () => {
   const [title, setTitle] = useState<string>("");
   const [content, setContent] = useState<string>("");
   const [image, setImage] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
-  const [teamId] = useState<number>(1); // 팀 ID (고정값 또는 동적으로 받을 수 있음)
+
+  const location = useLocation();
   const navigate = useNavigate();
+  const { teamId, id } = location.state || {
+    id: 1,
+    teamId: 1,
+  };
+
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setTitle(e.target.value);
   };
@@ -34,21 +40,47 @@ const TeamNoticeCreatePage: React.FC = () => {
     setPreview(null);
   };
 
+  useEffect(() => {
+    if (id !== "" && teamId !== "") {
+      const fetchedDetail = async () => {
+        try {
+          const response = await apiClient.get(
+            `api/announcement/manager/detail`,
+            {
+              params: {
+                announcementId: Number(id),
+                teamId: Number(teamId),
+              },
+            }
+          );
+          setTitle(response.data.title);
+          setPreview(response.data.imageUrl);
+          setContent(response.data.content);
+          return response.data;
+        } catch (err) {
+          console.error("데이터를 가져오는 중 에러가 발생했습니다.", err);
+        }
+      };
+      fetchedDetail();
+    }
+  }, [id, teamId]);
+
   const handleSubmit = async () => {
-    if (!title || !content || !image) {
-      alert("제목, 내용, 이미지를 모두 입력해주세요.");
+    if (!title || !content) {
+      alert("제목, 내용을 모두 입력해주세요.");
       return;
     }
 
     const formData = new FormData();
-    formData.append("image", image); // 이미지 파일을 formData에 추가
+    formData.append("image", image || "");
 
     try {
-      const response = await apiClient.post(
-        "api/announcement/manager/create",
+      const response = await apiClient.put(
+        "api/announcement/manager/update",
         formData, // formData를 두 번째 인자로 전달
         {
           params: {
+            announcementId: id,
             content,
             teamId,
             title, // 쿼리 파라미터로 전달
@@ -57,7 +89,7 @@ const TeamNoticeCreatePage: React.FC = () => {
       );
 
       if (response.status === 200) {
-        alert("공지사항이 성공적으로 등록되었습니다.");
+        alert("공지사항이 성공적으로 수정되었습니다.");
         // 폼 초기화
         setTitle("");
         setContent("");
@@ -103,14 +135,14 @@ const TeamNoticeCreatePage: React.FC = () => {
             onChange={handleContentChange}
             placeholder="내용을 입력해주세요"
           ></Textarea>
-          <MainButton onClick={handleSubmit}>등록하기</MainButton>
+          <MainButton onClick={handleSubmit}>수정하기</MainButton>
         </Form>
       </Container>
     </>
   );
 };
 
-export default TeamNoticeCreatePage;
+export default TeamNoticeRewritePage;
 
 // Styled Components
 const Container = styled.div`
