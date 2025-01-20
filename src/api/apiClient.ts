@@ -12,7 +12,7 @@ import {
  * @type {AxiosInstance}
  */
 const apiClient: AxiosInstance = axios.create({
-  baseURL: "http://13.124.10.231:8080", // API 기본 URL
+  baseURL: "http://43.203.36.23:8080", // API 기본 URL
   headers: {
     "Content-Type": "application/x-www-form-urlencoded",
   },
