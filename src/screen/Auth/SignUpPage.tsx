@@ -7,7 +7,11 @@ import ScrollProgress from "../../components/ScrollProgress/ScrollProgress";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { MdClose } from "react-icons/md";
 import { FaCheck } from "react-icons/fa6";
-import { setAccessToken, setRefreshToken } from "../../utils/authUtils";
+import {
+  getAccessToken,
+  setAccessToken,
+  setRefreshToken,
+} from "../../utils/authUtils";
 import RadioButton from "../../components/Button/RadioButton";
 import KakaoMapModal from "../../components/Modal/KakaoAddress";
 import apiClient from "../../api/apiClient";
@@ -767,15 +771,28 @@ const SignupPage: React.FC = () => {
       setIsLoading(true);
       try {
         const dataToSend = { ...updatedData };
-
+        const accessToken = getAccessToken();
+        const headers = {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        };
         if (isSocialLogin) {
           // 소셜 로그인 회원 추가정보 입력 시 name 제외
           const { name, ...dataWithoutName } = dataToSend;
+          // const {
+          //   address,
+          //   addressDetail,
+          //   birthDate,
+          //   gender,
+          //   hasExperience,
+          //   level,
+          // } = dataWithoutName;
           // PUT 요청 사용
           const response = await apiClient.put(
             "/auth/add-info",
             dataWithoutName
           );
+
           if (response.status === 200 || response.status === 201) {
             // const { token, refreshToken } = response.data;
             // console.log(response.data);

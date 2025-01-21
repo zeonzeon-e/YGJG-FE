@@ -33,7 +33,7 @@ const KakaoRedirectHandler: React.FC = () => {
           }> = await apiClient.post("/auth/kakao/signin", { accessToken });
 
           const { token, refreshToken, newUser } = response.data;
-
+          console.log(response);
           if (newUser) {
             // 신규 사용자라면 회원가입 페이지로 이동
             navigate(`/signup?socialData=${newUser}`);
