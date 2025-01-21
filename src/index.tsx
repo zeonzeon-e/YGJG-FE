@@ -29,6 +29,8 @@ import TeamNoticeDetailPage from "./screen/Team/Notice/TeamNoticeDetailPage";
 import TeamNoticeCreatePage from "./screen/Team/Notice/TeamNoticeCreatePage";
 import TeamOutPage from "./screen/My/TeamOutPage";
 import TeamNoticeRewritePage from "./screen/Team/Notice/TeamNoticeRewritePage";
+import CalendarPage from "./screen/Calendar/CalendarPage";
+import ProfileEditPage from "./screen/My/ProfileEditPage";
 
 const GlobalStyle = createGlobalStyle`
   body, #root, .app-container {
@@ -68,10 +70,12 @@ root.render(
         <Route path="/team" element={<TeamInfoPage />} />
         <Route path="/my" element={<MyPage />} />
         <Route path="/team/notice" element={<TeamNoticePage />} />
+        <Route path="/my/calendar" element={<PersonalCalenderPage/>}/>
         <Route
           path="/team/notice/:noticeId"
           element={<TeamNoticeDetailPage />}
         />
+        <Route path="/my/joinstatus" element={<JoinApprovalStatus />} />
         <Route path="/team/notice/create" element={<TeamNoticeCreatePage />} />
         <Route path="/out/:id" element={<TeamOutPage />} />
         {/* 팀 정보 수정 페이지 */}
@@ -83,6 +87,7 @@ root.render(
           path="/team/notice/rewrite/:id"
           element={<TeamNoticeRewritePage />}
         />
+        <Route path="/my/edit" element={<ProfileEditPage />} />
       </Routes>
     </BrowserRouter>
   </React.StrictMode>

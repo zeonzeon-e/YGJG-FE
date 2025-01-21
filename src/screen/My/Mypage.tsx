@@ -148,9 +148,9 @@ const navigate = useNavigate();
     });
   };  
 
-  if (loading) {
-    return (
-      <>
+
+  return (
+    <>
         <GlobalStyles />
         <Header1 text="마이페이지" />
         <Container>
@@ -162,7 +162,7 @@ const navigate = useNavigate();
             />
             <ProfileName>{profile?.name || "이름 없음"}</ProfileName>
             <ProfileEmail>{profile?.email || "이메일 없음"}</ProfileEmail>
-            <ProfileButton>프로필 설정</ProfileButton>
+            <ProfileButton onClick={()=> navigate("edit")}>프로필 설정</ProfileButton>
           </Profile>
 
           <TeamContainer className="border-df">
@@ -231,85 +231,6 @@ const navigate = useNavigate();
           </FooterList>
         </Container>
       </>
-    );
-  }
-
-  if (error) {
-    return <div>{error}</div>;
-  }
-
-  return (
-    <>
-      <GlobalStyles />
-      <Header1 text="마이페이지" />
-      <Container>
-        <Profile>
-          <ProfileImage
-            src={profile?.imageUrl || "https://example.com/profile-image.jpg"}
-            alt="프로필 이미지"
-            className="shadow-df"
-          />
-          <ProfileName>{profile?.name || "이름 없음"}</ProfileName>
-          <ProfileEmail>{profile?.email || "이메일 없음"}</ProfileEmail>
-          <ProfileButton>프로필 설정</ProfileButton>
-        </Profile>
-
-        <SectionTitle>가입 중인 팀</SectionTitle>
-        {teamList.length !== 0 ? (
-          teamList.map((el, index) => (
-            <JoinTeamList key={index}>
-              {/* <ColorCircle color={el.teamColor} /> */}
-              <div>{el.teamImageUrl}</div>
-              <TeamNameText>{el.teamName}</TeamNameText>
-              <PositionWrapper>
-                <PositionText position={el.position}>
-                  {el.position}으로 활동중
-                </PositionText>
-              </PositionWrapper>
-              <MiniButton onClick={() => handleEditClick(index)}>
-                <FaEdit style={{ marginRight: "5px" }} />
-                정보 수정
-              </MiniButton>
-            </JoinTeamList>
-          ))
-        ) : (
-          <JoinTeamList>가입 중인 팀이 없어요</JoinTeamList>
-        )}
-
-        <MenuList>
-          <MenuItem>
-            <FaCalendarAlt size={24} />
-            <MenuText onClick={() => navigate("/my/calendar")}>
-              내 경기 일정 보기
-            </MenuText>
-          </MenuItem>
-          <MenuItem>
-            <FaClipboardCheck size={24} />
-            <MenuText onClick={() => navigate("/my/joinstatus")}>
-              가입 승인 현황 보기
-            </MenuText>
-          </MenuItem>
-        </MenuList>
-
-        <Divider />
-
-        <FooterList>
-          <FooterTitle>고객센터</FooterTitle>
-          <FooterItem>공지사항</FooterItem>
-          <FooterItem>자주 묻는 질문</FooterItem>
-          <FooterItem>문의하기</FooterItem>
-        </FooterList>
-
-        <Divider />
-
-        <FooterList>
-          <FooterTitle>보안</FooterTitle>
-          <FooterItem>비밀번호 변경하기</FooterItem>
-          <FooterItem>로그아웃</FooterItem>
-          <FooterItem>서비스 탈퇴하기</FooterItem>
-        </FooterList>
-      </Container>
-    </>
   );
 };
 
