@@ -199,7 +199,7 @@ const TeamProfileCreation: React.FC<{ onNext: (data: any) => void }> = ({
   );
 };
 
-// Step 2: 팀 상세정보 (1) 페이지 (요일+시간을 함께 선택)
+// Step 2: 팀 상세정보 (1) 페이지 (요일+시간을 함께 선택 : arr[7][6])
 const TeamDetailOne: React.FC<{ onNext: (data: any) => void }> = ({
   onNext,
 }) => {
