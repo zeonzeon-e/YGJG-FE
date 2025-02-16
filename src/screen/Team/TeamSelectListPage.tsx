@@ -187,6 +187,14 @@ const TeamSelectListPage: React.FC = () => {
     }
   };
 
+  /**
+   * 모달(필터) Overlay 바깥 클릭 시 닫기
+   * - FilterContainer를 클릭하면 이벤트가 전파(stopPropagation)되지 않도록 설정
+   */
+  const handleOverlayClick = () => {
+    setFilterOpen(false);
+  };
+
   return (
     <Container>
       {/* 상단 헤더 */}
@@ -260,8 +268,11 @@ const TeamSelectListPage: React.FC = () => {
 
       {/* 필터 오버레이 */}
       {filterOpen && (
-        <FilterOverlay>
-          <FilterContainer>
+        <FilterOverlay onClick={handleOverlayClick}>
+          <FilterContainer onClick={(e) => e.stopPropagation()}>
+            {/* X 아이콘(닫기) 버튼 */}
+            <CloseButton onClick={() => setFilterOpen(false)}>×</CloseButton>
+
             <Section>
               <h3>지역</h3>
               <CheckButton
@@ -461,13 +472,32 @@ const FilterOverlay = styled.div`
   z-index: 1000;
 `;
 
+/**
+ * onClick에 e.stopPropagation()을 사용해
+ * 모달창 내부 클릭 시 Overlay로 이벤트 버블링되는 것을 막는다.
+ */
 const FilterContainer = styled.div`
+  position: relative; /* 닫기 버튼을 배치하기 위해 relative */
   background-color: #fff;
   padding: 20px;
   border-radius: 8px;
   width: 80%;
   max-height: 80vh;
   overflow-y: auto;
+`;
+
+/**
+ * 모달 내 X (닫기) 버튼
+ */
+const CloseButton = styled.button`
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  border: none;
+  background: transparent;
+  font-size: 28px;
+  font-weight: bold;
+  cursor: pointer;
 `;
 
 const Section = styled.div`
