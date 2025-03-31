@@ -31,6 +31,8 @@ import TeamOutPage from "./screen/My/TeamOutPage";
 import TeamNoticeRewritePage from "./screen/Team/Notice/TeamNoticeRewritePage";
 import CalendarPage from "./screen/Calendar/CalendarPage";
 import ProfileEditPage from "./screen/My/ProfileEditPage";
+import ChangePasswardPage from "./screen/My/ChangePasswardPage";
+import UnsubscribePage from "./screen/My/UnsubscribePage";
 
 const GlobalStyle = createGlobalStyle`
   body, #root, .app-container {
@@ -70,7 +72,8 @@ root.render(
         <Route path="/team" element={<TeamInfoPage />} />
         <Route path="/my" element={<MyPage />} />
         <Route path="/team/notice" element={<TeamNoticePage />} />
-        <Route path="/my/calendar" element={<PersonalCalenderPage/>}/>
+        <Route path="/my/calendar" element={<PersonalCalenderPage />} />
+        <Route path="/my/change-pw" element={<ChangePasswardPage />} />
         <Route
           path="/team/notice/:noticeId"
           element={<TeamNoticeDetailPage />}
@@ -88,6 +91,7 @@ root.render(
           element={<TeamNoticeRewritePage />}
         />
         <Route path="/my/edit" element={<ProfileEditPage />} />
+        <Route path="/my/unsub" element={<UnsubscribePage />} />
       </Routes>
     </BrowserRouter>
   </React.StrictMode>
