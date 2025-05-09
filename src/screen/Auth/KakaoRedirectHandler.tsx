@@ -36,7 +36,7 @@ const KakaoRedirectHandler: React.FC = () => {
           console.log(response);
           if (newUser) {
             // 신규 사용자라면 회원가입 페이지로 이동
-            navigate(`/signup?socialData=${newUser}`);
+            //navigate(`/signup?socialData=${newUser}`);
           } else {
             // 기존 사용자라면 토큰 저장 후 메인 페이지로 이동
             if (token && refreshToken) {
@@ -45,7 +45,7 @@ const KakaoRedirectHandler: React.FC = () => {
               navigate("/my");
             } else {
               // 토큰이 없다면 회원가입 페이지로 이동(에러 상황 처리)
-              navigate(`/signup?socialData=${newUser}`);
+              // navigate(`/signup?socialData=${newUser}`);
             }
           }
         } catch (error) {

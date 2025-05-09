@@ -521,7 +521,7 @@ const dummyNoticeList: Record<number, NoticeItem[]> = {
 };
 /* ─────────────────────────────────────────────────────────────────────────── */
 
-const TeamInfoPage: React.FC = () => {
+const MainPage: React.FC = () => {
   const [selectedTeam, setselectedTeam] = useState<{
     teamId: number;
     teamName: string;
@@ -751,7 +751,7 @@ const TeamInfoPage: React.FC = () => {
   );
 };
 
-export default TeamInfoPage;
+export default MainPage;
 
 // Styled Components
 const Container = styled.div`

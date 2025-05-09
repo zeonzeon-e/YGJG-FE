@@ -14,7 +14,7 @@ interface Player {
   role?: string; // 다른 필드가 필요하면 추가
 }
 
-const TeamListPage: React.FC = () => {
+const TeamMemberListPage: React.FC = () => {
   // URL 파라미터에서 teamId 추출
   const { teamId } = useParams();
   const numericTeamId = Number(teamId);
@@ -167,7 +167,7 @@ const TeamListPage: React.FC = () => {
   );
 };
 
-export default TeamListPage;
+export default TeamMemberListPage;
 
 /* ---------------- 스타일 컴포넌트 정의 ---------------- */
 const PageContainer = styled.div`

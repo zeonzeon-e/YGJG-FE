@@ -1,17 +1,17 @@
 import React, { useState } from "react";
 import styled from "styled-components";
-import GlobalStyles from "../../../components/Styled/GlobalStyled";
-import Header2 from "../../../components/Header/Header2/Header2";
-import MainButton from "../../../components/Button/MainButton";
+import GlobalStyles from "../../../../components/Styled/GlobalStyled";
+import Header2 from "../../../../components/Header/Header2/Header2";
+import MainButton from "../../../../components/Button/MainButton";
 import { format } from "date-fns";
-import CalendarModal from "../../../components/Modal/CalendarModal";
-import TimePickerModal from "../../../components/Modal/TimePickerModal";
+import CalendarModal from "../../../../components/Modal/CalendarModal";
+import TimePickerModal from "../../../../components/Modal/TimePickerModal";
 import { ko } from "date-fns/locale";
-import Input from "../../../components/Input/Input";
-import Input2 from "../../../components/Input/Input2";
-import KakaoMapModal from "../../../components/Modal/KakaoAddress";
-import FormationModal from "../../../components/Modal/FormationModal";
-import FormationListModal from "../../../components/Modal/FormationListModal";
+import Input from "../../../../components/Input/Input";
+import Input2 from "../../../../components/Input/Input2";
+import KakaoMapModal from "../../../../components/Modal/KakaoAddress";
+import FormationModal from "../../../../components/Modal/FormationModal";
+import FormationListModal from "../../../../components/Modal/FormationListModal";
 
 interface CirclePosition {
   id: number;
@@ -45,8 +45,8 @@ const GameStrategy: React.FC = () => {
     setFormationCircles(circles); // Save formation circles
   };
 
-  console.log(selectedDate)
-  console.log(selectedTime)
+  console.log(selectedDate);
+  console.log(selectedTime);
 
   return (
     <>
@@ -70,7 +70,6 @@ const GameStrategy: React.FC = () => {
             >
               {selectedTime || "시간을 선택하세요"}
             </StrategyButton>
-            
           </PickerButton>
           {showDatePicker && (
             <CalendarModal
@@ -108,7 +107,7 @@ const GameStrategy: React.FC = () => {
             )}
 
             <MainButton
-            fontSize={12}
+              fontSize={12}
               width={100}
               height={35}
               onClick={() => setShowMapModal(true)}
@@ -229,14 +228,14 @@ const PickerButton = styled.div`
   display: flex;
   width: 100%;
   margin-top: 5px;
-  gap:10px;
+  gap: 10px;
 `;
 
 const Formation = styled.div`
   display: flex;
   width: 100%;
   margin-top: 10px;
-  gap:10px;
+  gap: 10px;
 `;
 
 const FormationImageContainer = styled.div`
