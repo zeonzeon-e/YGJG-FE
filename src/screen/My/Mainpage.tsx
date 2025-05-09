@@ -656,8 +656,8 @@ const MainPage: React.FC = () => {
               </TeamProfileSetting>
             </ProfileWrapper>
             <TeamDetails>
-              {/* <p>팀 이름: {teamData.teamName}</p> */}
-              {/* <p>소개: {teamData.team_introduce}</p> */}
+              <p>팀 이름: {teamData.teamName}</p> 
+              {/* <p>소개: {teamData.team_introduce}</p>
               <>
                 <TeamTitle>활동 요일</TeamTitle>
                 {/* <ItemWrapper>
