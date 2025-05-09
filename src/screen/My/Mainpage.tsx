@@ -521,7 +521,7 @@ const dummyNoticeList: Record<number, NoticeItem[]> = {
 };
 /* ─────────────────────────────────────────────────────────────────────────── */
 
-const TeamInfoPage: React.FC = () => {
+const MainPage: React.FC = () => {
   const [selectedTeam, setselectedTeam] = useState<{
     teamId: number;
     teamName: string;
@@ -655,9 +655,9 @@ const TeamInfoPage: React.FC = () => {
                 <IoSettingsSharp />
               </TeamProfileSetting>
             </ProfileWrapper>
-            <TeamDetails>
-              {/* <p>팀 이름: {teamData.teamName}</p> */}
-              {/* <p>소개: {teamData.team_introduce}</p> */}
+
+            {/* <p>팀 이름: {teamData.teamName}</p>  */}
+            {/* <p>소개: {teamData.team_introduce}</p>
               <>
                 <TeamTitle>활동 요일</TeamTitle>
                 {/* <ItemWrapper>
@@ -674,8 +674,8 @@ const TeamInfoPage: React.FC = () => {
                     );
                   })}
                 </ItemWrapper> */}
-              </>
-              {/* <>
+
+            {/* <>
           <TeamTitle>활동 시간</TeamTitle>
           <TimeWrapper>
         {timeBlock.map((hour, idx) => {
@@ -692,7 +692,7 @@ const TeamInfoPage: React.FC = () => {
         })}
       </TimeWrapper>
           </> */}
-            </TeamDetails>
+            {/* </TeamDetails> */}
             <TeamDetails>
               <TeamTitle>
                 <div>공지사항</div>
@@ -751,7 +751,7 @@ const TeamInfoPage: React.FC = () => {
   );
 };
 
-export default TeamInfoPage;
+export default MainPage;
 
 // Styled Components
 const Container = styled.div`

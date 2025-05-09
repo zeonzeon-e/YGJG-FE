@@ -53,7 +53,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
     ref
   ) => {
     return (
-      <div>
+      <>
         {title && <h4>{title}</h4>}
         <StyledInput
           className="border-df shadow-df"
@@ -68,7 +68,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           border={border}
           {...rest} // 추가: 나머지 props 전달
         />
-      </div>
+      </>
     );
   }
 );

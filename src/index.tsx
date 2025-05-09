@@ -9,11 +9,11 @@ import FindPassWardPage from "./screen/Auth/FindPassWardPage";
 import FindPassWardPhonePage from "./screen/Auth/FindPassWardPhonePage";
 import MyPage from "./screen/My/Mypage";
 import TeamInfoEdit from "./screen/My/TeamInfoEdit";
-import GameStrategy from "./screen/Team/GameStrategy/GameStrategy";
+import GameStrategy from "./screen/Team/Manager/GameStrategy/GameStrategy";
 import PersonalCalenderPage from "./screen/My/PersonalCalendarPage";
 import JoinApprovalStatus from "./screen/My/JoinApprovalSataus";
 import { createGlobalStyle } from "styled-components";
-import TeamListPage from "./screen/Filter/TeamListPage";
+import TeamMemberListPage from "./screen/Team/TeamMemberListPage";
 import FindPassWardEmailPage from "./screen/Auth/FindPassWardEmailPage";
 import SignUpPage from "./screen/Auth/SignUpPage";
 import IntroPage from "./screen/IntroPage";
@@ -23,14 +23,18 @@ import GoogleRedirectHandler from "./screen/Auth/GoogleRedirectHandler";
 import TeamCreationPage from "./screen/Team/TeamCreationPage";
 import TeamCreationIntroPage from "./screen/Team/TeamCreationIntroPage";
 import TeamSelectListPage from "./screen/Team/TeamSelectListPage";
-import TeamInfoPage from "./screen/Team/TeamInforPage";
+import TeamInforPage from "./screen/Team/TeamInforPage";
 import TeamNoticePage from "./screen/Team/Notice/TeamNoticePage";
 import TeamNoticeDetailPage from "./screen/Team/Notice/TeamNoticeDetailPage";
 import TeamNoticeCreatePage from "./screen/Team/Notice/TeamNoticeCreatePage";
 import TeamOutPage from "./screen/My/TeamOutPage";
 import TeamNoticeRewritePage from "./screen/Team/Notice/TeamNoticeRewritePage";
-import CalendarPage from "./screen/Calendar/CalendarPage";
+import CalendarPage from "./screen/Team/Calendar/CalendarPage";
 import ProfileEditPage from "./screen/My/ProfileEditPage";
+import ChangePasswardPage from "./screen/My/ChangePasswardPage";
+import UnsubscribePage from "./screen/My/UnsubscribePage";
+import MTeaminforpage from "./screen/Team/Manager/MTeamInforPage";
+import MainPage from "./screen/My/Mainpage";
 
 const GlobalStyle = createGlobalStyle`
   body, #root, .app-container {
@@ -51,6 +55,8 @@ root.render(
       <GlobalStyle />
       <Routes>
         <Route path="/" element={<IntroPage />} />
+
+        {/* 로그인 페이지 */}
         <Route path="/signup" element={<SignUpPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/auth/kakao/callback" element={<KakaoRedirectHandler />} />
@@ -63,31 +69,61 @@ root.render(
           path="/login/find-pw/phone"
           element={<FindPassWardPhonePage />}
         />
+
+        {/* 팀 관련 페이지 */}
+        {/* 초대코드 입력 페이지 */}
+        <Route path="/invite" element={<InvitePage />} />
+        {/* 팀 선택 목록에서 들어가면 보이는 팀 상세 페이지 */}
+        <Route path="/team/list/:teamId" element={<TeamInforPage />} />
+        {/* 팀 생성 페이지 */}
         <Route path="/team/create" element={<TeamCreationPage />} />
+        {/* 팀 생성 안내 페이지 */}
         <Route path="/team/intro" element={<TeamCreationIntroPage />} />
-        <Route path="/team/select/list" element={<TeamSelectListPage />} />
-        <Route path="/team/list/:teamId" element={<TeamListPage />} />
-        <Route path="/team" element={<TeamInfoPage />} />
-        <Route path="/my" element={<MyPage />} />
+        {/* 팀 선택 목록 페이지 */}
+        <Route path="/team/list" element={<TeamSelectListPage />} />
+        {/* 팀 선수목록 페이지 */}
+        <Route path="/team/:teamId/member" element={<TeamMemberListPage />} />
+        {/* 게시판 목록 페이지 */}
         <Route path="/team/notice" element={<TeamNoticePage />} />
-        <Route path="/my/calendar" element={<PersonalCalenderPage/>}/>
+        {/* 게시판 글 페이지 */}
         <Route
           path="/team/notice/:noticeId"
           element={<TeamNoticeDetailPage />}
         />
-        <Route path="/my/joinstatus" element={<JoinApprovalStatus />} />
-        <Route path="/team/notice/create" element={<TeamNoticeCreatePage />} />
+        {/* 팀 탈퇴 사유 작성 페이지 */}
         <Route path="/out/:id" element={<TeamOutPage />} />
-        {/* 팀 정보 수정 페이지 */}
-        <Route path="/team-edit/:id" element={<TeamInfoEdit />} />
-        {/* 팀 전략 생성 페이지*/}
+
+        {/* 팀 매너지 관련 페이지 */}
+        {/* 경기전략 페이지 */}
         <Route path="/team-strategy/:id" element={<GameStrategy />} />
-        <Route path="/invite" element={<InvitePage />} />
+        {/* 게시판 추가 페이지 */}
+        <Route path="/team/notice/create" element={<TeamNoticeCreatePage />} />
+        {/* 게시판 수정 페이지 */}
         <Route
           path="/team/notice/rewrite/:id"
           element={<TeamNoticeRewritePage />}
         />
+        {/* 본인이 관리자인 팀 페이지 */}
+        <Route path="/manager/:id" element={<MTeaminforpage />} />
+
+        {/* 마이페이지 */}
+        {/* 메인페이지(가입한 팀 정보 있음) */}
+        <Route path="/myteam" element={<MainPage />} />
+        {/* 마이페이지 */}
+        <Route path="/my" element={<MyPage />} />
+        {/* 개인 캘린더 */}
+        <Route path="/my/calendar" element={<PersonalCalenderPage />} />
+        {/* 비밀번호 변경 */}
+        <Route path="/my/change-pw" element={<ChangePasswardPage />} />
+        {/* 가입 승인 현황 (대기, 승인, 탈락) */}
+        <Route path="/my/joinstatus" element={<JoinApprovalStatus />} />
+        {/* 본인 프로필 수정 */}
         <Route path="/my/edit" element={<ProfileEditPage />} />
+
+        {/* 서비스 탈퇴 안내 페이지 */}
+        <Route path="/my/unsub" element={<UnsubscribePage />} />
+        {/* 팀 색상, 팀 내 희망 포지션 변경 */}
+        <Route path="/team-edit/:id" element={<TeamInfoEdit />} />
       </Routes>
     </BrowserRouter>
   </React.StrictMode>

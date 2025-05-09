@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import GlobalStyles from "../../components/Styled/GlobalStyled";
 import Header2 from "../../components/Header/Header2/Header2";
@@ -19,7 +19,29 @@ const JoinApprovalStatus: React.FC = () => {
       teamImageUrl: "https://example.com/profile-image.jpg",
     },
   ];
+  const [approval, setApproval] = useState<number>(0);
+  const [wait, setWait] = useState<number>(0);
+  const [out, setOut] = useState<number>(0);
 
+  useEffect(() => {
+    let approvalCount = 0;
+    let waitCount = 0;
+    let outCount = 0;
+
+    approvalList.forEach((team) => {
+      if (team.status === "승인") {
+        approvalCount += 1;
+      } else if (team.status === "승인대기") {
+        waitCount += 1;
+      } else if (team.status === "거절") {
+        outCount += 1;
+      }
+    });
+
+    setApproval(approvalCount);
+    setWait(waitCount);
+    setOut(outCount);
+  }, []);
   // const [approvalList, setApprovalList] = useState<ApprovalItemType[]>([]); // 상태 관리
 
   // // API 호출
@@ -41,6 +63,21 @@ const JoinApprovalStatus: React.FC = () => {
       <GlobalStyles />
       <Container>
         <Header2 text="가입 승인 현황" />
+        <Title>최근 2주 동안의 가입 승인 현황이에요</Title>
+        <CountContainer>
+          <CountA>
+            <CountTitle style={{ color: "green" }}>승인</CountTitle>
+            <CountContent>{approval}</CountContent>
+          </CountA>
+          <CountB>
+            <CountTitle style={{ color: "orange" }}>승인 대기</CountTitle>
+            <CountContent>{wait}</CountContent>
+          </CountB>
+          <CountC>
+            <CountTitle style={{ color: "red" }}>거절</CountTitle>
+            <CountContent>{out}</CountContent>
+          </CountC>
+        </CountContainer>
         {approvalList.map((item, index) => (
           <ApprovalItem key={index}>
             <ProfileImage src={item.teamImageUrl} alt="팀 이미지" />
@@ -65,6 +102,55 @@ const Container = styled.div`
   padding: 20px;
 `;
 
+const Title = styled.div`
+  margin-top: 20px;
+  font-size: 20px;
+`;
+const CountContainer = styled.div`
+  display: flex;
+  align-items: center;
+  height: 100px;
+  gap: 10px;
+`;
+const CountA = styled.div`
+  flex: 1;
+  display: flex;
+  gap: 20px;
+  border: 1px green solid;
+  border-radius: 8px;
+  align-items: center;
+  align-content: center;
+  flex-direction: column;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+`;
+const CountB = styled.div`
+  flex: 1;
+  display: flex;
+  gap: 20px;
+  border: 1px orange solid;
+  border-radius: 8px;
+  align-items: center;
+  align-content: center;
+  flex-direction: column;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+`;
+const CountC = styled.div`
+  flex: 1;
+  display: flex;
+  gap: 20px;
+  border: 1px red solid;
+  border-radius: 8px;
+  align-items: center;
+  align-content: center;
+  flex-direction: column;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+`;
+const CountTitle = styled.div`
+  margin-top: 10px;
+`;
+const CountContent = styled.div`
+  margin-bottom: 10px;
+`;
 const ApprovalItem = styled.div`
   display: flex;
   align-items: center;
