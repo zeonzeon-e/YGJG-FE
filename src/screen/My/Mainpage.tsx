@@ -692,7 +692,7 @@ const MainPage: React.FC = () => {
         })}
       </TimeWrapper>
           </> */}
-            {/* </TeamDetails> */}
+            
             <TeamDetails>
               <TeamTitle>
                 <div>공지사항</div>
