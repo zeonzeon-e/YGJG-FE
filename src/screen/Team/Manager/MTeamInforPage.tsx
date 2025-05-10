@@ -133,6 +133,7 @@ import { IoSettingsSharp } from "react-icons/io5";
 import { useNavigate } from "react-router-dom";
 import HorizontalLine from "../../../components/Styled/HorizontalLine";
 import MiniButton from "../../../components/Button/MiniButton";
+import Modal from "../../../components/Modal/Modal1";
 
 /* ─────────────────────────────── 더미 데이터 ─────────────────────────────── */
 interface TeamListItem {
@@ -265,8 +266,9 @@ const TeamInfoPage: React.FC = () => {
   const [teamData, setTeamData] = useState<TeamData>();
   const [favoriteTeams, setFavoriteTeams] = useState<number[]>([]);
   const [noticeList, setNoticeList] = useState<NoticeItem[]>([]);
-
+  const [isModalOpen, setIsModalOpen] = useState(false); // 모달 열림 상태 관리
   const navigate = useNavigate();
+
 
   /* ─────────────────────────── 데이터 초기화 ─────────────────────────── */
   useEffect(() => {
@@ -323,7 +325,10 @@ const TeamInfoPage: React.FC = () => {
     fetchNoticeList();
     */
   }, [selectedTeam]);
-
+  const handleCopyLink = (code:string) => {
+    navigator.clipboard.writeText(code);
+    setIsModalOpen(true); // 모달 열기
+  }
   const handleTeamChange = (teamId: number, teamName: string) => {
     setselectedTeam({ teamId, teamName });
   };
@@ -401,8 +406,8 @@ const TeamInfoPage: React.FC = () => {
                   <div>
                     초대코드
                   </div>
-                  <div style={{color:'var(--color-dark1)'}}>0912345</div>
-                  <div>복사</div>
+                  <div style={{color:'var(--color-dark1)'}}>{teamData.invitedCode}</div>
+                  <div onClick={() => handleCopyLink(teamData.invitedCode)}>복사</div>
                 </Card>
                 <GreenCard>선수 목록 보기</GreenCard>
                 <CardContainer>
@@ -501,6 +506,14 @@ const TeamInfoPage: React.FC = () => {
             </TeamDetails>
           </>
         )}
+        {/* 모달 컴포넌트 */}
+              <Modal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)} // 모달 닫기
+                title="초대코드를 복사했습니다"
+                onConfirm={() => setIsModalOpen(false)} // 확인 버튼 클릭 시 삭제 수행
+              >
+              </Modal>
       </Container>
     </>
   );
