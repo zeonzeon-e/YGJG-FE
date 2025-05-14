@@ -35,6 +35,7 @@ import ChangePasswardPage from "./screen/My/ChangePasswardPage";
 import UnsubscribePage from "./screen/My/UnsubscribePage";
 import MTeaminforpage from "./screen/Team/Manager/MTeamInforPage";
 import MainPage from "./screen/My/Mainpage";
+import AdminJoinReviewPage from "./screen/Team/Manager/AdminJoinReviewPage";
 
 const GlobalStyle = createGlobalStyle`
   body, #root, .app-container {
@@ -73,6 +74,8 @@ root.render(
         {/* 팀 관련 페이지 */}
         {/* 초대코드 입력 페이지 */}
         <Route path="/invite" element={<InvitePage />} />
+        {/* [관리자]팀 가입 신청서 열람람 페이지 @@@@@팀ID & 유저ID로 식별 기능 추가할 것 */}
+        <Route path="/joinReview" element={<AdminJoinReviewPage />} />
         {/* 팀 선택 목록에서 들어가면 보이는 팀 상세 페이지 */}
         <Route path="/team/list/:teamId" element={<TeamInforPage />} />
         {/* 팀 생성 페이지 */}
