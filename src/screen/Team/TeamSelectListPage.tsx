@@ -11,11 +11,11 @@ import MainButton from "../../components/Button/MainButton";
 import Modal1 from "../../components/Modal/Modal1";
 
 interface Team {
-  name: string;
+  teamName: string;
   ageGroup: string;
   activityDays: string[];
   matchLocation: string;
-  gender: string;
+  teamGender: string;
   activityTime: string[];
   skillLevel: string;
   teamImageUrl: string;
@@ -158,7 +158,7 @@ const TeamSelectListPage: React.FC = () => {
     // 팀 목록에서 keyword가 포함된 것만 필터
     const filtered = teams.filter((team) => {
       // 예: 팀명, 지역, 요일 등에 keyword가 포함되는지 확인
-      if (team.name.toLowerCase().includes(keyword)) return true;
+      if (team.teamName.toLowerCase().includes(keyword)) return true;
       if (
         team.matchLocation &&
         team.matchLocation.toLowerCase().includes(keyword)
@@ -235,12 +235,12 @@ const TeamSelectListPage: React.FC = () => {
           <img
             src={team.teamImageUrl}
             alt="team logo"
-            style={{ width: "50px", borderRadius: "50%" }}
+            style={{ width: "50px", height: "50px", borderRadius: "50%" }}
           />
           <TeamInfo>
-            <p style={{ fontWeight: "bold" }}>{team.name}</p>
-            <p>{team.ageGroup}</p>
-            <p>{team.activityDays.join(", ")}</p>
+            <p style={{ fontWeight: "bold", marginBottom: "10px" }}>{team.teamName}</p>
+            <p>{team.teamGender}</p>
+            <p>{team.activityDays}</p>
             <p>{team.matchLocation}</p>
           </TeamInfo>
         </TeamCard>
