@@ -6,7 +6,7 @@ import MainButton from "../../components/Button/MainButton";
 
 const FindPasswordPage: React.FC = () => {
   return (
-    <div>
+    <Wrapper>
       <Header2 text="비밀번호 찾기" />
       <Container>
         <Title>비밀번호를 잊으셨나요?</Title>
@@ -17,17 +17,21 @@ const FindPasswordPage: React.FC = () => {
           <MainButton>이메일로 찾기</MainButton>
         </Link>
       </Container>
-    </div>
+    </Wrapper>
   );
 };
 
 export default FindPasswordPage;
 
+const Wrapper = styled.div`
+  margin: 0px 10px;
+`;
+
 const Container = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 0px 5px;
+  padding: 0px 10px;
   margin: auto;
 `;
 

@@ -35,6 +35,8 @@ import MTeaminforpage from "./screen/Team/Manager/MTeamInforPage";
 import MainPage from "./screen/My/Mainpage";
 import AdminJoinReviewPage from "./screen/Team/Manager/AdminJoinReviewPage";
 import ChangePasswordPage from "./screen/My/ChangePasswardPage";
+import FindPasswordEmailPage from "./screen/Auth/FindPasswordEmailPage";
+import SetNewPasswordPage from "./screen/Auth/SetNewPasswordPage";
 
 const GlobalStyle = createGlobalStyle`
   body, #root, .app-container {
@@ -68,6 +70,14 @@ root.render(
         <Route
           path="/login/find-pw/phone"
           element={<FindPasswordPhonePage />}
+        />
+        <Route
+          path="/login/find-pw/email"
+          element={<FindPasswordEmailPage />}
+        />
+        <Route
+          path="/login/find-pw/set-new-password"
+          element={<SetNewPasswordPage />}
         />
 
         {/* 팀 관련 페이지 */}
