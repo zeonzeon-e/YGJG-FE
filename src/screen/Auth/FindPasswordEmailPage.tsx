@@ -6,7 +6,7 @@ import MainButton from "../../components/Button/MainButton";
 import Input from "../../components/Input/Input";
 import { useNavigate } from "react-router-dom";
 
-const FindPassWardEmailPage: React.FC = () => {
+const FindPasswordEmailPage: React.FC = () => {
   const navigate = useNavigate();
 
   const goToFindPage = () => {
@@ -30,7 +30,7 @@ const FindPassWardEmailPage: React.FC = () => {
   );
 };
 
-export default FindPassWardEmailPage;
+export default FindPasswordEmailPage;
 
 const Container = styled.div`
   display: flex;

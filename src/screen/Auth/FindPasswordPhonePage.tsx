@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import Header2 from "../../components/Header/Header2/Header2";
 import MainButton from "../../components/Button/MainButton";
 
-const FindPassWardPhonePage: React.FC = () => {
+const FindPasswordPhonePage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -56,7 +56,7 @@ const FindPassWardPhonePage: React.FC = () => {
   );
 };
 
-export default FindPassWardPhonePage;
+export default FindPasswordPhonePage;
 
 const Container = styled.div`
   display: flex;

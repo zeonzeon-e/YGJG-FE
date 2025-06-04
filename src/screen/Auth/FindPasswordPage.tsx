@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import Header2 from "../../components/Header/Header2/Header2";
 import MainButton from "../../components/Button/MainButton";
 
-const FindPassWardPage: React.FC = () => {
+const FindPasswordPage: React.FC = () => {
   return (
     <div>
       <Header2 text="비밀번호 찾기" />
@@ -21,7 +21,7 @@ const FindPassWardPage: React.FC = () => {
   );
 };
 
-export default FindPassWardPage;
+export default FindPasswordPage;
 
 const Container = styled.div`
   display: flex;

@@ -5,8 +5,8 @@ import App from "./App";
 import reportWebVitals from "./reportWebVitals";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import LoginPage from "./screen/Auth/LoginPage";
-import FindPassWardPage from "./screen/Auth/FindPassWardPage";
-import FindPassWardPhonePage from "./screen/Auth/FindPassWardPhonePage";
+import FindPasswordPage from "./screen/Auth/FindPasswordPage";
+import FindPasswordPhonePage from "./screen/Auth/FindPasswordPhonePage";
 import MyPage from "./screen/My/Mypage";
 import TeamInfoEdit from "./screen/My/TeamInfoEdit";
 import GameStrategy from "./screen/Team/Manager/GameStrategy/GameStrategy";
@@ -14,7 +14,6 @@ import PersonalCalenderPage from "./screen/My/PersonalCalendarPage";
 import JoinApprovalStatus from "./screen/My/JoinApprovalSataus";
 import { createGlobalStyle } from "styled-components";
 import TeamMemberListPage from "./screen/Team/TeamMemberListPage";
-import FindPassWardEmailPage from "./screen/Auth/FindPassWardEmailPage";
 import SignUpPage from "./screen/Auth/SignUpPage";
 import IntroPage from "./screen/IntroPage";
 import InvitePage from "./screen/Invite/InvitePage";
@@ -31,11 +30,11 @@ import TeamOutPage from "./screen/My/TeamOutPage";
 import TeamNoticeRewritePage from "./screen/Team/Notice/TeamNoticeRewritePage";
 import CalendarPage from "./screen/Team/Calendar/CalendarPage";
 import ProfileEditPage from "./screen/My/ProfileEditPage";
-import ChangePasswardPage from "./screen/My/ChangePasswardPage";
 import UnsubscribePage from "./screen/My/UnsubscribePage";
 import MTeaminforpage from "./screen/Team/Manager/MTeamInforPage";
 import MainPage from "./screen/My/Mainpage";
 import AdminJoinReviewPage from "./screen/Team/Manager/AdminJoinReviewPage";
+import ChangePasswordPage from "./screen/My/ChangePasswardPage";
 
 const GlobalStyle = createGlobalStyle`
   body, #root, .app-container {
@@ -65,10 +64,10 @@ root.render(
           path="/auth/google/callback"
           element={<GoogleRedirectHandler />}
         />
-        <Route path="/login/find-pw" element={<FindPassWardPage />} />
+        <Route path="/login/find-pw" element={<FindPasswordPage />} />
         <Route
           path="/login/find-pw/phone"
-          element={<FindPassWardPhonePage />}
+          element={<FindPasswordPhonePage />}
         />
 
         {/* 팀 관련 페이지 */}
@@ -117,7 +116,7 @@ root.render(
         {/* 개인 캘린더 */}
         <Route path="/my/calendar" element={<PersonalCalenderPage />} />
         {/* 비밀번호 변경 */}
-        <Route path="/my/change-pw" element={<ChangePasswardPage />} />
+        <Route path="/my/change-pw" element={<ChangePasswordPage />} />
         {/* 가입 승인 현황 (대기, 승인, 탈락) */}
         <Route path="/my/joinstatus" element={<JoinApprovalStatus />} />
         {/* 본인 프로필 수정 */}

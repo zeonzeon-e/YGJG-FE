@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import Header2 from "../../components/Header/Header2/Header2";
 import MainButton from "../../components/Button/MainButton";
 
-const ChangePasswardPage: React.FC = () => {
+const ChangePasswordPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -56,7 +56,7 @@ const ChangePasswardPage: React.FC = () => {
   );
 };
 
-export default ChangePasswardPage;
+export default ChangePasswordPage;
 
 const Container = styled.div`
   display: flex;
