@@ -270,15 +270,51 @@ const TeamInfoPage: React.FC = () => {
               <>
                 <TeamTitle>주요 활동 일정</TeamTitle>
                 <ItemWrapper>
-                  {teamData.activitySchedule.map((item) => {
+                  {teamData.activitySchedule.map((item, idx) => {
                      const isActive = teamData.activitySchedule.includes(item); // 해당 요일이 활성화 상태인지 확인
-                    return (
-                      <ActivityDaysItem
+  
+                     var times = ''
+                     if (Array.isArray(item)) {
+                      // item이 배열일 때
+                      times = item.join(', ');  // '아침,점심'으로 결합
+                    } else {
+                      // item이 문자열일 때
+                      times = item.split(',').join(', ');
+                    }
+                    console.log(item)
+                     var dayName = ""
+                     switch(idx){
+                      case 0 : 
+                        dayName = "월" 
+                        break;
+                      case 1 : 
+                        dayName = "화" 
+                        break;
+                      case 2 : 
+                        dayName = "수" 
+                        break;
+                      case 3 : 
+                        dayName = "목" 
+                        break;
+                      case 4 : 
+                        dayName = "금" 
+                        break;
+                      case 5 : 
+                        dayName = "토" 
+                        break;
+                      case 6 : 
+                        dayName = "일" 
+                        break;
+
+                     }
+
+                     return (
+                      item.length !== 0 && <ActivityDaysItem
                         key={item}
                        isActive={isActive}
                         className="border-df shadow-df"
                       >
-                        {item.slice(0, 1)}
+                        <div>{dayName}</div> <div>{times}</div>
                       </ActivityDaysItem>
                     );
                   })}
@@ -373,10 +409,14 @@ const Card = styled.div`
 `;
 const ItemWrapper = styled.div`
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
+  gap: 10px;
 `;
 const ActivityDaysItem = styled.div<{ isActive: boolean }>`
-  width: 15px;
+  display: flex;
+  justify-content: space-evenly;
+  margin: 0 auto;
+  width: 90%;
   height: 15px;
   border-radius: 8px;
   padding: 10px;
@@ -384,10 +424,10 @@ const ActivityDaysItem = styled.div<{ isActive: boolean }>`
   text-align: center;
   background-color: ${({ isActive }) =>
     isActive
-      ? "var(--color-main)"
+      ? "var(--color-light2)"
       : "#ffffff"}; /* 활성화: 초록색, 비활성화: 회색 */
   color: ${({ isActive }) =>
-    isActive ? "#ffffff" : "#9e9e9e"}; /* 활성화: 흰색, 비활성화: 연한 회색 */
+    isActive ? "var(--color-main)" : "#9e9e9e"}; /* 활성화: 흰색, 비활성화: 연한 회색 */
 `;
 const TimeWrapper = styled.div`
   display: flex;
