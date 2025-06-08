@@ -3,40 +3,35 @@ import styled from "styled-components";
 import { Link } from "react-router-dom";
 import Header2 from "../../components/Header/Header2/Header2";
 import MainButton from "../../components/Button/MainButton";
-import Input from "../../components/Input/Input";
-import { useNavigate } from "react-router-dom";
 
-const FindPassWardEmailPage: React.FC = () => {
-  const navigate = useNavigate();
-
-  const goToFindPage = () => {
-    navigate("/");
-  };
-
+const FindPasswordPage: React.FC = () => {
   return (
-    <div>
+    <Wrapper>
       <Header2 text="비밀번호 찾기" />
       <Container>
         <Title>비밀번호를 잊으셨나요?</Title>
-        <Input
-          type="input"
-          placeholder="이메일을 입력해주세요"
-          bgColor="#eee"
-          height={50}
-        />
-        <MainButton onClick={goToFindPage}>이메일로 찾기</MainButton>
+        <Link style={{ width: "100%" }} to="/login/find-pw/phone">
+          <MainButton>휴대폰 번호로 찾기</MainButton>
+        </Link>
+        <Link style={{ width: "100%" }} to="/login/find-pw/email">
+          <MainButton>이메일로 찾기</MainButton>
+        </Link>
       </Container>
-    </div>
+    </Wrapper>
   );
 };
 
-export default FindPassWardEmailPage;
+export default FindPasswordPage;
+
+const Wrapper = styled.div`
+  margin: 0px 10px;
+`;
 
 const Container = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 0px 5px;
+  padding: 0px 10px;
   margin: auto;
 `;
 
