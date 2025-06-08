@@ -179,7 +179,7 @@ const MyPage: React.FC = () => {
                 <TeamDiv>
                   <ColorLine color={el.teamColor} />
                   <TeamProfileImg src={el.teamImageUrl} />
-                  <TeamNameText>{el.teamName}</TeamNameText>
+                  <TeamNameText onClick={() => navigate('/myteam')}>{el.teamName}</TeamNameText>
                 </TeamDiv>
                 <PositionWrapper>
                   <PositionText position={el.position}>

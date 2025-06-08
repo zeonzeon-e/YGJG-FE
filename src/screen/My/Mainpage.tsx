@@ -539,11 +539,11 @@ const MainPage: React.FC = () => {
   /* ─────────────────────────── 데이터 초기화 ─────────────────────────── */
   useEffect(() => {
     // 더미 데이터 세팅
-    setTeamList(dummyTeamList);
+    //setTeamList(dummyTeamList);
     if (dummyTeamList.length > 0) setselectedTeam(dummyTeamList[0]);
 
     // 실제 API 사용 시 아래 로직 주석 해제
-    /*
+
     const fetchTeamList = async () => {
       try {
         const response = await apiClient.get("api/myPage/teams");
@@ -554,18 +554,18 @@ const MainPage: React.FC = () => {
       }
     };
     fetchTeamList();
-    */
+
   }, []);
 
   useEffect(() => {
     if (selectedTeam.teamId === 0) return;
 
     // 더미 데이터 세팅
-    setTeamData(dummyTeamData[selectedTeam.teamId]);
-    setNoticeList(dummyNoticeList[selectedTeam.teamId] ?? []);
+    //setTeamData(dummyTeamData[selectedTeam.teamId]);
+   // setNoticeList(dummyNoticeList[selectedTeam.teamId] ?? []);
 
     // 실제 API 사용 시 아래 로직 주석 해제
-    /*
+
     const teamId = selectedTeam.teamId;
     const fetchTeamData = async () => {
       try {
@@ -589,7 +589,7 @@ const MainPage: React.FC = () => {
 
     fetchTeamData();
     fetchNoticeList();
-    */
+
   }, [selectedTeam]);
 
   const handleTeamChange = (teamId: number, teamName: string) => {

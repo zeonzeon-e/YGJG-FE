@@ -68,7 +68,7 @@ const TeamCreationIntroPage: React.FC = () => {
           선수를 모아보세요
         </Title>
         <IconWrapper>
-          <img src="/rocket.png" alt="Rocket" />
+          <img src="/rocket.svg" alt="Rocket" />
         </IconWrapper>
         <SubTitle>팀을 생성하면?</SubTitle>
         <InfoBox>
