@@ -1,65 +1,7 @@
+// src/components/CheckBox/CheckBox.tsx
 import React, { useState } from "react";
 import { FaAngleDown, FaAngleUp, FaCheck } from "react-icons/fa6";
 import styled from "styled-components";
-import HorizontalLine from "../Styled/HorizontalLine";
-
-/* #################### 사용 예시 #######################
-
-/ Step 2: 약관 동의 컴포넌트
-const TermsAgreement: React.FC<{ onNext: () => void }> = ({ onNext }) => {
-  const content: [string, string][] = [
-    ["(필수) 서비스 이용자 동의", "내용1"],
-    ["(필수) 개인정보 수집/이용 동의", "내용2"],
-    ["(필수) 제 3자 제공 동의", "내용3"],
-    ["(선택) 메일 수신 동의", "내용4"],
-    ["(선택) 마케팅 수신 동의", "내용5"],
-    ["(선택) 야간 마케팅 수신 동의", "내용6"],
-  ];
-
-  const requiredIndexes = [0, 1, 2]; // 필수 항목 인덱스
-  const [checkedState, setCheckedState] = useState<boolean[]>(
-    Array(content.length).fill(false)
-  );
-
-  // 개별 체크박스 클릭 핸들러
-  const handleCheckboxClick = (index: number) => {
-    const updatedCheckedState = [...checkedState];
-    updatedCheckedState[index] = !updatedCheckedState[index];
-    setCheckedState(updatedCheckedState);
-  };
-
-  // 전체 체크박스 클릭 핸들러
-  const handleAllClick = (checked: boolean) => {
-    setCheckedState(Array(content.length).fill(checked));
-  };
-
-  // 필수 항목 체크 여부 확인
-  const isNextButtonEnabled = requiredIndexes.every(
-    (index) => checkedState[index]
-  );
-
-  return (
-    <Container>
-      <Title>약관 동의</Title>
-      <SubTitle>
-        서비스 이용에 필요한 필수 약관과 선택 약관에 동의해주세요
-      </SubTitle>
-      <CheckBox
-        content={content}
-        checkedState={checkedState}
-        isToggle={true}
-        onCheckboxClick={handleCheckboxClick}
-        onAllClick={handleAllClick}
-      />
-      <ButtonWrapper>
-        <MainButton disabled={!isNextButtonEnabled} onClick={onNext}>
-          다음
-        </MainButton>
-      </ButtonWrapper>
-    </Container>
-  );
-};
- */
 
 interface CheckBoxProps {
   content: [string, string][];
@@ -79,9 +21,8 @@ const CheckBox: React.FC<CheckBoxProps> = ({
   const [toggles, setToggles] = useState<boolean[]>(() =>
     Array(content.length).fill(false)
   );
-  const allChecked = checkedState.every(Boolean);
+  const allChecked = checkedState.length > 0 && checkedState.every(Boolean);
 
-  // 토글 버튼 클릭 핸들러
   const handleToggleClick = (index: number) => {
     const updatedToggles = [...toggles];
     updatedToggles[index] = !updatedToggles[index];
@@ -89,25 +30,41 @@ const CheckBox: React.FC<CheckBoxProps> = ({
   };
 
   return (
-    <div>
-      {/* 전체 선택 체크박스 */}
-      <SelectAllWrapper onClick={() => onAllClick(!allChecked)}>
-        <IconWrapper className={allChecked ? "icon" : ""}>
-          <FaCheck className="CheckBox-icon" />
-        </IconWrapper>
-        전체 동의
-      </SelectAllWrapper>
+    <CheckBoxContainer>
+      {/* 전체 동의 */}
+      <CheckBoxItem>
+        <CheckBoxContent>
+          <StyledLabel htmlFor="all-agree">
+            <HiddenCheckbox
+              id="all-agree"
+              checked={allChecked}
+              onChange={(e) => onAllClick(e.target.checked)}
+            />
+            <StyledCheckBox>
+              <FaCheck />
+            </StyledCheckBox>
+            전체 동의
+          </StyledLabel>
+        </CheckBoxContent>
+      </CheckBoxItem>
 
-      {/* 개별 체크박스 목록 */}
+      <Divider />
+
+      {/* 개별 약관 동의 */}
       {content.map(([title, detail], index) => (
         <CheckBoxItem key={index}>
           <CheckBoxContent>
-            <CheckBoxLabel onClick={() => onCheckboxClick(index)}>
-              <IconWrapper className={checkedState[index] ? "icon" : ""}>
-                <FaCheck className="CheckBox-icon" />
-              </IconWrapper>
+            <StyledLabel htmlFor={`agree-${index}`}>
+              <HiddenCheckbox
+                id={`agree-${index}`}
+                checked={checkedState[index]}
+                onChange={() => onCheckboxClick(index)}
+              />
+              <StyledCheckBox>
+                <FaCheck />
+              </StyledCheckBox>
               {title}
-            </CheckBoxLabel>
+            </StyledLabel>
             {isToggle && (
               <ToggleButton onClick={() => handleToggleClick(index)}>
                 {toggles[index] ? (
@@ -123,70 +80,107 @@ const CheckBox: React.FC<CheckBoxProps> = ({
           )}
         </CheckBoxItem>
       ))}
-    </div>
+    </CheckBoxContainer>
   );
 };
 
 export default CheckBox;
 
-/* Styled-components */
+/* ================================================== */
+/* Styled-components                                */
+/* ================================================== */
 
-/* 아이콘 스타일 */
-const IconWrapper = styled.div`
-  background-color: var(--color-light2);
-  color: var(--color-light2);
-  margin-right: 5px;
-  border-radius: 3px;
-  padding: 0.5px;
-  border: 1px solid var(--color-dark1);
-
-  &.icon {
-    border: 1px solid var(--color-dark1);
-    background-color: var(--color-main);
-    color: var(--color-light2);
-  }
-`;
-
-/* 전체 선택 스타일 */
-const SelectAllWrapper = styled.div`
-  display: flex;
-  padding: 5px;
-  align-items: center;
-  border-radius: 5px;
-  cursor: pointer;
-`;
-
-/* 체크박스 항목 스타일 */
-const CheckBoxItem = styled.div`
+const CheckBoxContainer = styled.div`
   width: 100%;
-  padding: 5px;
   display: flex;
   flex-direction: column;
 `;
 
-/* 체크박스 콘텐츠 스타일 */
+const CheckBoxItem = styled.div`
+  width: 100%;
+  padding: 8px 0;
+  display: flex;
+  flex-direction: column;
+`;
+
 const CheckBoxContent = styled.div`
   display: flex;
-  justify-content: space-between;
   align-items: center;
 `;
 
-/* 체크박스 라벨 스타일 */
-const CheckBoxLabel = styled.label`
+const StyledLabel = styled.label`
   display: flex;
   align-items: center;
   cursor: pointer;
+  flex-grow: 1;
+  font-size: 16px;
 `;
 
-/* 체크박스 세부 내용 스타일 */
+// 실제 input은 숨김 처리
+const HiddenCheckbox = styled.input.attrs({ type: "checkbox" })`
+  border: 0;
+  clip: rect(0 0 0 0);
+  clippath: inset(50%);
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+`;
+
+// 커스텀 디자인을 적용할 체크박스 모양
+const StyledCheckBox = styled.div`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  background-color: #fff;
+  border: 1px solid var(--color-dark1);
+  border-radius: 3px;
+  margin-right: 8px;
+  transition: background-color 0.2s, border-color 0.2s;
+
+  svg {
+    visibility: hidden; // 평소에는 체크 아이콘 숨김
+    color: white;
+    width: 14px;
+    height: 14px;
+  }
+
+  // 숨겨진 실제 체크박스가 :checked 상태일 때, 이 컴포넌트의 스타일 변경
+  ${HiddenCheckbox}:checked + & {
+    background-color: var(--color-main);
+    border-color: var(--color-main);
+
+    svg {
+      visibility: visible; // 보이기
+    }
+  }
+`;
+
+const ToggleButton = styled.div`
+  cursor: pointer;
+  margin-left: auto;
+  padding-left: 10px;
+  display: flex;
+  align-items: center;
+`;
+
 const CheckBoxDetail = styled.div`
   background-color: var(--color-light2);
   padding: 10px;
   border-radius: 5px;
-  margin-top: 5px;
+  margin-top: 8px;
+  color: var(--color-dark2);
+  font-size: 14px;
+  line-height: 1.5;
 `;
 
-/* 토글 버튼 스타일 */
-const ToggleButton = styled.div`
-  cursor: pointer;
+const Divider = styled.hr`
+  border: none;
+  border-top: 1px solid #eee;
+  margin: 8px 0;
 `;
