@@ -2,18 +2,8 @@ import React, { useState, useEffect } from "react";
 import GlobalStyles from "../../components/Styled/GlobalStyled";
 import Header1 from "../../components/Header/Header1/Header1";
 import styled from "styled-components";
-import MiniButton from "../../components/Button/MiniButton";
-import {
-  FaCalendarAlt,
-  FaClipboardCheck,
-  FaEdit,
-  FaBell,
-} from "react-icons/fa";
 import { useNavigate } from "react-router-dom"; // React Router 사용
 import apiClient from "../../api/apiClient"; // apiClient 임포트
-import { getAccessToken } from "../../utils/authUtils";
-import axios, { AxiosResponse } from "axios";
-import { setAccessToken, setRefreshToken } from "../../utils/authUtils";
 import MainButton from "../../components/Button/MainButton";
 import Modal2 from "../../components/Modal/Modal2";
 
