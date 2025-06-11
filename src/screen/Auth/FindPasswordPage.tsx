@@ -16,6 +16,11 @@ const FindPasswordPage: React.FC = () => {
         <Link style={{ width: "100%" }} to="/login/find-pw/email">
           <MainButton>이메일로 찾기</MainButton>
         </Link>
+
+        <Horizontal />
+        <Link style={{ width: "100%" }} to="/login">
+          <MainButton>로그인 홈으로 돌아가기</MainButton>
+        </Link>
       </Container>
     </Wrapper>
   );
@@ -33,6 +38,13 @@ const Container = styled.div`
   align-items: center;
   padding: 0px 10px;
   margin: auto;
+`;
+
+const Horizontal = styled.div`
+  height: 1px;
+  width: 100%;
+  background-color: #ccc;
+  margin: 20px;
 `;
 
 const Title = styled.h2`

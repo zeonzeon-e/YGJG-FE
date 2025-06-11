@@ -18,6 +18,7 @@ import apiClient from "../../api/apiClient";
 
 const Container = styled.div`
   margin: auto;
+  width: 100%; /* 너비를 100%로 설정하여 내부 아이템 정렬 기준 명확화 */
 `;
 
 const Title = styled.h2`
@@ -91,7 +92,6 @@ const PhoneVerification: React.FC<{
       const phoneNum = phone;
       const response = await apiClient.post("/api/sign/send-sms", phoneNum);
       setRealVerificationCode(response.data.certificationNum);
-      console.log(response.data.certificationNum);
     } catch (error) {
       console.error(error);
     }
