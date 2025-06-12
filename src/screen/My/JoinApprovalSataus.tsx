@@ -3,22 +3,30 @@ import styled from "styled-components";
 import GlobalStyles from "../../components/Styled/GlobalStyled";
 import Header2 from "../../components/Header/Header2/Header2";
 import axios from "axios";
+import apiClient from "../../api/apiClient";
+
+interface ApprovalItemType {
+  status: string;
+  teamImageUrl: any;
+  position?: string;
+  teamName: string;
+}
 
 const JoinApprovalStatus: React.FC = () => {
-  const approvalList = [
-    {
-      teamName: "코리아 팀",
-      position: "공격수",
-      status: "승인대기",
-      teamImageUrl: "https://example.com/profile-image.jpg",
-    },
-    {
-      teamName: "코리아 팀",
-      position: "공격수",
-      status: "거절",
-      teamImageUrl: "https://example.com/profile-image.jpg",
-    },
-  ];
+  // const approvalList = [
+  //   {
+  //     teamName: "코리아 팀",
+  //     position: "공격수",
+  //     status: "승인대기",
+  //     teamImageUrl: "https://example.com/profile-image.jpg",
+  //   },
+  //   {
+  //     teamName: "코리아 팀",
+  //     position: "공격수",
+  //     status: "거절",
+  //     teamImageUrl: "https://example.com/profile-image.jpg",
+  //   },
+  // ];
   const [approval, setApproval] = useState<number>(0);
   const [wait, setWait] = useState<number>(0);
   const [out, setOut] = useState<number>(0);
@@ -42,21 +50,21 @@ const JoinApprovalStatus: React.FC = () => {
     setWait(waitCount);
     setOut(outCount);
   }, []);
-  // const [approvalList, setApprovalList] = useState<ApprovalItemType[]>([]); // 상태 관리
+  const [approvalList, setApprovalList] = useState<ApprovalItemType[]>([]); // 상태 관리
 
-  // // API 호출
-  // useEffect(() => {
-  //   const fetchApprovalList = async () => {
-  //     try {
-  //       const response = await axios.get("/api/requests"); // 백엔드 API 엔드포인트
-  //       setApprovalList(response.data); // 응답 데이터를 상태에 저장
-  //     } catch (error) {
-  //       console.error("Error fetching approval list", error);
-  //     }
-  //   };
+  // API 호출
+  useEffect(() => {
+    const fetchApprovalList = async () => {
+      try {
+        const response = await apiClient.get("/api/myPage/requests"); // 백엔드 API 엔드포인트
+        setApprovalList(response.data); // 응답 데이터를 상태에 저장
+      } catch (error) {
+        console.error("Error fetching approval list", error);
+      }
+    };
 
-  //   fetchApprovalList();
-  // }, []); // 컴포넌트가 처음 렌더링될 때 한 번만 실행
+    fetchApprovalList();
+  }, []); // 컴포넌트가 처음 렌더링될 때 한 번만 실행
 
   return (
     <>
