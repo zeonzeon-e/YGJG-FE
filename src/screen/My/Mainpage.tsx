@@ -406,7 +406,6 @@ import apiClient from "../../api/apiClient";
 import { FaLocationDot, FaPeopleGroup, FaHeart } from "react-icons/fa6";
 import { IoSettingsSharp } from "react-icons/io5";
 import { useNavigate } from "react-router-dom";
-import HorizontalLine from "../../components/Styled/HorizontalLine";
 
 interface TeamListItem {
   position: string;
