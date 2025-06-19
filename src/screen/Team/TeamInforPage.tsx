@@ -48,8 +48,6 @@ const TeamInfoPage: React.FC = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // 실제 API 사용 시 아래 로직 주석 해제
-
     const fetchTeamData = async () => {
       try {
         const response = await apiClient.get(`api/team/${teamId}`);
