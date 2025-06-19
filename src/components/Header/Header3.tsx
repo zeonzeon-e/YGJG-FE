@@ -7,16 +7,16 @@ import HorizontalLine from "../Styled/HorizontalLine";
 interface HeaderProps {
   selectedTeam:  {teamId: number, teamName: string};
   teams: {teamId: number, teamName: string}[];
-  onTeamChange: (team: number) => void;
+  onTeamChange: (teamId: number, teamName: string) => void;
   favoriteTeams: number[]; // 즐겨찾기된 팀 목록
-  onToggleFavorite: (team: number) => void; // 즐겨찾기 토글 함수
+  onToggleFavorite: (teamId: number, teamName: string) => void; // 즐겨찾기 토글 함수
 }
 
 const HeaderContainer = styled.header`
   display: flex;
   align-items: center;
   justify-content: center; /* 가운데 정렬 */
-  height: 60px;
+  height: 44px;
   background-color: white;
   position: relative;
 `;
@@ -130,8 +130,8 @@ const Header3: React.FC<HeaderProps> = ({
     setIsModalOpen((prev) => !prev);
   };
 
-  const handleTeamSelect = (teamId: number) => {
-    onTeamChange(teamId);
+  const handleTeamSelect = (teamId: number, teamName: string) => {
+    onTeamChange(teamId, teamName);
     setIsModalOpen(false);
   };
 
@@ -147,7 +147,9 @@ const Header3: React.FC<HeaderProps> = ({
           </DropdownButton>
           <HorizontalLine />
         </TeamNameWrapper>
+        
       </HeaderContainer>
+      
 
       <ModalBackground isOpen={isModalOpen} onClick={toggleModal}>
         <ModalContent className="border-df shadow-df" onClick={(e) => e.stopPropagation()}>
@@ -156,14 +158,14 @@ const Header3: React.FC<HeaderProps> = ({
               <TeamListItem
                 key={team.teamId}
                 isSelected={team.teamName === selectedTeam.teamName}
-                onClick={() => handleTeamSelect(team.teamId)}
+                onClick={() => handleTeamSelect(team.teamId, team.teamName)}
               >
                 <LeftItems>
                 <StarIcon
                   isFavorite={isFavorite(team.teamId)}
                   onClick={(e) => {
                     e.stopPropagation();
-                    onToggleFavorite(team.teamId);
+                    onToggleFavorite(team.teamId, team.teamName);
                   }}
                 >
                   {isFavorite(team.teamId) ? <FaStar /> : <FaStar />}
@@ -195,8 +197,11 @@ const Header3: React.FC<HeaderProps> = ({
               </TeamListItem>
             ))}
           </TeamList>
+          
         </ModalContent>
+        
       </ModalBackground>
+      
     </>
   );
 };

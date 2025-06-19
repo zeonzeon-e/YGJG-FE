@@ -7,6 +7,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { getAccessToken } from "../../utils/authUtils";
 import apiClient from "../../api/apiClient";
 import { CompactPicker } from "react-color";
+import MainButton from "../../components/Button/MainButton";
 
 const TeamInfoEdit: React.FC = () => {
   const location = useLocation();
@@ -23,7 +24,7 @@ const TeamInfoEdit: React.FC = () => {
 
   const handleColorChange = (newColor: any) => {
     setSelectedColor(newColor.hex);
-    console.log(selectedColor)
+    console.log(selectedColor);
   };
 
   const handlePositionChange = (
@@ -32,38 +33,42 @@ const TeamInfoEdit: React.FC = () => {
     setNewPosition(event.target.value);
   };
 
-
   const handleSubmit = async () => {
-
-
-    try{
+    try {
       const accessToken = getAccessToken();
       const headers = {
         Authorization: `Bearer ${accessToken}`,
-        'Content-Type': 'application/json', 
+        "Content-Type": "application/json",
       };
       const body = {
         position: newPosition,
-        teamColor: selectedColor 
-      }
+        teamColor: selectedColor,
+      };
       await apiClient.put(`api/myPage/teamMember/${teamId}`, body, {
         headers, // headers를 config에 포함
-      });  
-        navigate("/my", {
-          state: {
-            updatedTeam: { teamId, teamColor: selectedColor, position: newPosition },
+      });
+      navigate("/my", {
+        state: {
+          updatedTeam: {
+            teamId,
+            teamColor: selectedColor,
+            position: newPosition,
           },
-        });
-      }catch(err){console.error(err);
-        setError("데이터를 가져오는 중 에러가 발생했습니다.")
-      }
+        },
+      });
+    } catch (err) {
+      console.error(err);
+      setError("데이터를 가져오는 중 에러가 발생했습니다.");
+    }
   };
-
+  const handleOutClick = () => {
+    navigate(`/out/${teamId}`);
+  };
   return (
     <>
       <GlobalStyles />
+      <Header2 text="팀 정보 수정" />
       <Container>
-        <Header2 text="팀 정보 수정" />
         {/* <Profile>
           <ProfileImage
             src="https://example.com/team-image.jpg"
@@ -104,8 +109,12 @@ const TeamInfoEdit: React.FC = () => {
             </ColorPickerContainer>
           </ColorPickerWrapper>
         </Section>
-
-        <SubmitButton onClick={handleSubmit}>변경하기</SubmitButton>
+        <Section>
+          <OutButton onClick={handleOutClick} className="border-df shadow-df">
+            팀 탈퇴하기
+          </OutButton>
+        </Section>
+        <MainButton onClick={handleSubmit}>변경하기</MainButton>
       </Container>
     </>
   );
@@ -142,6 +151,8 @@ const ProfileName = styled.div`
 
 const Section = styled.div`
   margin-bottom: 30px;
+  display: flex;
+  flex-direction: column;
 `;
 
 const SectionTitle = styled.h2`
@@ -216,4 +227,12 @@ const SubmitButton = styled.button`
   &:hover {
     background-color: var(--color-sub);
   }
+`;
+
+const OutButton = styled.button`
+  margin-left: auto;
+  padding: 8px;
+  background-color: white;
+  border-radius: 8px;
+  color: var(--color-dark1);
 `;
