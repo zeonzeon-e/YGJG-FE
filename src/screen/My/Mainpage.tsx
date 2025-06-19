@@ -408,7 +408,6 @@ import { IoSettingsSharp } from "react-icons/io5";
 import { useNavigate } from "react-router-dom";
 import HorizontalLine from "../../components/Styled/HorizontalLine";
 
-/* ─────────────────────────────── 더미 데이터 ─────────────────────────────── */
 interface TeamListItem {
   position: string;
   teamColor: string;
@@ -554,7 +553,6 @@ const MainPage: React.FC = () => {
       }
     };
     fetchTeamList();
-
   }, []);
 
   useEffect(() => {
@@ -562,7 +560,7 @@ const MainPage: React.FC = () => {
 
     // 더미 데이터 세팅
     //setTeamData(dummyTeamData[selectedTeam.teamId]);
-   // setNoticeList(dummyNoticeList[selectedTeam.teamId] ?? []);
+    // setNoticeList(dummyNoticeList[selectedTeam.teamId] ?? []);
 
     // 실제 API 사용 시 아래 로직 주석 해제
 
@@ -578,9 +576,12 @@ const MainPage: React.FC = () => {
 
     const fetchNoticeList = async () => {
       try {
-        const response = await apiClient.get("/api/announcement/member/get-all", {
-          params: { teamId },
-        });
+        const response = await apiClient.get(
+          "/api/announcement/member/get-all",
+          {
+            params: { teamId },
+          }
+        );
         setNoticeList(response.data);
       } catch (err) {
         console.error("데이터를 가져오는 중 에러가 발생했습니다.", err);
@@ -589,7 +590,6 @@ const MainPage: React.FC = () => {
 
     fetchTeamData();
     fetchNoticeList();
-
   }, [selectedTeam]);
 
   const handleTeamChange = (teamId: number, teamName: string) => {
@@ -692,7 +692,7 @@ const MainPage: React.FC = () => {
         })}
       </TimeWrapper>
           </> */}
-            
+
             <TeamDetails>
               <TeamTitle>
                 <div>공지사항</div>
