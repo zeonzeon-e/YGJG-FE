@@ -43,7 +43,7 @@ interface NoticeItem {
 const TeamInfoPage: React.FC = () => {
   const [teamList, setTeamList] = useState<TeamListItem[]>([]);
   const [teamData, setTeamData] = useState<TeamData>();
-  const [teamId, setTeamId] = useState<string>("1");
+  const [teamId, setTeamId] = useState<string>("13");
 
   const navigate = useNavigate();
 
@@ -192,10 +192,10 @@ const TeamInfoPage: React.FC = () => {
             </TeamDetails>
           </>
         )}
+        <MainButton onClick={() => navigate(`/team/list/${teamId}/join`)}>
+          팀 가입하기
+        </MainButton>
       </Container>
-      <MainButton onClick={() => navigate(`/team/list/${teamId}/join`)}>
-        팀 가입하기
-      </MainButton>
     </>
   );
 };
@@ -210,7 +210,7 @@ const Container = styled.div`
 `;
 
 const TeamDetails = styled.div`
-  margin-top: 20px;
+  margin-top: 10px;
   padding: 10px;
   border: 1px solid #ccc;
   border-radius: 8px;
@@ -248,12 +248,13 @@ const TeamProfileSetting = styled.div`
   right: 0;
 `;
 const CardWrapper = styled.div`
+  margin-top: 20px;
   display: flex;
   gap: 10px;
 `;
 const Card = styled.div`
   padding: 10px;
-  border: 1px solid black;
+  border: 1px solid #ccc;
   width: 50%;
   border-radius: 8px;
 `;
@@ -280,64 +281,4 @@ const ActivityDaysItem = styled.div<{ isActive: boolean }>`
     isActive
       ? "var(--color-main)"
       : "#9e9e9e"}; /* 활성화: 흰색, 비활성화: 연한 회색 */
-`;
-const TimeWrapper = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 10px;
-`;
-
-const TimeItem = styled.div<{ isActive: boolean }>`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  width: 12px;
-  height: 50px;
-  margin: 0 1px;
-  border-radius: 20px;
-  background-color: ${({ isActive }) =>
-    isActive ? "#4caf50" : "#e0e0e0"}; /* 활성화: 초록색, 비활성화: 회색 */
-  color: ${({ isActive }) =>
-    isActive ? "#ffffff" : "#9e9e9e"}; /* 활성화: 흰색, 비활성화: 연한 회색 */
-`;
-
-const TimeItemWrpper = styled.div`
-  display: flex;
-  flex-direction: column;
-  font-size: 11px;
-  text-align: center;
-  white-space: pre-line;
-  align-self: flex-end;
-  align-items: center;
-`;
-const TimeTitle = styled.div`
-  word-break: keep-all;
-`;
-
-const NoticeList = styled.ul`
-  list-style: none;
-  padding: 0;
-`;
-
-const NoticeItem = styled.li`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px;
-  margin-bottom: 10px;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  background-color: white;
-`;
-
-const NoticeTitle = styled.div`
-  font-size: 14px;
-`;
-
-const NoticeDate = styled.div`
-  font-size: 12px;
-  color: #888;
-  white-space: nowrap;
 `;
