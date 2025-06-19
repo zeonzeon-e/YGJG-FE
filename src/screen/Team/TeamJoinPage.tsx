@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom"; // React Router 사용
 import apiClient from "../../api/apiClient"; // apiClient 임포트
 import MainButton from "../../components/Button/MainButton";
 import Modal2 from "../../components/Modal/Modal2";
+import Header2 from "../../components/Header/Header2/Header2";
 
 const TeamJoinPage: React.FC = () => {
   type Profile = {
@@ -33,7 +34,7 @@ const TeamJoinPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [content, setContent] = useState<string>("");
   const [position, setPosition] = useState<string>("");
-  const [teamId, setTeamId] = useState<string>("1");
+  const [teamId, setTeamId] = useState<string>("13");
   const [completeOpen, setCompleteOpen] = useState(false);
   const [complete, setComplete] = useState(false);
   const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -71,7 +72,7 @@ const TeamJoinPage: React.FC = () => {
         //alert("팀 가입 신청이 성공적으로 등록되었습니다.");
       }
     } catch (error) {
-      console.error("공지사항 등록 중 오류 발생:", error);
+      console.error("가입 신청 중 오류 발생:", error);
       alert("팀 가입 신청에 실패했습니다.");
     }
   };
@@ -146,7 +147,7 @@ const TeamJoinPage: React.FC = () => {
       {complete === false && (
         <>
           <GlobalStyles />
-          <Header1 text="팀 가입신청서" />
+          <Header2 text="팀 가입신청서" />
           <Container>
             <NoticeDiv>
               <NoticeTitle>팀에게 회원님의 정보를 제공해요</NoticeTitle>
