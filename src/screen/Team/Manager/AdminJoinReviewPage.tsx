@@ -10,6 +10,7 @@ import MainButton from "../../../components/Button/MainButton";
 import Modal2 from "../../../components/Modal/Modal2";
 import Modal1 from "../../../components/Modal/Modal1";
 import apiClient from "../../../api/apiClient";
+import CoupleButton from "../../../components/Button/CoupleButton";
 
 interface JoinRequest {
   id: number;
@@ -17,17 +18,20 @@ interface JoinRequest {
   gender: string;
   age: number;
   address: string;
-  experience: string;
+  hasExperience: boolean;
   level: string;
-  desiredPosition: string;
-  message: string;
+  position: string;
+  joinReason: string;
   avatarUrl?: string;
 }
 
 const AdminJoinReviewPage: React.FC = () => {
   const navigate = useNavigate();
-  const { requestId } = useParams<{ requestId: string }>();
-
+  const { teamId, requestId } = useParams<{
+    teamId: string;
+    requestId: string;
+  }>();
+  console.log(teamId, requestId);
   const [request, setRequest] = useState<JoinRequest | null>(null);
 
   // modal states
@@ -41,12 +45,11 @@ const AdminJoinReviewPage: React.FC = () => {
     async function fetchRequest() {
       try {
         const res = await apiClient.get<JoinRequest>(
-          `/api/admin/join-requests/${requestId}`
+          `/api/admin/joinTeam/requestDetail/${requestId}`
         );
         setRequest(res.data);
       } catch (err) {
         console.error("신청서 로드 실패", err);
-        navigate(-1);
       }
     }
     fetchRequest();
@@ -58,7 +61,7 @@ const AdminJoinReviewPage: React.FC = () => {
   const doReject = async () => {
     setRejectConfirmOpen(false);
     try {
-      await apiClient.post(`/api/admin/join-requests/${requestId}/reject`);
+      await apiClient.post(`/api/admin/join-requests/${teamId}/reject`);
       setRejectCompleteOpen(true);
     } catch (err) {
       console.error("거절 실패", err);
@@ -67,8 +70,15 @@ const AdminJoinReviewPage: React.FC = () => {
 
   const doApprove = async () => {
     setApproveConfirmOpen(false);
+    const data = {
+      memberId: requestId,
+      teamId: teamId,
+    };
     try {
-      await apiClient.post(`/api/admin/join-requests/${requestId}/approve`);
+      await apiClient.post(
+        `/api/admin/joinTeam/${teamId}/accept/${requestId}`,
+        data
+      );
       setApproveCompleteOpen(true);
     } catch (err) {
       console.error("승인 실패", err);
@@ -113,30 +123,35 @@ const AdminJoinReviewPage: React.FC = () => {
         </Card>
 
         <Card>
-          <Row>
-            <Label>선수 경험</Label>
-            <Value>{request.experience}</Value>
-          </Row>
-          <Row>
-            <Label>수준</Label>
-            <Value>{request.level}</Value>
-          </Row>
-          <Row>
-            <Label>희망 포지션</Label>
-            <Value>{request.desiredPosition}</Value>
-          </Row>
+          <Info>
+            <Row>
+              <Label>선수 경험</Label>
+              <Value>{request.hasExperience == true ? "있음" : "없음"}</Value>
+            </Row>
+            <Row>
+              <Label>수준</Label>
+              <Value>{request.level}</Value>
+            </Row>
+            <Row>
+              <Label>희망 포지션</Label>
+              <Value>{request.position}</Value>
+            </Row>
+          </Info>
         </Card>
 
         <MessageSection>
           <MessageLabel>가입 희망자가 전하고 싶은 말이에요</MessageLabel>
-          <MessageBox readOnly value={request.message} />
+          <MessageBox readOnly value={request.joinReason} />
         </MessageSection>
 
         <ButtonRow>
-          <MiniButton onClick={handleReject}>거절</MiniButton>
-          <MainButton onClick={handleApprove} height={50}>
-            승인
-          </MainButton>
+          <CoupleButton
+            height={50}
+            textN="거절"
+            textP="승인"
+            onClickN={doReject}
+            onClickP={doApprove}
+          ></CoupleButton>
         </ButtonRow>
       </Content>
 
@@ -186,7 +201,6 @@ export default AdminJoinReviewPage;
 /* styled-components */
 
 const Container = styled.div`
-  background-color: #f7f7f7;
   min-height: 100vh;
 `;
 
@@ -195,18 +209,21 @@ const Content = styled.div`
 `;
 
 const Card = styled.div`
-  background: #ffffff;
+  background: var(--color-light2);
+  box-shadow: 0 1.5px 1.5px 0 var(--color-shabow);
+  border: 1px solid var(--color-border);
   border-radius: 8px;
   padding: 16px;
   margin-bottom: 16px;
   display: flex;
   align-items: flex-start;
+  flex-direction: column;
 `;
 
 const Avatar = styled.div`
   font-size: 60px;
   color: var(--color-dark2);
-  margin-right: 16px;
+  margin: 0 auto;
 
   img {
     width: 60px;
@@ -216,23 +233,26 @@ const Avatar = styled.div`
 `;
 
 const Info = styled.div`
-  flex: 1;
+  display: flex;
+  flex-direction: column;
+  margin: 0 auto;
 `;
 
 const Row = styled.div`
   display: flex;
+
   margin-bottom: 8px;
 `;
 
 const Label = styled.div`
-  width: 80px;
+  width: 100px;
   font-weight: 500;
   color: var(--color-dark2);
+  flex: 1 1;
 `;
 
 const Value = styled.div`
-  flex: 1;
-  color: var(--color-dark1);
+  color: var(--color-dark2);
 `;
 
 const MessageSection = styled.div`
@@ -242,7 +262,7 @@ const MessageSection = styled.div`
 const MessageLabel = styled.div`
   margin-bottom: 8px;
   color: var(--color-dark2);
-  font-size: 14px;
+  font-size: 16px;
 `;
 
 const MessageBox = styled.textarea`
@@ -250,16 +270,13 @@ const MessageBox = styled.textarea`
   height: 120px;
   padding: 12px;
   box-sizing: border-box;
-  border: 1px solid var(--color-border);
   border-radius: 8px;
-  background-color: var(--color-light1);
   resize: none;
   font-size: 14px;
-  color: var(--color-dark1);
+  color: var(--color-dark2);
+  background: var(--color-light2);
+  box-shadow: 0 1.5px 1.5px 0 var(--color-shabow);
+  border: 1px solid var(--color-border);
 `;
 
-const ButtonRow = styled.div`
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-`;
+const ButtonRow = styled.div``;
