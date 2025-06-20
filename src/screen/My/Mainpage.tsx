@@ -474,11 +474,7 @@ const MainPage: React.FC = () => {
 
   /* ─────────────────────────── 데이터 초기화 ─────────────────────────── */
   useEffect(() => {
-    // 더미 데이터 세팅
-    //setTeamList(dummyTeamList);
     if (dummyTeamList.length > 0) setselectedTeam(dummyTeamList[0]);
-
-    // 실제 API 사용 시 아래 로직 주석 해제
 
     const fetchTeamList = async () => {
       try {
@@ -494,12 +490,6 @@ const MainPage: React.FC = () => {
 
   useEffect(() => {
     if (selectedTeam.teamId === 0) return;
-
-    // 더미 데이터 세팅
-    //setTeamData(dummyTeamData[selectedTeam.teamId]);
-    // setNoticeList(dummyNoticeList[selectedTeam.teamId] ?? []);
-
-    // 실제 API 사용 시 아래 로직 주석 해제
 
     const teamId = selectedTeam.teamId;
     const fetchTeamData = async () => {
