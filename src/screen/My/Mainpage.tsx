@@ -457,68 +457,6 @@ const dummyTeamList: TeamListItem[] = [
   },
 ];
 
-const dummyTeamData: Record<number, TeamData> = {
-  1: {
-    activityDays: ["화요일", "목요일", "토요일"],
-    activityTime: [20, 21, 22],
-    ageRange: "20-30대",
-    dues: "월 30,000원",
-    invitedCode: "FURIOUS2025",
-    matchLocation: "잠실생체구장",
-    positionRequired: ["GK", "CB"],
-    region: "서울",
-    teamGender: "남성",
-    teamImageUrl:
-      "https://images.unsplash.com/photo-1508672019048-805c876b67e2?w=400&q=80",
-    teamLevel: "아마추어 A",
-    teamName: "서울 퓨리어스",
-    team_introduce:
-      "스피드와 조직력을 강점으로 하는 젊은 팀입니다. 즐기면서도 승리를 추구합니다!",
-    town: "송파구",
-  },
-  2: {
-    activityDays: ["월요일", "수요일", "금요일"],
-    activityTime: [19, 20],
-    ageRange: "30-40대",
-    dues: "월 20,000원",
-    invitedCode: "STORM2025",
-    matchLocation: "사직실내체육관",
-    positionRequired: ["FW"],
-    region: "부산",
-    teamGender: "혼성",
-    teamImageUrl:
-      "https://images.unsplash.com/photo-1521412644187-c49fa049e84d?w=400&q=80",
-    teamLevel: "아마추어 B",
-    teamName: "부산 스톰",
-    team_introduce:
-      "가족 같은 분위기에서 축구를 즐기는 친목 중심 팀입니다. 누구나 환영!",
-    town: "부산진구",
-  },
-};
-
-const dummyNoticeList: Record<number, NoticeItem[]> = {
-  1: [
-    {
-      id: 101,
-      title: "4/15 연습경기 공지 – 필독",
-      createAt: new Date("2025-04-01T09:00:00"),
-    },
-    {
-      id: 102,
-      title: "4/10 회비 납부 안내",
-      createAt: new Date("2025-03-28T18:30:00"),
-    },
-  ],
-  2: [
-    {
-      id: 201,
-      title: "4/20 부산 시내 친선대회 참가신청",
-      createAt: new Date("2025-04-05T14:20:00"),
-    },
-  ],
-};
-/* ─────────────────────────────────────────────────────────────────────────── */
-
 const MainPage: React.FC = () => {
   const [selectedTeam, setselectedTeam] = useState<{
     teamId: number;
