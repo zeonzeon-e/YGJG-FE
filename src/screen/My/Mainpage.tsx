@@ -472,7 +472,6 @@ const MainPage: React.FC = () => {
 
   const navigate = useNavigate();
 
-  /* ─────────────────────────── 데이터 초기화 ─────────────────────────── */
   useEffect(() => {
     if (dummyTeamList.length > 0) setselectedTeam(dummyTeamList[0]);
 
