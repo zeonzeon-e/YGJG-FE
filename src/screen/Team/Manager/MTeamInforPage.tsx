@@ -1,129 +1,3 @@
-// const TeamInfoPage: React.FC = () => {
-//   const [selectedTeam, setselectedTeam] = useState<{
-//     teamId: number;
-//     teamName: string;
-//   }>({ teamId: 0, teamName: "" });
-//   const [teamList, setTeamList] = useState<
-//     Array<{
-//       position: string;
-//       teamColor: string;
-//       teamId: number;
-//       teamImageUrl: string;
-//       teamName: string;
-//     }>
-//   >([]);
-//   const [teamData, setTeamData] = useState<{
-//     activityDays: string[];
-//     activityTime: number[];
-//     ageRange: string;
-//     dues: string;
-//     invitedCode: string;
-//     matchLocation: string;
-//     positionRequired: string[];
-//     region: string;
-//     teamGender: string;
-//     teamImageUrl: string;
-//     teamLevel: string;
-//     teamName: string;
-//     team_introduce: string;
-//     town: string;
-//   }>();
-//   const [favoriteTeams, setFavoriteTeams] = useState<number[]>([]);
-
-//   const activityDays = [
-//     "월요일",
-//     "화요일",
-//     "수요일",
-//     "목요일",
-//     "금요일",
-//     "토요일",
-//     "일요일",
-//   ];
-//   const timeSlots = [6, 9, 12, 15, 18, 21, 0, 3]; // 시간대 배열
-//   const timeBlock = [
-//     6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 0, 1, 2,
-//     3,
-//   ];
-//   const [noticeList, setNoticeList] = useState([
-//     { id: 1, title: "", createAt: new Date() },
-//   ]);
-
-//   const navigate = useNavigate();
-//   useEffect(() => {
-//     const fetchTeamList = async () => {
-//       try {
-//         const response = await apiClient.get("api/myPage/teams");
-//         //console.log("teamListData", response.data);
-//         setTeamList(response.data);
-//         if (response.data.length > 0) {
-//           const firstTeam = response.data[0];
-
-//           setselectedTeam(firstTeam);
-//         }
-//       } catch (err) {
-//         console.error("Error fetching team list:", err);
-//       }
-//     };
-
-//     fetchTeamList();
-//   }, []); // teamList는 `currentTeam`과 관계없으므로 빈 배열로 설정
-
-//   useEffect(() => {
-//     if (teamList.length > 0) {
-//       const teamId = selectedTeam.teamId;
-//       const fetchTeamData = async () => {
-//         try {
-//           const response = await apiClient.get(
-//             `api/team/${selectedTeam.teamId}`
-//           );
-//           setTeamData(response.data);
-//         } catch (err) {
-//           console.error("Error fetching team data:", err);
-//         }
-//       };
-//       const fetchNoticeList = async () => {
-//         try {
-//           const response = await apiClient.get(
-//             `/api/announcement/member/get-all`,
-//             {
-//               params: { teamId },
-//             }
-//           );
-//           setNoticeList(response.data);
-//         } catch (err) {
-//           console.error("데이터를 가져오는 중 에러가 발생했습니다.", err);
-//         }
-//       };
-//       fetchNoticeList();
-//       fetchTeamData();
-//     }
-//   }, [selectedTeam]); // `currentTeam` 변경 시에만 호출
-
-//   const handleTeamChange = (teamId: number, teamName: string) => {
-//     setselectedTeam({ teamId, teamName });
-//   };
-
-//   const handleEditClick = (teamId: number) => {
-//     const teamEdit = teamList.find((item) => item.teamId === teamId);
-//     navigate(`/team-edit/${teamId}`, {
-//       state: {
-//         teamId: teamEdit?.teamId,
-//         teamColor: teamEdit?.teamColor,
-//         position: teamEdit?.position,
-//       },
-//     });
-//   };
-//   const handleNoticeClick = (teamId: number) => {
-//     const teamEdit = teamList.find((item) => item.teamId === teamId);
-
-//     navigate(`notice`, {
-//       state: {
-//         teamId: teamEdit?.teamId,
-//       },
-//     });
-//   };
-
-// src/pages/TeamInfoPage.tsx
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import Header3 from "../../../components/Header/Header3";
@@ -135,7 +9,6 @@ import HorizontalLine from "../../../components/Styled/HorizontalLine";
 import MiniButton from "../../../components/Button/MiniButton";
 import Modal from "../../../components/Modal/Modal1";
 
-/* ─────────────────────────────── 더미 데이터 ─────────────────────────────── */
 interface TeamListItem {
   position: string;
   teamColor: string;
@@ -150,7 +23,7 @@ interface TeamData {
   activityTime: number[];
   ageRange: string;
   dues: string;
-  invitedCode: string;
+  inviteCode: string;
   matchLocation: string;
   positionRequired: string[];
   region: string;
@@ -169,91 +42,6 @@ interface NoticeItem {
   createAt: Date;
 }
 
-const dummyTeamList: TeamListItem[] = [
-  {
-    position: "FW",
-    teamColor: "#FF6B6B",
-    teamId: 1,
-    teamImageUrl:
-      "https://images.unsplash.com/photo-1508672019048-805c876b67e2?w=400&q=80",
-    teamName: "서울 퓨리어스",
-    role: "부매니저"
-  },
-  {
-    position: "MF",
-    teamColor: "#4ECDC4",
-    teamId: 2,
-    teamImageUrl:
-      "https://images.unsplash.com/photo-1521412644187-c49fa049e84d?w=400&q=80",
-    teamName: "부산 스톰",
-    role: "부매니저"
-  },
-];
-
-const dummyTeamData: Record<number, TeamData> = {
-  1: {
-    activityDays: ["화요일", "목요일", "토요일"],
-    activityTime: [20, 21, 22],
-    ageRange: "20-30대",
-    dues: "월 30,000원",
-    invitedCode: "FURIOUS2025",
-    matchLocation: "잠실생체구장",
-    positionRequired: ["GK", "CB"],
-    region: "서울",
-    teamGender: "남성",
-    teamImageUrl:
-      "https://images.unsplash.com/photo-1508672019048-805c876b67e2?w=400&q=80",
-    teamLevel: "아마추어 A",
-    teamName: "서울 퓨리어스",
-    team_introduce:
-      "스피드와 조직력을 강점으로 하는 젊은 팀입니다. 즐기면서도 승리를 추구합니다!",
-    town: "송파구",
-    role: "부매니저"
-  },
-  2: {
-    activityDays: ["월요일", "수요일", "금요일"],
-    activityTime: [19, 20],
-    ageRange: "30-40대",
-    dues: "월 20,000원",
-    invitedCode: "STORM2025",
-    matchLocation: "사직실내체육관",
-    positionRequired: ["FW"],
-    region: "부산",
-    teamGender: "혼성",
-    teamImageUrl:
-      "https://images.unsplash.com/photo-1521412644187-c49fa049e84d?w=400&q=80",
-    teamLevel: "아마추어 B",
-    teamName: "부산 스톰",
-    team_introduce:
-      "가족 같은 분위기에서 축구를 즐기는 친목 중심 팀입니다. 누구나 환영!",
-    town: "부산진구",
-    role: "부매니저"
-  },
-};
-
-const dummyNoticeList: Record<number, NoticeItem[]> = {
-  1: [
-    {
-      id: 101,
-      title: "4/15 연습경기 공지 – 필독",
-      createAt: new Date("2025-04-01T09:00:00"),
-    },
-    {
-      id: 102,
-      title: "4/10 회비 납부 안내",
-      createAt: new Date("2025-03-28T18:30:00"),
-    },
-  ],
-  2: [
-    {
-      id: 201,
-      title: "4/20 부산 시내 친선대회 참가신청",
-      createAt: new Date("2025-04-05T14:20:00"),
-    },
-  ],
-};
-/* ─────────────────────────────────────────────────────────────────────────── */
-
 const TeamInfoPage: React.FC = () => {
   const [selectedTeam, setselectedTeam] = useState<{
     teamId: number;
@@ -269,15 +57,8 @@ const TeamInfoPage: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false); // 모달 열림 상태 관리
   const navigate = useNavigate();
 
-
   /* ─────────────────────────── 데이터 초기화 ─────────────────────────── */
   useEffect(() => {
-    // 더미 데이터 세팅
-    setTeamList(dummyTeamList);
-    if (dummyTeamList.length > 0) setselectedTeam(dummyTeamList[0]);
-
-    // 실제 API 사용 시 아래 로직 주석 해제
-    /*
     const fetchTeamList = async () => {
       try {
         const response = await apiClient.get("api/myPage/teams");
@@ -288,18 +69,11 @@ const TeamInfoPage: React.FC = () => {
       }
     };
     fetchTeamList();
-    */
   }, []);
 
   useEffect(() => {
     if (selectedTeam.teamId === 0) return;
 
-    // 더미 데이터 세팅
-    setTeamData(dummyTeamData[selectedTeam.teamId]);
-    setNoticeList(dummyNoticeList[selectedTeam.teamId] ?? []);
-
-    // 실제 API 사용 시 아래 로직 주석 해제
-    /*
     const teamId = selectedTeam.teamId;
     const fetchTeamData = async () => {
       try {
@@ -312,9 +86,12 @@ const TeamInfoPage: React.FC = () => {
 
     const fetchNoticeList = async () => {
       try {
-        const response = await apiClient.get("/api/announcement/member/get-all", {
-          params: { teamId },
-        });
+        const response = await apiClient.get(
+          "/api/announcement/member/get-all",
+          {
+            params: { teamId },
+          }
+        );
         setNoticeList(response.data);
       } catch (err) {
         console.error("데이터를 가져오는 중 에러가 발생했습니다.", err);
@@ -323,12 +100,11 @@ const TeamInfoPage: React.FC = () => {
 
     fetchTeamData();
     fetchNoticeList();
-    */
   }, [selectedTeam]);
-  const handleCopyLink = (code:string) => {
+  const handleCopyLink = (code: string) => {
     navigator.clipboard.writeText(code);
     setIsModalOpen(true); // 모달 열기
-  }
+  };
   const handleTeamChange = (teamId: number, teamName: string) => {
     setselectedTeam({ teamId, teamName });
   };
@@ -371,7 +147,12 @@ const TeamInfoPage: React.FC = () => {
       <Container>
         {teamData && (
           <>
-            <ManagerCard> 내가 <span style={{ color:'var(--color-sub)'}}>{teamData.role}</span>로 활동하고 있어요</ManagerCard>
+            <ManagerCard>
+              {" "}
+              내가{" "}
+              <span style={{ color: "var(--color-sub)" }}>{teamData.role}</span>
+              로 활동하고 있어요
+            </ManagerCard>
             <ProfileWrapper>
               <TeamProfile>
                 <TeamProfileImg src={teamData.teamImageUrl} />
@@ -394,26 +175,39 @@ const TeamInfoPage: React.FC = () => {
               </TeamProfileSetting>
             </ProfileWrapper>
             <ManagerSetting>
-              <div style={{marginLeft:"auto"}}><MiniButton>팀 프로필 수정</MiniButton></div>
-              <div style={{marginRight:"auto"}}>
-              <MiniButton>팀 가입공고 수정</MiniButton></div>
+              <div style={{ marginLeft: "auto" }}>
+                <MiniButton>팀 프로필 수정</MiniButton>
+              </div>
+              <div style={{ marginRight: "auto" }}>
+                <MiniButton>팀 가입공고 수정</MiniButton>
+              </div>
             </ManagerSetting>
             <ManagerInfor>
-                <Card>
-                  우리 팀에서 나는 공격수를 맡고 있어요
-                </Card>
-                <Card>
-                  <div>
-                    초대코드
-                  </div>
-                  <div style={{color:'var(--color-dark1)'}}>{teamData.invitedCode}</div>
-                  <div onClick={() => handleCopyLink(teamData.invitedCode)}>복사</div>
-                </Card>
-                <GreenCard>선수 목록 보기</GreenCard>
-                <CardContainer>
-                  <GreenCard2><div>가입 승인 대기</div><div style={{fontSize:'14px'}}>1건</div></GreenCard2>
-                  <GreenCard2><div>탈퇴 확인</div><div style={{fontSize:'14px'}}>1건</div></GreenCard2>
-                </CardContainer>
+              <Card>우리 팀에서 나는 를 맡고 있어요</Card>
+              <Card>
+                <div>초대코드</div>
+                <div style={{ color: "var(--color-dark1)" }}>
+                  {teamData.inviteCode}
+                </div>
+                <div onClick={() => handleCopyLink(teamData.inviteCode)}>
+                  복사
+                </div>
+              </Card>
+              <GreenCard>선수 목록 보기</GreenCard>
+              <CardContainer>
+                <GreenCard2
+                  onClick={() =>
+                    navigate(`/manager/${selectedTeam.teamId}/joinReview`)
+                  }
+                >
+                  <div>가입 승인 대기</div>
+                  <div style={{ fontSize: "14px" }}>1건</div>
+                </GreenCard2>
+                <GreenCard2>
+                  <div>탈퇴 확인</div>
+                  <div style={{ fontSize: "14px" }}>1건</div>
+                </GreenCard2>
+              </CardContainer>
             </ManagerInfor>
             <TeamDetails>
               {/* <p>팀 이름: {teamData.teamName}</p> */}
@@ -507,13 +301,12 @@ const TeamInfoPage: React.FC = () => {
           </>
         )}
         {/* 모달 컴포넌트 */}
-              <Modal
-                isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)} // 모달 닫기
-                title="초대코드를 복사했습니다"
-                onConfirm={() => setIsModalOpen(false)} // 확인 버튼 클릭 시 삭제 수행
-              >
-              </Modal>
+        <Modal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)} // 모달 닫기
+          title="초대코드를 복사했습니다"
+          onConfirm={() => setIsModalOpen(false)} // 확인 버튼 클릭 시 삭제 수행
+        ></Modal>
       </Container>
     </>
   );
@@ -652,55 +445,54 @@ const ManagerCard = styled.div`
   color: white;
   border-radius: 10px;
   margin: 10px 0;
-`
+`;
 
 const ManagerSetting = styled.div`
   display: flex;
   margin: 10px auto;
-  gap:10px;
-`
+  gap: 10px;
+`;
 
 const ManagerInfor = styled.div`
   display: flex;
   flex-direction: column;
-  gap:10px;
-`
+  gap: 10px;
+`;
 
 const Card = styled.div`
   display: flex;
   justify-content: space-around;
-  padding:10px;
+  padding: 10px;
   border-radius: 10px;
   background: var(--color-light1);
   box-shadow: 0 1.5px 1.5px 0 var(--color-shabow);
   border: 1px solid var(--color-border);
-`
+`;
 
 const GreenCard = styled.div`
   text-align: center;
-  padding:10px;
+  padding: 10px;
   border-radius: 10px;
   background: var(--color-main);
   color: var(--color-light1);
   box-shadow: 0 1.5px 1.5px 0 var(--color-shabow);
   border: 1px solid var(--color-border);
-`
+`;
 const GreenCard2 = styled.div`
   text-align: center;
-  padding:10px;
+  padding: 10px;
   border-radius: 10px;
   background: var(--color-main);
   color: var(--color-light1);
   box-shadow: 0 1.5px 1.5px 0 var(--color-shabow);
   border: 1px solid var(--color-border);
-  width:100%;
+  width: 100%;
   display: flex;
   justify-content: space-between;
   justify-items: center;
-`
+`;
 const CardContainer = styled.div`
   display: flex;
   justify-content: space-between;
-  gap:10px;
-
-`
+  gap: 10px;
+`;
