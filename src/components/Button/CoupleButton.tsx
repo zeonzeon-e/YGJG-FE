@@ -11,11 +11,13 @@ interface CoupleButtonProps {
   textN?: string;
   textP?: string;
   isClick?: boolean;
+  onClickN?: () => void;
+  onClickP?: () => void;
 }
 
 // StyledButtonNegative 컴포넌트 정의
 const StyledButtonNegative = styled.button<CoupleButtonProps>`
-  background-color: ${(props) => props.bgColor || `var(--color-light2)`};
+  background-color: ${(props) => props.bgColor || `var(--color-light1)`};
   color: ${(props) => props.textColor || `var(--color-dark1)`};
   height: ${(props) => (props.height ? `${props.height}px` : "100%")};
   width: ${(props) => (props.width ? `${props.width}px` : "49%")};
@@ -67,6 +69,8 @@ const StyledButtonPositive = styled.button<CoupleButtonProps>`
  * @param {number} [porps.fontSize] - 텍스트 사이즈
  * @param {number} [porps.textN] -  부정적 텍스트(이전, 거절)
  * @param {number} [porps.textP] - 긍정적 텍스트 (다음, 승인)
+ * @param {void} [porps.onClickN] 부정 버튼 클릭 시 실행될 함수
+ * @param {void} [porps.onClickP] 긍정 버튼 클릭 시 실행될 함수
  *
  * @returns {JSX.Element} button 컴포넌트
  */
@@ -76,6 +80,8 @@ const CoupleButton: React.FC<CoupleButtonProps> = ({
   height,
   textN = "이전",
   textP = "다음",
+  onClickN,
+  onClickP,
 }) => {
   const [isClickN, setIsClickN] = useState(false);
 
@@ -97,9 +103,11 @@ const CoupleButton: React.FC<CoupleButtonProps> = ({
 
   const handleClickN = () => {
     setIsClickN(true); // 클릭 시 배경색 변경
+    if (onClickN) onClickN(); // 외부 이벤트 실행
   };
   const handleClickP = () => {
     setIsClickP(true); // 클릭 시 배경색 변경
+    if (onClickP) onClickP(); // 외부 이벤트 실행
   };
   return (
     <div className="flex flex-jc-sb">

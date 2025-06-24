@@ -38,6 +38,7 @@ import ChangePasswordPage from "./screen/My/ChangePasswardPage";
 import FindPasswordEmailPage from "./screen/Auth/FindPasswordEmailPage";
 import SetNewPasswordPage from "./screen/Auth/SetNewPasswordPage";
 import TeamJoinPage from "./screen/Team/TeamJoinPage";
+import AdminJoinListPage from "./screen/Team/Manager/AdminJoinListPage";
 
 const GlobalStyle = createGlobalStyle`
   body, #root, .app-container {
@@ -85,7 +86,14 @@ root.render(
         {/* 초대코드 입력 페이지 */}
         <Route path="/invite" element={<InvitePage />} />
         {/* [관리자]팀 가입 신청서 열람람 페이지 @@@@@팀ID & 유저ID로 식별 기능 추가할 것 */}
-        <Route path="/joinReview" element={<AdminJoinReviewPage />} />
+        <Route
+          path="/manager/:teamId/joinReview"
+          element={<AdminJoinListPage />}
+        />
+        <Route
+          path="/manager/:teamId/joinReview/:requestId"
+          element={<AdminJoinReviewPage />}
+        />
         {/* 팀 선택 목록에서 들어가면 보이는 팀 상세 페이지(가입하기 전) */}
         <Route path="/team/list/:teamId" element={<TeamInforPage />} />
         {/* 팀 가입 페이지 */}

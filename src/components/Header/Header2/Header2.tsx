@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 interface OwnProps {
   text?: string; // 헤더에 표시될 텍스트 (선택적)
   line?: boolean; // 수평선을 표시할지 여부 (선택적)
+  nav?: any;
 }
 
 // Wrap: 원래 .Header2__wrap
@@ -47,13 +48,13 @@ const Text = styled.div`
  * @param {boolean} [props.line=true] - 수평선을 표시할지 여부 (선택적, 기본값 = true)
  * @returns {JSX.Element} Header2 컴포넌트
  */
-const Header2: React.FC<OwnProps> = ({ text, line = true }) => {
+const Header2: React.FC<OwnProps> = ({ text, line = true, nav = -1 }) => {
   const navigate = useNavigate();
 
   return (
     <div>
       <Wrap>
-        <Back onClick={() => navigate(-1)}>
+        <Back onClick={() => navigate(nav)}>
           <FaChevronLeft />
         </Back>
         <Text>{text}</Text>

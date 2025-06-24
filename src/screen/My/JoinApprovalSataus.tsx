@@ -30,6 +30,7 @@ const JoinApprovalStatus: React.FC = () => {
   const [approval, setApproval] = useState<number>(0);
   const [wait, setWait] = useState<number>(0);
   const [out, setOut] = useState<number>(0);
+  const [approvalList, setApprovalList] = useState<ApprovalItemType[]>([]); // 상태 관리
 
   useEffect(() => {
     let approvalCount = 0;
@@ -37,11 +38,11 @@ const JoinApprovalStatus: React.FC = () => {
     let outCount = 0;
 
     approvalList.forEach((team) => {
-      if (team.status === "승인") {
+      if (team.status === "ACCEPT") {
         approvalCount += 1;
-      } else if (team.status === "승인대기") {
+      } else if (team.status === "PENDING") {
         waitCount += 1;
-      } else if (team.status === "거절") {
+      } else if (team.status === "REJECT") {
         outCount += 1;
       }
     });
@@ -49,8 +50,7 @@ const JoinApprovalStatus: React.FC = () => {
     setApproval(approvalCount);
     setWait(waitCount);
     setOut(outCount);
-  }, []);
-  const [approvalList, setApprovalList] = useState<ApprovalItemType[]>([]); // 상태 관리
+  }, [approvalList]);
 
   // API 호출
   useEffect(() => {
@@ -69,8 +69,8 @@ const JoinApprovalStatus: React.FC = () => {
   return (
     <>
       <GlobalStyles />
+      <Header2 text="가입 승인 현황" nav={"/my"} />
       <Container>
-        <Header2 text="가입 승인 현황" />
         <Title>최근 2주 동안의 가입 승인 현황이에요</Title>
         <CountContainer>
           <CountA>
@@ -112,7 +112,7 @@ const Container = styled.div`
 
 const Title = styled.div`
   margin-top: 20px;
-  font-size: 20px;
+  font-size: 18px;
 `;
 const CountContainer = styled.div`
   display: flex;
