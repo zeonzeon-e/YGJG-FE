@@ -33,12 +33,13 @@ import ProfileEditPage from "./screen/My/ProfileEditPage";
 import UnsubscribePage from "./screen/My/UnsubscribePage";
 import MTeaminforpage from "./screen/Team/Manager/MTeamInforPage";
 import MainPage from "./screen/My/Mainpage";
-import AdminJoinReviewPage from "./screen/Team/Manager/AdminJoinReviewPage";
+import MTMemberAdmissionDetail from "./screen/Team/Manager/MTMemberAdmissionDetail";
 import ChangePasswordPage from "./screen/My/ChangePasswardPage";
 import FindPasswordEmailPage from "./screen/Auth/FindPasswordEmailPage";
 import SetNewPasswordPage from "./screen/Auth/SetNewPasswordPage";
 import TeamJoinPage from "./screen/Team/TeamJoinPage";
-import AdminJoinListPage from "./screen/Team/Manager/AdminJoinListPage";
+import MTeamMemberAdmission from "./screen/Team/Manager/MTeamMemberAdmission";
+import MTeamMemberListPage from "./screen/Team/Manager/MTeamMemberListPage";
 
 const GlobalStyle = createGlobalStyle`
   body, #root, .app-container {
@@ -85,14 +86,14 @@ root.render(
         {/* 팀 관련 페이지 */}
         {/* 초대코드 입력 페이지 */}
         <Route path="/invite" element={<InvitePage />} />
-        {/* [관리자]팀 가입 신청서 열람람 페이지 @@@@@팀ID & 유저ID로 식별 기능 추가할 것 */}
+        {/* [관리자]팀 가입 신청서 열람 페이지 @@@@@팀ID & 유저ID로 식별 기능 추가할 것 */}
         <Route
           path="/manager/:teamId/joinReview"
-          element={<AdminJoinListPage />}
+          element={<MTeamMemberAdmission />}
         />
         <Route
           path="/manager/:teamId/joinReview/:requestId"
-          element={<AdminJoinReviewPage />}
+          element={<MTMemberAdmissionDetail />}
         />
         {/* 팀 선택 목록에서 들어가면 보이는 팀 상세 페이지(가입하기 전) */}
         <Route path="/team/list/:teamId" element={<TeamInforPage />} />
@@ -126,9 +127,14 @@ root.render(
           path="/team/notice/rewrite/:id"
           element={<TeamNoticeRewritePage />}
         />
-        {/* 본인이 관리자인 팀 페이지 */}
-        <Route path="/manager/:id" element={<MTeaminforpage />} />
 
+        {/* [관리자] 팀 페이지 */}
+        <Route path="/manager/:id" element={<MTeaminforpage />} />
+        {/* [관리자] 팀 멤버 목록 페이지 */}
+        <Route
+          path="/manager/:teamId/memberList"
+          element={<MTeamMemberListPage />}
+        />
         {/* 마이페이지 */}
         {/* 메인페이지(가입한 팀 정보 있음) */}
         <Route path="/myteam" element={<MainPage />} />
