@@ -19,12 +19,12 @@ interface TeamListItem {
 }
 
 interface TeamData {
-  activityDays: string[];
-  activityTime: number[];
+  activitySchedule: string[];
   ageRange: string;
   dues: string;
   inviteCode: string;
   matchLocation: string;
+  memberCount: number;
   positionRequired: string[];
   region: string;
   teamGender: string;
@@ -33,7 +33,6 @@ interface TeamData {
   teamName: string;
   team_introduce: string;
   town: string;
-  role: string;
 }
 
 interface NoticeItem {
@@ -149,9 +148,8 @@ const TeamInfoPage: React.FC = () => {
           <>
             <ManagerCard>
               {" "}
-              내가{" "}
-              <span style={{ color: "var(--color-sub)" }}>{teamData.role}</span>
-              로 활동하고 있어요
+              내가 <span style={{ color: "var(--color-sub)" }}></span>로
+              활동하고 있어요
             </ManagerCard>
             <ProfileWrapper>
               <TeamProfile>
@@ -193,13 +191,12 @@ const TeamInfoPage: React.FC = () => {
                   복사
                 </div>
               </Card>
-              <GreenCard>선수 목록 보기</GreenCard>
+              <GreenCard2 onClick={() => navigate(`memberList`)}>
+                <div>선수 목록 보기</div>
+                <div>{teamData.memberCount}명</div>
+              </GreenCard2>
               <CardContainer>
-                <GreenCard2
-                  onClick={() =>
-                    navigate(`/manager/${selectedTeam.teamId}/joinReview`)
-                  }
-                >
+                <GreenCard2 onClick={() => navigate(`joinReview`)}>
                   <div>가입 승인 대기</div>
                   <div style={{ fontSize: "14px" }}>1건</div>
                 </GreenCard2>
@@ -480,7 +477,7 @@ const GreenCard = styled.div`
 `;
 const GreenCard2 = styled.div`
   text-align: center;
-  padding: 10px;
+  padding: 10px 0;
   border-radius: 10px;
   background: var(--color-main);
   color: var(--color-light1);
@@ -488,7 +485,7 @@ const GreenCard2 = styled.div`
   border: 1px solid var(--color-border);
   width: 100%;
   display: flex;
-  justify-content: space-between;
+  justify-content: space-evenly;
   justify-items: center;
 `;
 const CardContainer = styled.div`

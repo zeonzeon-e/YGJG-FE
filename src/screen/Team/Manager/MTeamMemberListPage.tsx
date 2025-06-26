@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import styled from "styled-components";
 import FilterBar from "../../../components/Filter/FilterBar";
 import HorizontalLine from "../../../components/Styled/HorizontalLine";
@@ -13,28 +13,14 @@ interface Player {
   profileUrl?: string; // 프로필 이미지 URL
   role?: string; // 다른 필드가 필요하면 추가
 }
-interface JoinRequest {
-  id: number;
-  name: string;
-  gender: string;
-  age: number;
-  address: string;
-  experience: string;
-  level: string;
-  message: string;
-  profileUrl?: string;
-  position: string;
-  joinTeamId: number;
-}
 
-const AdminJoinListPage: React.FC = () => {
+const MTeamMemberListPage: React.FC = () => {
   // URL 파라미터에서 teamId 추출
-
-  const { teamId } = useParams<{ teamId: string }>();
+  const { teamId } = useParams();
   const numericTeamId = Number(teamId);
 
   // 서버에서 받아온 전체 플레이어 목록
-  const [allPlayers, setAllPlayers] = useState<JoinRequest[]>([]);
+  const [allPlayers, setAllPlayers] = useState<Player[]>([]);
 
   // 포지션, 정렬 필터 (백엔드에 전달)
   const [positionFilter, setPositionFilter] = useState<string>("전체");
@@ -47,24 +33,36 @@ const AdminJoinListPage: React.FC = () => {
   // Intersection Observer 관찰 대상
   const sentinelRef = useRef<HTMLDivElement | null>(null);
 
-  const [request, setRequest] = useState<JoinRequest[]>([]);
   // 포지션이나 정렬이 바뀌면 서버에 다시 요청하여 데이터를 새로 받아옴
-  const navigate = useNavigate();
-
   useEffect(() => {
-    // API 호출로 가입 요청 상세 가져오기
-    async function fetchRequest() {
+    const fetchPlayers = async () => {
+      if (!numericTeamId) return;
+
       try {
-        const res = await apiClient.get(
-          `/api/admin/joinTeam/getPendingRequests/${teamId}`
+        const response = await apiClient.get<Player[]>(
+          `/api/team/${numericTeamId}/memberList`,
+          {
+            params: {
+              position: positionFilter === "전체" ? null : positionFilter,
+              sort: sortFilter,
+            },
+            headers: {
+              "X-AUTH-TOKEN": "사용자 인증 토큰",
+            },
+          }
         );
-        setRequest(res.data);
-      } catch (err) {
-        console.error("신청서 로드 실패", err);
+
+        // 새로운 데이터 수신 후 무한 스크롤 상태 초기화
+        setAllPlayers(response.data);
+        setItemsToShow(100);
+        setHasMore(response.data.length > 100);
+      } catch (error) {
+        console.error("Failed to fetch players:", error);
       }
-    }
-    fetchRequest();
-  }, [teamId, navigate]);
+    };
+
+    fetchPlayers();
+  }, [numericTeamId, positionFilter, sortFilter]);
 
   // itemsToShow가 변경되면, 이미 전체 길이를 초과했는지 확인해 hasMore 업데이트
   useEffect(() => {
@@ -94,7 +92,7 @@ const AdminJoinListPage: React.FC = () => {
   }, [hasMore]);
 
   // 실제로 화면에 표시할 목록
-  const displayedPlayers = request && request.slice(0, itemsToShow);
+  const displayedPlayers = allPlayers.slice(0, itemsToShow);
 
   // FilterBar에서 포지션 변경 시 호출
   const handleFilterChange = (value: string) => {
@@ -110,6 +108,7 @@ const AdminJoinListPage: React.FC = () => {
    * - 그 외는 회색
    */
   const getColorByPosition = (pos: string): string => {
+    if (pos === null) return "#95a5a6";
     const position = pos.toUpperCase().trim();
 
     // 공격수 계열
@@ -138,7 +137,7 @@ const AdminJoinListPage: React.FC = () => {
 
   return (
     <PageContainer>
-      <Header2 text="가입 선수 대기 목록" />
+      <Header2 text="선수 목록" />
       <div style={{ padding: "12px 0" }}></div>
 
       {/* 포지션 필터 전용 컴포넌트 */}
@@ -149,10 +148,7 @@ const AdminJoinListPage: React.FC = () => {
         <HorizontalLine color="#333" />
 
         {displayedPlayers.map((player) => (
-          <PlayerItem
-            key={player.id}
-            onClick={() => navigate(`${player.joinTeamId}`)}
-          >
+          <PlayerItem key={player.id}>
             <PlayerInfo>
               <PlayerImage
                 src={player.profileUrl || "https://via.placeholder.com/50"}
@@ -172,7 +168,7 @@ const AdminJoinListPage: React.FC = () => {
   );
 };
 
-export default AdminJoinListPage;
+export default MTeamMemberListPage;
 
 /* ---------------- 스타일 컴포넌트 정의 ---------------- */
 const PageContainer = styled.div`

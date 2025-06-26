@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import styled from "styled-components";
 import FilterBar from "../../../components/Filter/FilterBar";
 import HorizontalLine from "../../../components/Styled/HorizontalLine";
@@ -7,7 +7,7 @@ import Header2 from "../../../components/Header/Header2/Header2";
 import apiClient from "../../../api/apiClient";
 
 interface Player {
-  id: number;
+  joinTeamId: number;
   name: string;
   position: string; // 예: "ST", "CF", "LW", "RW", "GK" 등
   profileUrl?: string; // 프로필 이미지 URL
@@ -17,6 +17,8 @@ interface Player {
 const TeamMemberListPage: React.FC = () => {
   // URL 파라미터에서 teamId 추출
   const { teamId } = useParams();
+  const navigate = useNavigate();
+
   const numericTeamId = Number(teamId);
 
   // 서버에서 받아온 전체 플레이어 목록
@@ -40,11 +42,10 @@ const TeamMemberListPage: React.FC = () => {
 
       try {
         const response = await apiClient.get<Player[]>(
-          `/api/team/${numericTeamId}/memberList`,
+          `/api/admin/joinTeam/getPendingRequests/${numericTeamId}`,
           {
             params: {
               position: positionFilter === "전체" ? null : positionFilter,
-              sort: sortFilter,
             },
             headers: {
               "X-AUTH-TOKEN": "사용자 인증 토큰",
@@ -147,7 +148,10 @@ const TeamMemberListPage: React.FC = () => {
         <HorizontalLine color="#333" />
 
         {displayedPlayers.map((player) => (
-          <PlayerItem key={player.id}>
+          <PlayerItem
+            key={player.joinTeamId}
+            onClick={() => navigate(`${player.joinTeamId}`)}
+          >
             <PlayerInfo>
               <PlayerImage
                 src={player.profileUrl || "https://via.placeholder.com/50"}

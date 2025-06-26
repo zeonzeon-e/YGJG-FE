@@ -22,16 +22,17 @@ interface JoinRequest {
   level: string;
   position: string;
   joinReason: string;
-  avatarUrl?: string;
+  prefileUrl?: string;
+  memberId: number;
 }
 
-const AdminJoinReviewPage: React.FC = () => {
+const MTMemberAdmissionDetail: React.FC = () => {
   const navigate = useNavigate();
   const { teamId, requestId } = useParams<{
     teamId: string;
     requestId: string;
   }>();
-  console.log(teamId, requestId);
+
   const [request, setRequest] = useState<JoinRequest | null>(null);
 
   // modal states
@@ -39,6 +40,8 @@ const AdminJoinReviewPage: React.FC = () => {
   const [rejectCompleteOpen, setRejectCompleteOpen] = useState(false);
   const [approveConfirmOpen, setApproveConfirmOpen] = useState(false);
   const [approveCompleteOpen, setApproveCompleteOpen] = useState(false);
+  const [approveFailOpen, setApproveFailOpen] = useState(false);
+  const [rejectFailOpen, setRejectFailOpen] = useState(false);
 
   useEffect(() => {
     // API 호출로 가입 요청 상세 가져오기
@@ -55,32 +58,40 @@ const AdminJoinReviewPage: React.FC = () => {
     fetchRequest();
   }, [requestId, navigate]);
 
-  const handleReject = () => setRejectConfirmOpen(true);
-  const handleApprove = () => setApproveConfirmOpen(true);
-
+  // 팀 가입 거절 API
   const doReject = async () => {
     setRejectConfirmOpen(false);
+    const data = {
+      memberId: Number(request?.memberId),
+      teamId: Number(teamId),
+    };
     try {
-      await apiClient.post(`/api/admin/join-requests/${teamId}/reject`);
+      await apiClient.post(
+        `/api/admin/joinTeam/${teamId}/deny/${request?.memberId}`,
+        data
+      );
       setRejectCompleteOpen(true);
     } catch (err) {
+      setRejectFailOpen(true);
       console.error("거절 실패", err);
     }
   };
 
+  // 팀 가입 승인 API
   const doApprove = async () => {
     setApproveConfirmOpen(false);
     const data = {
-      memberId: requestId,
-      teamId: teamId,
+      memberId: Number(request?.memberId),
+      teamId: Number(teamId),
     };
     try {
       await apiClient.post(
-        `/api/admin/joinTeam/${teamId}/accept/${requestId}`,
+        `/api/admin/joinTeam/${teamId}/accept/${request?.memberId}`,
         data
       );
       setApproveCompleteOpen(true);
     } catch (err) {
+      setApproveFailOpen(true);
       console.error("승인 실패", err);
     }
   };
@@ -96,8 +107,8 @@ const AdminJoinReviewPage: React.FC = () => {
       <Content>
         <Card>
           <Avatar>
-            {request.avatarUrl ? (
-              <img src={request.avatarUrl} alt="avatar" />
+            {request.prefileUrl ? (
+              <img src={request.prefileUrl} alt="avatar" />
             ) : (
               <FaUserCircle />
             )}
@@ -149,8 +160,8 @@ const AdminJoinReviewPage: React.FC = () => {
             height={50}
             textN="거절"
             textP="승인"
-            onClickN={doReject}
-            onClickP={doApprove}
+            onClickN={() => setRejectConfirmOpen(true)}
+            onClickP={() => setApproveConfirmOpen(true)}
           ></CoupleButton>
         </ButtonRow>
       </Content>
@@ -173,7 +184,14 @@ const AdminJoinReviewPage: React.FC = () => {
         confirmText="확인"
         onConfirm={closeAll}
       />
-
+      {/* 승인 실패 모달 */}
+      <Modal1
+        isOpen={rejectFailOpen}
+        onClose={() => setRejectFailOpen(false)}
+        title="가입 거절에 실패하였습니다."
+        confirmText="확인"
+        onConfirm={() => setRejectFailOpen(false)}
+      />
       {/* 승인 확인 모달 */}
       <Modal2
         isOpen={approveConfirmOpen}
@@ -192,11 +210,20 @@ const AdminJoinReviewPage: React.FC = () => {
         confirmText="확인"
         onConfirm={closeAll}
       />
+
+      {/* 승인 실패 모달 */}
+      <Modal1
+        isOpen={approveFailOpen}
+        onClose={() => setApproveFailOpen(false)}
+        title="가입 승인에 실패하였습니다."
+        confirmText="확인"
+        onConfirm={() => setApproveFailOpen(false)}
+      />
     </Container>
   );
 };
 
-export default AdminJoinReviewPage;
+export default MTMemberAdmissionDetail;
 
 /* styled-components */
 
