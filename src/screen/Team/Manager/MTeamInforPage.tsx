@@ -286,12 +286,21 @@ const TeamInfoPage: React.FC = () => {
             <TeamDetails>
               <TeamTitle>
                 <div>경기일정</div>
-                <div
-                  style={{ color: "var(--color-info)" }}
-                  className="h5"
-                  onClick={() => console.log("달력으로 이동")}
-                >
-                  달력보기
+                <div>
+                  <div
+                    style={{ color: "var(--color-info)" }}
+                    className="h5"
+                    onClick={() => navigate("team-strategy/1")}
+                  >
+                    추가하기
+                  </div>
+                  <div
+                    style={{ color: "var(--color-info)" }}
+                    className="h5"
+                    onClick={() => console.log("달력으로 이동")}
+                  >
+                    달력보기
+                  </div>
                 </div>
               </TeamTitle>
             </TeamDetails>

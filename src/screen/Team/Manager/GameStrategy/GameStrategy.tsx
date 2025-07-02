@@ -24,9 +24,11 @@ interface CirclePosition {
 
 const GameStrategy: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [selectedTime, setSelectedTime] = useState<string | null>(null);
+  const [startTime, setStartTime] = useState<string | null>(null);
+  const [endTime, setEndTime] = useState<string | null>(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [showTimePicker, setShowTimePicker] = useState(false);
+  const [showSTimePicker, setShowSTimePicker] = useState(false);
+  const [showETimePicker, setShowETimePicker] = useState(false);
   const [showMapModal, setShowMapModal] = useState(false);
   const [selectedAddress, setSelectedAddress] = useState<string>("");
   const [showFormationModal, setShowFormationModal] = useState(false);
@@ -45,9 +47,6 @@ const GameStrategy: React.FC = () => {
     setFormationCircles(circles); // Save formation circles
   };
 
-  console.log(selectedDate);
-  console.log(selectedTime);
-
   return (
     <>
       <GlobalStyles />
@@ -64,11 +63,19 @@ const GameStrategy: React.FC = () => {
                 ? format(selectedDate, "MM월 dd일 EEEE", { locale: ko })
                 : "날짜를 선택하세요"}
             </StrategyButton>
+          </PickerButton>
+          <PickerButton>
             <StrategyButton
               className="shadow-df"
-              onClick={() => setShowTimePicker(true)}
+              onClick={() => setShowSTimePicker(true)}
             >
-              {selectedTime || "시간을 선택하세요"}
+              {startTime || "시간을 선택하세요"}
+            </StrategyButton>
+            <StrategyButton
+              className="shadow-df"
+              onClick={() => setShowETimePicker(true)}
+            >
+              {endTime || "시간을 선택하세요"}
             </StrategyButton>
           </PickerButton>
           {showDatePicker && (
@@ -81,13 +88,26 @@ const GameStrategy: React.FC = () => {
             />
           )}
         </ItemDiv>
-        {showTimePicker && (
+        {showSTimePicker && (
           <TimePickerModal
             onTimeSelect={(time: string) => {
-              setSelectedTime(time);
-              setShowTimePicker(false);
+              setStartTime(time);
+              setEndTime(time + 3);
+              setShowSTimePicker(false);
             }}
-            onClose={() => setShowTimePicker(false)}
+            onTimeEnd={(time: string) => {
+              setEndTime(time);
+            }}
+            onClose={() => setShowSTimePicker(false)}
+          />
+        )}
+        {showETimePicker && (
+          <TimePickerModal
+            onTimeSelect={(time: string) => {
+              setEndTime(time);
+              setShowETimePicker(false);
+            }}
+            onClose={() => setShowETimePicker(false)}
           />
         )}
         <Input
