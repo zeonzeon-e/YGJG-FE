@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import GlobalStyles from "../../components/Styled/GlobalStyled";
-import Header1 from "../../components/Header/Header1/Header1";
 import styled from "styled-components";
 import apiClient from "../../api/apiClient";
 import MainButton from "../../components/Button/MainButton";
 import Input from "../../components/Input/Input";
 import RadioButton from "../../components/Button/RadioButton";
 import KakaoMapModal from "../../components/Modal/KakaoAddress";
+import Header2 from "../../components/Header/Header2/Header2";
 const ProfileEditPage: React.FC = () => {
   const [profileData, setProfileData] = useState({
     birthDate: "",
@@ -23,11 +23,13 @@ const ProfileEditPage: React.FC = () => {
     imageUrl: string;
   } | null>(null);
   const [showMapModal, setShowMapModal] = useState(false);
+  const [profileImage, setProfileImage] = useState<string | null>(null);
+  const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
     setProfileData((prev) => ({ ...prev, [id]: value }));
   };
-
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const handleSubmit = async () => {
     try {
       // JSON 데이터 변환
@@ -52,7 +54,17 @@ const ProfileEditPage: React.FC = () => {
     setSelectedAddress(address);
     setShowMapModal(false);
   };
-
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setProfileImageFile(file);
+      const reader = new FileReader();
+      reader.onload = () => {
+        setProfileImage(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
   useEffect(() => {
     const fetchProfile = async () => {
       try {
@@ -73,13 +85,30 @@ const ProfileEditPage: React.FC = () => {
   return (
     <>
       <GlobalStyles />
-      <Header1 text="프로필 설정하기" />
+      <Header2 text="프로필 설정하기" />
       <Container>
         <Profile>
           <ProfileImage
-            src={profile?.imageUrl || "https://example.com/profile-image.jpg"}
+            src={
+              profile?.imageUrl ||
+              profileImage ||
+              "https://example.com/profile-image.jpg"
+            }
             alt="프로필 이미지"
             className="shadow-df"
+          />
+          <ProfileButton
+            className="shadow-df"
+            onClick={() => fileInputRef.current?.click()}
+          >
+            프로필 사진 변경하기
+          </ProfileButton>
+          <input
+            type="file"
+            ref={fileInputRef}
+            style={{ display: "none" }}
+            accept="image/*"
+            onChange={handleImageUpload}
           />
           <ProfileName>{profile?.name || "이름 없음"}</ProfileName>
           <ProfileEmail>{profile?.email || "이메일 없음"}</ProfileEmail>
@@ -175,10 +204,32 @@ const Profile = styled.div`
 `;
 
 const ProfileImage = styled.img`
-  width: 20vw;
-  height: 20vw;
+  height: 116px;
   border-radius: 50%;
+  background-color: #f0f0f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  object-fit: cover;
+  border: 1px solid #ddd;
   margin-bottom: 10px;
+`;
+
+const ProfileButton = styled.button`
+  background-color: var(--color-dark1);
+  border: 1px solid var(--color-dark1);
+  margin-bottom: 20px;
+  border-radius: 20px;
+  padding: 5px 10px;
+  cursor: pointer;
+  font-size: 14px;
+  font-family: "Pretendard-Regular";
+  color: var(--color-light1);
+  transition: background-color 0.3s ease;
+
+  &:hover {
+    background-color: var(--color-dark1);
+  }
 `;
 
 const ProfileName = styled.div`
@@ -190,7 +241,7 @@ const ProfileName = styled.div`
 const ProfileEmail = styled.div`
   font-size: 14px;
   font-family: "Pretendard-Regular";
-  color: #777;
+  color: var(--color-dark1);
   margin-bottom: 10px;
 `;
 
