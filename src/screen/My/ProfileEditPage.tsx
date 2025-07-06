@@ -24,6 +24,10 @@ const ProfileEditPage: React.FC = () => {
   } | null>(null);
   const [showMapModal, setShowMapModal] = useState(false);
   const [profileImage, setProfileImage] = useState<string | null>(null);
+  const [experience, setExperience] = useState<string | null>(null);
+  const [experienceLevel, setExperienceLevel] = useState<string | null>(null);
+  const [level, setLevel] = useState<string | null>(null);
+  const [gender, setGender] = useState<string | null>(null);
   const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
@@ -137,8 +141,8 @@ const ProfileEditPage: React.FC = () => {
           <RadioButton
             fontSize={14}
             items={["남성", "여성"]}
-            // selectedItem={gender}
-            // onChange={(value) => setGender(value)}
+            selectedItem={gender}
+            onChange={(value) => setGender(value)}
           />
           <SubTitle>주소</SubTitle>
           <FlexBox>
@@ -164,23 +168,23 @@ const ProfileEditPage: React.FC = () => {
           <RadioButton
             fontSize={14}
             items={["있다", "없다"]}
-            // selectedItem={gender}
-            // onChange={(value) => setGender(value)}
+            selectedItem={experience}
+            onChange={(value) => setExperience(value)}
           />
 
           <SubTitle>마지막 선수 경력</SubTitle>
           <RadioButton
             fontSize={14}
             items={["중학교 선출", "고등학교 선출", "대학교 선출"]}
-            // selectedItem={gender}
-            // onChange={(value) => setGender(value)}
+            selectedItem={experienceLevel}
+            onChange={(value) => setExperienceLevel(value)}
           />
           <SubTitle>실력</SubTitle>
           <RadioButton
             fontSize={14}
             items={["상", "중", "하"]}
-            // selectedItem={teamLevel}
-            // onChange={(value) => setTeamLevel(value)}
+            selectedItem={level}
+            onChange={(value) => setLevel(value)}
           />
         </SubContainer>
       </Container>

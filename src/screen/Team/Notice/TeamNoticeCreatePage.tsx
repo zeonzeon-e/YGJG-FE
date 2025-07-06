@@ -85,7 +85,7 @@ const TeamNoticeCreatePage: React.FC = () => {
             placeholder="제목을 입력해주세요"
           />
           <FileInputWrapper>
-            <FileLabel>
+            <FileLabel className="border-df shadow-df">
               <FileInput type="file" onChange={handleImageChange} />
               <FaBoxOpen /> 사진 첨부하기
             </FileLabel>
@@ -103,8 +103,10 @@ const TeamNoticeCreatePage: React.FC = () => {
             onChange={handleContentChange}
             placeholder="내용을 입력해주세요"
           ></Textarea>
-          <MainButton onClick={handleSubmit}>등록하기</MainButton>
         </Form>
+        <SubmitContainer>
+        <MainButton onClick={handleSubmit}>공지사항 게시하기</MainButton>
+        </SubmitContainer>
       </Container>
     </>
   );
@@ -114,13 +116,17 @@ export default TeamNoticeCreatePage;
 
 // Styled Components
 const Container = styled.div`
+  display: flex;
   padding: 10px;
+  flex-direction: column;
+  
 `;
 
 const Form = styled.div`
   display: flex;
   flex-direction: column;
   gap: 10px;
+  
 `;
 
 const Label = styled.label`
@@ -144,6 +150,7 @@ const FileInputWrapper = styled.div`
 const FileLabel = styled.label`
   display: flex;
   align-items: center;
+  width: fit-content;
   gap: 5px;
   padding: 8px;
   font-size: 14px;
@@ -198,3 +205,7 @@ const Textarea = styled.textarea`
   height: 200px;
   resize: none;
 `;
+
+const SubmitContainer = styled.div`
+  margin-top: 100%;
+`
