@@ -48,6 +48,7 @@ const GlobalStyle = createGlobalStyle`
     margin: 5px;
     padding: 0;
     box-sizing: border-box;
+    padding-bottom: 50px;
   }
 `;
 
