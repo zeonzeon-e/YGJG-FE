@@ -45,7 +45,7 @@ import BottomNavBar from "./components/Nevigation/BottomNavBar";
 const GlobalStyle = createGlobalStyle`
   body, #root, .app-container {
     max-width: 600px;
-    margin: 5px;
+    margin: auto;
     padding: 0;
     box-sizing: border-box;
     padding-bottom: 50px;
