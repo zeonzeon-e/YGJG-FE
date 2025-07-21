@@ -48,7 +48,7 @@ const GlobalStyle = createGlobalStyle`
     margin: auto;
     padding: 0;
     box-sizing: border-box;
-    padding-bottom: 40px;
+    padding-bottom: 50px;
   }
 `;
 
