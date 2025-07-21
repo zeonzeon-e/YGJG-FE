@@ -13,6 +13,7 @@ const NavContainer = styled.div`
   position: fixed;
   bottom: 0;
   width: 100%;
+  max-width: 600px;
   left: 50%;
   transform: translateX(-50%);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
