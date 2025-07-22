@@ -106,7 +106,6 @@ const CalendarPage: React.FC = () => {
 
   return (
     <>
-      <GlobalStyles />
       <div className="CalendarPage">
         <Header2 text="팀 경기 일정" />
         <Calendar matches={matches} onDateSelect={handleDateSelect} />

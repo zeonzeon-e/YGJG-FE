@@ -40,13 +40,15 @@ import SetNewPasswordPage from "./screen/Auth/SetNewPasswordPage";
 import TeamJoinPage from "./screen/Team/TeamJoinPage";
 import MTeamMemberAdmission from "./screen/Team/Manager/MTeamMemberAdmission";
 import MTeamMemberListPage from "./screen/Team/Manager/MTeamMemberListPage";
+import BottomNavBar from "./components/Nevigation/BottomNavBar";
 
 const GlobalStyle = createGlobalStyle`
   body, #root, .app-container {
     max-width: 600px;
-    margin: 0 auto;
+    margin: auto;
     padding: 0;
     box-sizing: border-box;
+    padding-bottom: 50px;
   }
 `;
 
@@ -157,6 +159,7 @@ root.render(
         {/* 팀 색상, 팀 내 희망 포지션 변경 */}
         <Route path="/team-edit/:id" element={<TeamInfoEdit />} />
       </Routes>
+      <BottomNavBar />
     </BrowserRouter>
   </React.StrictMode>
 );
