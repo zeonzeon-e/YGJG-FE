@@ -3,10 +3,15 @@ import React, { useState } from "react";
 import styled from "styled-components";
 import { FaChevronDown, FaChevronUp, FaStar } from "react-icons/fa6";
 import HorizontalLine from "../Styled/HorizontalLine";
+import { useNavigate } from "react-router-dom";
 
 interface HeaderProps {
-  selectedTeam:  {teamId: number, teamName: string};
-  teams: {teamId: number, teamName: string}[];
+  selectedTeam: { teamId: number; teamName: string };
+  teams: {
+    teamImageUrl: any;
+    teamId: number;
+    teamName: string;
+  }[];
   onTeamChange: (teamId: number, teamName: string) => void;
   favoriteTeams: number[]; // 즐겨찾기된 팀 목록
   onToggleFavorite: (teamId: number, teamName: string) => void; // 즐겨찾기 토글 함수
@@ -27,7 +32,7 @@ const TeamNameWrapper = styled.div`
 `;
 
 const TeamName = styled.h1`
-
+  font-size: 18px;
 `;
 
 const DropdownButton = styled.button`
@@ -50,9 +55,9 @@ const ModalBackground = styled.div<{ isOpen: boolean }>`
 
 const ModalContent = styled.div`
   position: absolute;
-  top: 50px;
+  top: 40px;
   left: 50%;
-  
+
   transform: translate(-50%, 0);
   background-color: white;
   padding: 5px;
@@ -82,14 +87,15 @@ const TeamListItem = styled.li<{ isSelected: boolean }>`
 `;
 
 const StarIcon = styled.span<{ isFavorite: boolean }>`
-  font-size: 24px;
+  font-size: 18px;
   color: ${(props) =>
     props.isFavorite ? "var(--color-sub)" : "var(--color-dark1)"};
   cursor: pointer;
 `;
 
 const TeamNameText = styled.span`
-  font-size: 14px;
+  font-size: 16px;
+  font-family: "Pretendard-Bold";
 `;
 
 const LeftItems = styled.div`
@@ -109,14 +115,20 @@ const NavButton = styled.button`
   border: 1px solid var(--color-sub);
   border-radius: 6px;
   width: 80px;
-  height: 20px;
+  height: 24px;
   cursor: pointer;
-  font-size: 14px;
-  &:first-child{
+  font-size: 13px;
+  &:first-child {
     margin-bottom: 5px;
   }
 `;
 
+const TeamProfileImg = styled.img`
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #fff;
+`;
 const Header3: React.FC<HeaderProps> = ({
   selectedTeam,
   teams,
@@ -124,6 +136,8 @@ const Header3: React.FC<HeaderProps> = ({
   favoriteTeams,
   onToggleFavorite,
 }) => {
+  //const [isModalOpen, setIsModalOpen] = useState(false);
+  const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const toggleModal = () => {
@@ -141,18 +155,25 @@ const Header3: React.FC<HeaderProps> = ({
     <>
       <HeaderContainer>
         <TeamNameWrapper>
+          <StarIcon
+            style={{ marginRight: "5px" }}
+            isFavorite={isFavorite(selectedTeam.teamId)}
+          >
+            {isFavorite(selectedTeam.teamId) ? <FaStar /> : <FaStar />}
+          </StarIcon>
           <TeamName>{selectedTeam.teamName}</TeamName>
           <DropdownButton onClick={toggleModal}>
-            {isModalOpen ? <FaChevronUp/> : <FaChevronDown /> }
+            {isModalOpen ? <FaChevronUp /> : <FaChevronDown />}
           </DropdownButton>
           <HorizontalLine />
         </TeamNameWrapper>
-        
       </HeaderContainer>
-      
 
       <ModalBackground isOpen={isModalOpen} onClick={toggleModal}>
-        <ModalContent className="border-df shadow-df" onClick={(e) => e.stopPropagation()}>
+        <ModalContent
+          className="border-df shadow-df"
+          onClick={(e) => e.stopPropagation()}
+        >
           <TeamList>
             {teams.map((team) => (
               <TeamListItem
@@ -161,16 +182,19 @@ const Header3: React.FC<HeaderProps> = ({
                 onClick={() => handleTeamSelect(team.teamId, team.teamName)}
               >
                 <LeftItems>
-                <StarIcon
-                  isFavorite={isFavorite(team.teamId)}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onToggleFavorite(team.teamId, team.teamName);
-                  }}
-                >
-                  {isFavorite(team.teamId) ? <FaStar /> : <FaStar />}
-                </StarIcon>
-                <TeamNameText>{team.teamName}</TeamNameText>
+                  <StarIcon
+                    isFavorite={isFavorite(team.teamId)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onToggleFavorite(team.teamId, team.teamName);
+                    }}
+                  >
+                    {isFavorite(team.teamId) ? <FaStar /> : <FaStar />}
+                  </StarIcon>
+                  <TeamProfileImg src={team.teamImageUrl} />
+                  <RightItem>
+                    <TeamNameText>{team.teamName}</TeamNameText>
+                  </RightItem>
                 </LeftItems>
                 <RightItem>
                   <NavButton
@@ -178,7 +202,7 @@ const Header3: React.FC<HeaderProps> = ({
                     onClick={(e) => {
                       e.stopPropagation();
                       // 공지사항으로 이동하는 로직 구현
-                      console.log(`${team.teamName}의 공지사항으로 이동`);
+                      navigate(`/team/${team.teamId}/notice`);
                     }}
                   >
                     공지사항
@@ -188,7 +212,7 @@ const Header3: React.FC<HeaderProps> = ({
                     onClick={(e) => {
                       e.stopPropagation();
                       // 팀 달력으로 이동하는 로직 구현
-                      console.log(`${team.teamName}의 팀 달력으로 이동`);
+                      navigate(`/team/${team.teamId}/calendar`);
                     }}
                   >
                     팀 달력
@@ -197,11 +221,8 @@ const Header3: React.FC<HeaderProps> = ({
               </TeamListItem>
             ))}
           </TeamList>
-          
         </ModalContent>
-        
       </ModalBackground>
-      
     </>
   );
 };

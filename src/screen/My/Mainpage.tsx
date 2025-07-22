@@ -164,20 +164,22 @@ const MainPage: React.FC = () => {
                 <TeamProfileImg src={teamData.teamImageUrl} />
                 <TeamProfileInfor>
                   <TeamProfileText>
-                    <FaLocationDot /> 지역 {teamData.region}
+                    <FaLocationDot size={15} /> 홈그라운드
+                    <ColorText>{teamData.region}</ColorText>
                   </TeamProfileText>
                   <TeamProfileText>
-                    <FaPeopleGroup /> 연령대 {teamData.ageRange}
+                    <FaPeopleGroup /> 연령대{" "}
+                    <ColorText>{teamData.ageRange}</ColorText>
                   </TeamProfileText>
                   <TeamProfileText>
-                    <FaHeart /> 포지션
+                    <FaHeart /> 내 포지션
                   </TeamProfileText>
                 </TeamProfileInfor>
               </TeamProfile>
               <TeamProfileSetting
                 onClick={() => handleEditClick(selectedTeam.teamId)}
               >
-                <IoSettingsSharp />
+                <IoSettingsSharp size={30} />
               </TeamProfileSetting>
             </ProfileWrapper>
 
@@ -218,7 +220,7 @@ const MainPage: React.FC = () => {
       </TimeWrapper>
           </> */}
 
-            <TeamDetails>
+            <TeamDetails className="shadow-df border-df">
               <TeamTitle>
                 <div>공지사항</div>
                 <div
@@ -252,18 +254,20 @@ const MainPage: React.FC = () => {
                   ))}
                 </NoticeList>
               ) : (
-                <NoticeItem className="shadow-df border-df">
-                  <NoticeTitle>결과가 없습니다.</NoticeTitle>
-                </NoticeItem>
+                <NoticeTitle>결과가 없습니다.</NoticeTitle>
               )}
             </TeamDetails>
-            <TeamDetails>
+            <TeamDetails className="shadow-df border-df">
               <TeamTitle>
                 <div>경기일정</div>
                 <div
                   style={{ color: "var(--color-info)" }}
                   className="h5"
-                  onClick={() => console.log("달력으로 이동")}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    // 팀 달력으로 이동하는 로직 구현
+                    navigate(`/team/${selectedTeam.teamId}/calendar`);
+                  }}
                 >
                   달력보기
                 </div>
@@ -294,10 +298,10 @@ const TeamDetails = styled.div`
 const ProfileWrapper = styled.div`
   display: flex;
   justify-content: space-between;
+  margin-top: 10px;
 `;
 const TeamProfile = styled.div`
   display: flex;
-
   justify-content: space-around;
 `;
 const TeamTitle = styled.div`
@@ -307,20 +311,30 @@ const TeamTitle = styled.div`
   margin-bottom: 10px;
 `;
 const TeamProfileImg = styled.img`
-  width: 50px;
-  height: 50px;
+  width: 80px;
+  height: 80px;
   border-radius: 50%;
+  margin-left: 30px;
 `;
 const TeamProfileInfor = styled.div`
   display: flex;
   flex-direction: column;
-  margin-left: 10px;
+  margin-left: 50px;
+  gap: 10px;
+  color: var(--color-dark2);
 `;
 const TeamProfileText = styled.div`
-  font-size: 14px;
+  font-size: 16px;
+  align-items: center;
+  display: flex;
+  gap: 5px;
 `;
 const TeamProfileSetting = styled.div`
   right: 0;
+`;
+
+const ColorText = styled.span`
+  color: var(--color-main);
 `;
 
 const ItemWrapper = styled.div`

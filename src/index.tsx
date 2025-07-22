@@ -109,8 +109,10 @@ root.render(
         <Route path="/team/list" element={<TeamSelectListPage />} />
         {/* 팀 선수목록 페이지 */}
         <Route path="/team/:teamId/member" element={<TeamMemberListPage />} />
+        {/* 팀 캘린더 페이지 */}
+        <Route path="/team/:teamId/calendar" element={<CalendarPage />} />
         {/* 게시판 목록 페이지 */}
-        <Route path="/team/notice" element={<TeamNoticePage />} />
+        <Route path="/team/:teamId/notice" element={<TeamNoticePage />} />
         {/* 게시판 글 페이지 */}
         <Route
           path="/team/notice/:noticeId"
