@@ -17,6 +17,8 @@ export interface TeamRole {
   teamName: string;
   role: "MANAGER" | "SUB_MANAGER" | "MEMBER";
   position: "FW" | "MF" | "DF" | "GK";
+  teamColor: string;
+  teamImageUrl: string;
 }
 
 interface UserState {
