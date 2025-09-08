@@ -41,6 +41,7 @@ import TeamJoinPage from "./screen/Team/TeamJoinPage";
 import MTeamMemberAdmission from "./screen/Team/Manager/MTeamMemberAdmission";
 import MTeamMemberListPage from "./screen/Team/Manager/MTeamMemberListPage";
 import BottomNavBar from "./components/Nevigation/BottomNavBar";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 const GlobalStyle = createGlobalStyle`
   body, #root, .app-container {
@@ -141,7 +142,14 @@ root.render(
         {/* 메인페이지(가입한 팀 정보 있음) */}
         <Route path="/myteam" element={<MainPage />} />
         {/* 마이페이지 */}
-        <Route path="/my" element={<MyPage />} />
+        <Route
+          path="/my"
+          element={
+            <ProtectedRoute>
+              <MyPage />
+            </ProtectedRoute>
+          }
+        />
         {/* 개인 캘린더 */}
         <Route path="/my/calendar" element={<PersonalCalenderPage />} />
         {/* 비밀번호 변경 */}
