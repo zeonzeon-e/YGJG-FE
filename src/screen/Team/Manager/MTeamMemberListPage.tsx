@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import styled from "styled-components";
 import FilterBar from "../../../components/Filter/FilterBar";
 import HorizontalLine from "../../../components/Styled/HorizontalLine";
@@ -7,18 +7,16 @@ import Header2 from "../../../components/Header/Header2/Header2";
 import apiClient from "../../../api/apiClient";
 
 interface Player {
-  joinTeamId: number;
+  id: number;
   name: string;
   position: string; // 예: "ST", "CF", "LW", "RW", "GK" 등
   profileUrl?: string; // 프로필 이미지 URL
   role?: string; // 다른 필드가 필요하면 추가
 }
 
-const TeamMemberListPage: React.FC = () => {
+const MTeamMemberListPage: React.FC = () => {
   // URL 파라미터에서 teamId 추출
   const { teamId } = useParams();
-  const navigate = useNavigate();
-
   const numericTeamId = Number(teamId);
 
   // 서버에서 받아온 전체 플레이어 목록
@@ -42,10 +40,11 @@ const TeamMemberListPage: React.FC = () => {
 
       try {
         const response = await apiClient.get<Player[]>(
-          `/api/admin/joinTeam/getPendingRequests/${numericTeamId}`,
+          `/api/team/${numericTeamId}/memberList`,
           {
             params: {
               position: positionFilter === "전체" ? null : positionFilter,
+              sort: sortFilter,
             },
             headers: {
               "X-AUTH-TOKEN": "사용자 인증 토큰",
@@ -109,6 +108,7 @@ const TeamMemberListPage: React.FC = () => {
    * - 그 외는 회색
    */
   const getColorByPosition = (pos: string): string => {
+    if (pos === null) return "#95a5a6";
     const position = pos.toUpperCase().trim();
 
     // 공격수 계열
@@ -137,7 +137,7 @@ const TeamMemberListPage: React.FC = () => {
 
   return (
     <PageContainer>
-      <Header2 text="가입 선수 대기 목록" />
+      <Header2 text="선수 목록" />
       <div style={{ padding: "12px 0" }}></div>
 
       {/* 포지션 필터 전용 컴포넌트 */}
@@ -148,10 +148,7 @@ const TeamMemberListPage: React.FC = () => {
         <HorizontalLine color="#333" />
 
         {displayedPlayers.map((player) => (
-          <PlayerItem
-            key={player.joinTeamId}
-            onClick={() => navigate(`${player.joinTeamId}`)}
-          >
+          <PlayerItem key={player.id}>
             <PlayerInfo>
               <PlayerImage
                 src={player.profileUrl || "https://via.placeholder.com/50"}
@@ -171,7 +168,7 @@ const TeamMemberListPage: React.FC = () => {
   );
 };
 
-export default TeamMemberListPage;
+export default MTeamMemberListPage;
 
 /* ---------------- 스타일 컴포넌트 정의 ---------------- */
 const PageContainer = styled.div`

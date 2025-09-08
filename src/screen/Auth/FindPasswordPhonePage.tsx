@@ -4,165 +4,226 @@ import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import Header2 from "../../components/Header/Header2/Header2";
 import MainButton from "../../components/Button/MainButton";
-import Input from "../../components/Input/Input"; // Input 컴포넌트 경로 확인 필요
-// import apiClient from "../../api/apiClient"; // 실제 API 연동 시 필요
+import Input from "../../components/Input/Input";
+import apiClient from "../../api/apiClient"; // 실제 API 연동
+
+// --- Styled Components ---
 
 const Wrapper = styled.div`
-  margin: 0px 10px;
-  padding: 0px 10px; /* SignUpPage의 Container 패딩과 유사하게 적용 */
+  position: relative;
+  min-height: calc(100vh - 56px);
+  padding: 0 10px 120px 10px;
+  box-sizing: border-box;
 `;
 
 const Container = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  /* padding: 0px 10px; */ /* Wrapper로 이동 */
-  margin: auto;
+  padding: 0 10px;
 `;
 
 const Title = styled.h2`
-  font-size: 20px; /* SignUpPage의 Title과 유사하게 */
+  font-size: 20px;
   font-weight: bold;
-  margin: 40px 0 20px 0; /* 상단 여백 조정 */
+  margin: 100px 0 20px 0;
   color: #333;
-  text-align: center; /* 중앙 정렬 */
-  width: 100%; /* 부모 요소에 맞게 너비 설정 */
+  text-align: center;
 `;
 
 const SubTitle = styled.p`
-  color: #555; /* SignUpPage의 SubTitle과 유사하게 */
-  margin-bottom: 30px; /* Input과의 간격 */
+  color: #555;
+  margin-bottom: 80px;
   font-size: 14px;
   text-align: center;
   line-height: 1.5;
-  width: 100%;
 `;
 
 const InputGroup = styled.div`
   width: 100%;
-  margin-bottom: 10px;
+  position: relative;
 `;
 
 const ButtonGroup = styled.div`
   width: 100%;
-  margin-top: 20px;
+  margin-top: 5px;
+`;
+
+const FixedButtonGroup = styled.div`
+  position: absolute;
+  bottom: 40px;
+  left: 20px;
+  right: 20px;
+`;
+
+// 재전송 버튼과 안내 문구를 위한 그룹
+const ResendGroup = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  width: 100%;
+  margin-top: 2px;
+`;
+
+// 재전송 버튼 (보조적인 형태로 스타일링)
+const ResendButton = styled.button`
+  background: none;
+  border: none;
+  color: var(--color-dark2);
+  text-decoration: underline;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 2px 8px;
+
+  &:disabled {
+    color: var(--color-border);
+    cursor: not-allowed;
+    text-decoration: none;
+  }
 `;
 
 const TimerText = styled.p`
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
   font-size: 14px;
   color: var(--color-main);
+`;
+
+const FeedbackMessage = styled.p<{ type: "error" | "success" }>`
+  font-size: 12px;
   margin-top: 8px;
-  text-align: right;
-`;
-
-const ErrorMessage = styled.p`
-  color: var(--color-error);
-  font-size: 12px;
-  margin-top: 5px;
-  text-align: left;
+  padding-left: 2px;
   width: 100%;
-`;
-
-const SuccessMessage = styled.p`
-  color: var(--color-success); /* index.css의 --color-success 사용 */
-  font-size: 12px;
-  margin-top: 5px;
-  text-align: left;
-  width: 100%;
+  min-height: 1.2em;
+  color: ${(props) =>
+    props.type === "error" ? "var(--color-error)" : "var(--color-success)"};
 `;
 
 const FindPasswordPhonePage: React.FC = () => {
   const navigate = useNavigate();
   const [phone, setPhone] = useState("");
   const [verificationCode, setVerificationCode] = useState("");
-  const [realVerificationCode, setRealVerificationCode] = useState(""); // 실제로는 API 응답
+
   const [isCodeSent, setIsCodeSent] = useState(false);
   const [isVerified, setIsVerified] = useState(false);
-  const [timer, setTimer] = useState(180); // 3분 타이머
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  // 타이머 상태: 3분(인증 유효시간), 1분(재전송 쿨다운)
+  const [timer, setTimer] = useState(180);
+  const [resendCooldown, setResendCooldown] = useState(0);
 
+  const [phoneError, setPhoneError] = useState<string | null>(null);
+  const [otpError, setOtpError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const resendCooldownRef = useRef<NodeJS.Timeout | null>(null);
+
+  // 인증 유효시간 타이머
   useEffect(() => {
-    if (isCodeSent && timer > 0 && !isVerified) {
-      timerIntervalRef.current = setInterval(() => {
-        setTimer((prevTimer) => prevTimer - 1);
-      }, 1000);
-    } else if (timer === 0 || isVerified) {
-      if (timerIntervalRef.current) {
-        clearInterval(timerIntervalRef.current);
-      }
+    if (timer > 0 && isCodeSent && !isVerified) {
+      timerRef.current = setInterval(() => setTimer((t) => t - 1), 1000);
+    } else if (timer === 0 && isCodeSent && !isVerified) {
+      setOtpError("인증 시간이 만료되었습니다. 인증번호를 다시 요청해주세요.");
     }
     return () => {
-      if (timerIntervalRef.current) {
-        clearInterval(timerIntervalRef.current);
-      }
+      if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [isCodeSent, timer, isVerified]);
+  }, [timer, isCodeSent, isVerified]);
+
+  // 재전송 쿨다운 타이머
+  useEffect(() => {
+    if (resendCooldown > 0) {
+      resendCooldownRef.current = setInterval(
+        () => setResendCooldown((t) => t - 1),
+        1000
+      );
+    }
+    return () => {
+      if (resendCooldownRef.current) clearInterval(resendCooldownRef.current);
+    };
+  }, [resendCooldown]);
+
+  // const formatPhoneNumber = (value: string) => {
+  //   const numbers = value.replace(/\D/g, "");
+  //   if (numbers.length > 11) return phone; // 11자리 초과 입력 방지
+  //   return numbers.replace(/(\d{3})(\d{4})(\d{4})/, "$1-$2-$3");
+  // };
 
   const formatPhoneNumber = (value: string) => {
     const numbersOnly = value.replace(/\D/g, "");
-    let formattedNumber = "";
-    if (numbersOnly.length <= 3) {
-      formattedNumber = numbersOnly;
-    } else if (numbersOnly.length <= 7) {
-      formattedNumber = `${numbersOnly.slice(0, 3)}-${numbersOnly.slice(3)}`;
-    } else {
-      formattedNumber = `${numbersOnly.slice(0, 3)}-${numbersOnly.slice(
+    let formatted = "";
+    if (numbersOnly.length > 3 && numbersOnly.length <= 7) {
+      formatted = `${numbersOnly.slice(0, 3)}-${numbersOnly.slice(3)}`;
+    } else if (numbersOnly.length > 7) {
+      formatted = `${numbersOnly.slice(0, 3)}-${numbersOnly.slice(
         3,
         7
       )}-${numbersOnly.slice(7, 11)}`;
-    }
-    return formattedNumber;
-  };
-
-  const handleRequestCode = async () => {
-    if (!/^\d{3}-\d{3,4}-\d{4}$/.test(phone)) {
-      setError("올바른 휴대폰 번호 형식이 아닙니다.");
-      setSuccess(null);
-      return;
-    }
-    setError(null);
-    // try {
-    //   // 실제 API 호출: await apiClient.post('/api/auth/send-sms-verification', { phone });
-    //   const mockCode = "123456"; // 임시 인증번호
-    //   setRealVerificationCode(mockCode);
-    //   setIsCodeSent(true);
-    //   setTimer(180); // 타이머 리셋
-    //   setSuccess("인증번호가 발송되었습니다.");
-    //   console.log(`인증번호 [${mockCode}]가 ${phone}으로 발송되었습니다.`);
-    // } catch (err) {
-    //   setError("인증번호 발송에 실패했습니다. 다시 시도해주세요.");
-    //   setSuccess(null);
-    // }
-    // UI 테스트를 위한 임시 코드
-    const mockCode = String(Math.floor(100000 + Math.random() * 900000));
-    setRealVerificationCode(mockCode);
-    setIsCodeSent(true);
-    setTimer(180);
-    setSuccess(`인증번호가 발송되었습니다: ${mockCode}`); // 개발 중에만 보이도록
-    setError(null);
-    console.log(`인증번호 [${mockCode}]가 ${phone}으로 발송되었습니다.`);
-  };
-
-  const handleVerifyCode = () => {
-    if (timer === 0) {
-      setError("인증 시간이 만료되었습니다. 인증번호를 다시 요청해주세요.");
-      setSuccess(null);
-      setIsCodeSent(false); // 재요청 가능하도록
-      return;
-    }
-    if (verificationCode === realVerificationCode) {
-      setIsVerified(true);
-      setSuccess("휴대폰 인증이 완료되었습니다.");
-      setError(null);
-      if (timerIntervalRef.current) {
-        clearInterval(timerIntervalRef.current);
-      }
     } else {
-      setError("인증번호가 일치하지 않습니다.");
-      setSuccess(null);
+      formatted = numbersOnly;
+    }
+    return formatted;
+  };
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPhone(formatPhoneNumber(e.target.value));
+    if (phoneError) setPhoneError(null);
+  };
+
+  const handleOtpChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setVerificationCode(e.target.value);
+    if (otpError) setOtpError(null);
+  };
+
+  // 인증번호 발송 함수
+  const handleRequestCode = async () => {
+    if (!/^\d{3}-\d{4}-\d{4}$/.test(phone)) {
+      setPhoneError("올바른 휴대폰 번호 형식이 아닙니다.");
+      return;
+    }
+    setIsLoading(true);
+    setPhoneError(null);
+    setSuccessMessage(null);
+
+    try {
+      const phoneNum = phone.replace(/\D/g, "");
+      await apiClient.post(`/api/sign/send-sms?phoneNum=${phoneNum}`);
+      setIsCodeSent(true);
+      setTimer(180); // 3분 타이머 시작
+      setResendCooldown(60); // 1분 재전송 쿨다운 시작
+      setSuccessMessage("인증번호가 발송되었습니다.");
+    } catch (err) {
+      console.error("인증번호 발송 실패:", err);
+      setPhoneError("인증번호 발송에 실패했습니다. 잠시 후 다시 시도해주세요.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // 인증번호 확인 함수
+  const handleVerifyCode = async () => {
+    if (timer === 0) {
+      setOtpError("인증 시간이 만료되었습니다.");
+      return;
+    }
+    setIsLoading(true);
+    try {
+      await apiClient.post(
+        `/api/sign/verify?certificationNumber=${verificationCode}`
+      );
+      setIsVerified(true);
+      setSuccessMessage("휴대폰 인증이 완료되었습니다.");
+      setOtpError(null);
+      if (timerRef.current) clearInterval(timerRef.current);
+      if (resendCooldownRef.current) clearInterval(resendCooldownRef.current);
+    } catch (err) {
+      console.error("인증 실패:", err);
+      setOtpError("인증번호가 일치하지 않습니다.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -171,10 +232,17 @@ const FindPasswordPhonePage: React.FC = () => {
       navigate("/login/find-pw/set-new-password", {
         state: { method: "phone", identifier: phone },
       });
-    } else {
-      setError("휴대폰 인증을 먼저 완료해주세요.");
-      setSuccess(null);
     }
+  };
+
+  const displayMessage = () => {
+    if (phoneError)
+      return <FeedbackMessage type="error">{phoneError}</FeedbackMessage>;
+    if (otpError)
+      return <FeedbackMessage type="error">{otpError}</FeedbackMessage>;
+    if (successMessage)
+      return <FeedbackMessage type="success">{successMessage}</FeedbackMessage>;
+    return <FeedbackMessage type="success"> </FeedbackMessage>;
   };
 
   return (
@@ -188,18 +256,20 @@ const FindPasswordPhonePage: React.FC = () => {
           <Input
             type="tel"
             height={50}
-            placeholder="휴대폰 번호 (- 없이 입력)"
+            placeholder="휴대폰 번호 (숫자만 입력)"
             value={phone}
-            onChange={(e) => setPhone(formatPhoneNumber(e.target.value))}
-            disabled={isCodeSent || isVerified}
+            onChange={handlePhoneChange}
+            disabled={isVerified}
+            hasError={!!phoneError}
           />
         </InputGroup>
+
         {!isCodeSent && (
           <ButtonGroup>
             <MainButton
               height={50}
               onClick={handleRequestCode}
-              disabled={isCodeSent || isVerified || !phone}
+              disabled={isLoading || !phone}
             >
               인증번호 받기
             </MainButton>
@@ -207,41 +277,52 @@ const FindPasswordPhonePage: React.FC = () => {
         )}
 
         {isCodeSent && !isVerified && (
-          <>
+          <div style={{ width: "100%", marginTop: "24px" }}>
             <InputGroup>
               <Input
                 type="text"
                 height={50}
                 placeholder="인증번호 입력"
                 value={verificationCode}
-                onChange={(e) => setVerificationCode(e.target.value)}
-                maxLength={6}
+                onChange={handleOtpChange}
+                maxLength={4}
+                hasError={!!otpError}
               />
-              {timer > 0 && (
-                <TimerText>
-                  남은 시간: {Math.floor(timer / 60)}:
-                  {String(timer % 60).padStart(2, "0")}
-                </TimerText>
-              )}
+              <TimerText>
+                {Math.floor(timer / 60)}:{String(timer % 60).padStart(2, "0")}
+              </TimerText>
             </InputGroup>
+            <ResendGroup>
+              <ResendButton
+                onClick={handleRequestCode}
+                disabled={resendCooldown > 0 || isLoading}
+              >
+                {resendCooldown > 0
+                  ? `재전송 (${resendCooldown}초)`
+                  : "인증번호 재전송"}
+              </ResendButton>
+            </ResendGroup>
             <ButtonGroup>
-              <MainButton height={50} onClick={handleVerifyCode}>
+              <MainButton
+                height={50}
+                onClick={handleVerifyCode}
+                disabled={
+                  !verificationCode || verificationCode.length < 4 || isLoading
+                }
+              >
                 인증하기
               </MainButton>
             </ButtonGroup>
-          </>
+          </div>
         )}
 
-        {error && <ErrorMessage>{error}</ErrorMessage>}
-        {success && <SuccessMessage>{success}</SuccessMessage>}
+        {displayMessage()}
 
-        <ButtonGroup style={{ marginTop: isVerified ? "20px" : "80px" }}>
-          {" "}
-          {/* 하단 여백 확보 */}
+        <FixedButtonGroup>
           <MainButton height={50} onClick={handleNext} disabled={!isVerified}>
             다음
           </MainButton>
-        </ButtonGroup>
+        </FixedButtonGroup>
       </Container>
     </Wrapper>
   );

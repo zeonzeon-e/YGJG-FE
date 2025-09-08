@@ -33,17 +33,22 @@ import ProfileEditPage from "./screen/My/ProfileEditPage";
 import UnsubscribePage from "./screen/My/UnsubscribePage";
 import MTeaminforpage from "./screen/Team/Manager/MTeamInforPage";
 import MainPage from "./screen/My/Mainpage";
-import AdminJoinReviewPage from "./screen/Team/Manager/AdminJoinReviewPage";
+import MTMemberAdmissionDetail from "./screen/Team/Manager/MTMemberAdmissionDetail";
 import ChangePasswordPage from "./screen/My/ChangePasswardPage";
 import FindPasswordEmailPage from "./screen/Auth/FindPasswordEmailPage";
 import SetNewPasswordPage from "./screen/Auth/SetNewPasswordPage";
+import TeamJoinPage from "./screen/Team/TeamJoinPage";
+import MTeamMemberAdmission from "./screen/Team/Manager/MTeamMemberAdmission";
+import MTeamMemberListPage from "./screen/Team/Manager/MTeamMemberListPage";
+import BottomNavBar from "./components/Nevigation/BottomNavBar";
 
 const GlobalStyle = createGlobalStyle`
   body, #root, .app-container {
     max-width: 600px;
-    margin: 0 auto;
+    margin: auto;
     padding: 0;
     box-sizing: border-box;
+    padding-bottom: 50px;
   }
 `;
 
@@ -83,10 +88,19 @@ root.render(
         {/* 팀 관련 페이지 */}
         {/* 초대코드 입력 페이지 */}
         <Route path="/invite" element={<InvitePage />} />
-        {/* [관리자]팀 가입 신청서 열람람 페이지 @@@@@팀ID & 유저ID로 식별 기능 추가할 것 */}
-        <Route path="/joinReview" element={<AdminJoinReviewPage />} />
-        {/* 팀 선택 목록에서 들어가면 보이는 팀 상세 페이지 */}
+        {/* [관리자]팀 가입 신청서 열람 페이지 @@@@@팀ID & 유저ID로 식별 기능 추가할 것 */}
+        <Route
+          path="/manager/:teamId/joinReview"
+          element={<MTeamMemberAdmission />}
+        />
+        <Route
+          path="/manager/:teamId/joinReview/:requestId"
+          element={<MTMemberAdmissionDetail />}
+        />
+        {/* 팀 선택 목록에서 들어가면 보이는 팀 상세 페이지(가입하기 전) */}
         <Route path="/team/list/:teamId" element={<TeamInforPage />} />
+        {/* 팀 가입 페이지 */}
+        <Route path="/team/list/:teamId/join" element={<TeamJoinPage />} />
         {/* 팀 생성 페이지 */}
         <Route path="/team/create" element={<TeamCreationPage />} />
         {/* 팀 생성 안내 페이지 */}
@@ -95,8 +109,10 @@ root.render(
         <Route path="/team/list" element={<TeamSelectListPage />} />
         {/* 팀 선수목록 페이지 */}
         <Route path="/team/:teamId/member" element={<TeamMemberListPage />} />
+        {/* 팀 캘린더 페이지 */}
+        <Route path="/team/:teamId/calendar" element={<CalendarPage />} />
         {/* 게시판 목록 페이지 */}
-        <Route path="/team/notice" element={<TeamNoticePage />} />
+        <Route path="/team/:teamId/notice" element={<TeamNoticePage />} />
         {/* 게시판 글 페이지 */}
         <Route
           path="/team/notice/:noticeId"
@@ -107,7 +123,10 @@ root.render(
 
         {/* 팀 매너지 관련 페이지 */}
         {/* 경기전략 페이지 */}
-        <Route path="/team-strategy/:id" element={<GameStrategy />} />
+        <Route
+          path="/manager/:teamId/team-strategy/:id"
+          element={<GameStrategy />}
+        />
         {/* 게시판 추가 페이지 */}
         <Route path="/team/notice/create" element={<TeamNoticeCreatePage />} />
         {/* 게시판 수정 페이지 */}
@@ -115,9 +134,14 @@ root.render(
           path="/team/notice/rewrite/:id"
           element={<TeamNoticeRewritePage />}
         />
-        {/* 본인이 관리자인 팀 페이지 */}
-        <Route path="/manager/:id" element={<MTeaminforpage />} />
 
+        {/* [관리자] 팀 페이지 */}
+        <Route path="/manager/:id" element={<MTeaminforpage />} />
+        {/* [관리자] 팀 멤버 목록 페이지 */}
+        <Route
+          path="/manager/:teamId/memberList"
+          element={<MTeamMemberListPage />}
+        />
         {/* 마이페이지 */}
         {/* 메인페이지(가입한 팀 정보 있음) */}
         <Route path="/myteam" element={<MainPage />} />
@@ -137,6 +161,7 @@ root.render(
         {/* 팀 색상, 팀 내 희망 포지션 변경 */}
         <Route path="/team-edit/:id" element={<TeamInfoEdit />} />
       </Routes>
+      <BottomNavBar />
     </BrowserRouter>
   </React.StrictMode>
 );

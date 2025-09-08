@@ -6,9 +6,6 @@ import Header2 from "../../components/Header/Header2/Header2";
 import MainButton from "../../components/Button/MainButton";
 import Input from "../../components/Input/Input";
 import Modal1 from "../../components/Modal/Modal1";
-// 아이콘 import 제거
-// import { FaEye, FaEyeSlash } from "react-icons/fa6";
-// import { CgCloseO } from "react-icons/cg";
 // import apiClient from "../../api/apiClient";
 
 const Wrapper = styled.div`

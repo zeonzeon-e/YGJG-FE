@@ -719,7 +719,7 @@ const TeamCreationPage: React.FC = () => {
 
   return (
     <div style={{ padding: "20px" }}>
-      <Link to="/team/select/list">
+      <Link to="/team/list">
         <div style={{ padding: "10px 0" }}>
           <MdClose size={30} color="#000" />
         </div>

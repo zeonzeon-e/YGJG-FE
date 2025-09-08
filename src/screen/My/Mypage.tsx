@@ -35,34 +35,6 @@ const MyPage: React.FC = () => {
 
   const navigate = useNavigate();
 
-  // useEffect(() => {
-  //   // 백엔드에서 팀 목록과 프로필 정보를 가져오는 함수
-  //   const fetchData = async () => {
-  //     try {
-  //       setLoading(true);
-  //       const accessToken = getAccessToken(); // accessToken 가져오기
-  //       const headers = {
-  //         Authorization: `Bearer ${accessToken}`,
-  //       };
-
-  //       // 실제 API 엔드포인트에 맞게 수정하세요
-  //       const [teamResponse, profileResponse] = await Promise.all([
-  //         apiClient.get("/api/teams", { headers }), // 팀 목록을 가져오는 API
-  //         apiClient.get("/api/user/profile", { headers }), // 사용자 프로필을 가져오는 API
-  //       ]);
-  //       setTeamList(teamResponse.data);
-  //       setProfile(profileResponse.data);
-  //     } catch (err) {
-  //       console.error(err);
-  //       setError("데이터를 가져오는 중 에러가 발생했습니다.");
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
-
-  //   fetchData();
-  // }, []);
-
   useEffect(() => {
     const profileData = async () => {
       try {
@@ -100,49 +72,6 @@ const MyPage: React.FC = () => {
     teamData();
   }, []);
 
-  // // API 호출 결과 타입 정의
-  // interface ApiResponse {
-  //   id: number;
-  //   name: string;
-  //   email: string;
-  // }
-  // const accessToken = getAccessToken(); // 여기에 실제 토큰을 입력하세요.
-  // console.log('accessToken', accessToken)
-
-  //   const [data, setData] = useState<ApiResponse[]>([]);
-
-  // // API 데이터 가져오기 함수
-  // const fetchData = async () => {
-  //   setLoading(true);
-  //   setError(null);
-
-  //   try {
-  //     const response = await fetch('http://13.124.10.231:8080/api/team', {
-  //       method: 'GET',
-  //       headers: {
-  //         'Content-Type': 'application/json',
-  //         Authorization: `bearer ${accessToken}`,
-  //       },
-  //     });
-
-  //     if (!response.ok) {
-  //       throw new Error(`HTTP error! status: ${response.status}`);
-  //     }
-
-  //     const result: ApiResponse[] = await response.json();
-  //     setData(result);
-  //   } catch (err) {
-  //     setError((err as Error).message);
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-
-  // // 컴포넌트가 처음 렌더링될 때 데이터 가져오기
-  // useEffect(() => {
-  //   fetchData();
-  // }, []);
-
   const handleEditClick = (index: number) => {
     navigate(`/team-edit/${teamList[index].teamId}`, {
       state: {
@@ -166,7 +95,7 @@ const MyPage: React.FC = () => {
           />
           <ProfileName>{profile?.name || "이름 없음"}</ProfileName>
           <ProfileEmail>{profile?.email || "이메일 없음"}</ProfileEmail>
-          <ProfileButton onClick={() => navigate("edit")}>
+          <ProfileButton onClick={() => navigate("edit")} className="shadow-df">
             프로필 설정
           </ProfileButton>
         </Profile>
@@ -179,7 +108,9 @@ const MyPage: React.FC = () => {
                 <TeamDiv>
                   <ColorLine color={el.teamColor} />
                   <TeamProfileImg src={el.teamImageUrl} />
-                  <TeamNameText onClick={() => navigate('/myteam')}>{el.teamName}</TeamNameText>
+                  <TeamNameText onClick={() => navigate("/myteam")}>
+                    {el.teamName}
+                  </TeamNameText>
                 </TeamDiv>
                 <PositionWrapper>
                   <PositionText position={el.position}>
@@ -258,10 +189,16 @@ const Profile = styled.div`
 `;
 
 const ProfileImage = styled.img`
-  width: 20vw;
-  height: 20vw;
+  width: 116px;
+  height: 116px;
   border-radius: 50%;
-  margin-bottom: 10px;
+  background-color: #f0f0f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  object-fit: cover;
+  border: 1px solid #ddd;
+  margin-bottom: 20px;
 `;
 
 const ProfileName = styled.div`
@@ -273,12 +210,12 @@ const ProfileName = styled.div`
 const ProfileEmail = styled.div`
   font-size: 14px;
   font-family: "Pretendard-Regular";
-  color: #777;
+  color: var(--color-dark1);
   margin-bottom: 10px;
 `;
 
 const ProfileButton = styled.button`
-  background-color: var(--color-dark2);
+  background-color: var(--color-main);
   border: 1px solid var(--color-dark1);
   border-radius: 20px;
   padding: 5px 10px;
@@ -311,7 +248,7 @@ const TeamContainer = styled.div`
   border-radius: 8px;
   padding: 16px;
 
-  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1.5px 1.5px 0 var(--color-shabow);
 `;
 
 const TeamDiv = styled.div`
@@ -327,9 +264,15 @@ const ColorLine = styled.div<{ color: string }>`
 `;
 
 const TeamProfileImg = styled.img`
-  width: 10vw;
-  height: 10vw;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
+  background-color: #f0f0f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  object-fit: cover;
+  border: 1px solid #ddd;
 `;
 
 const TeamNameText = styled.div`
@@ -363,14 +306,19 @@ const PositionText = styled.span<{ position: string }>`
 `;
 
 const MenuList = styled.div`
-  margin: 40px 0;
+  margin-top: 40px;
 `;
 
 const MenuItem = styled.div`
   display: flex;
   align-items: center;
-  margin-bottom: 20px;
+  padding: 10px 0px;
+  border-bottom: 1px solid var(--color-light2);
   cursor: pointer;
+
+  &:first-child {
+    border-top: 1px solid var(--color-light2);
+  }
 `;
 
 const MenuText = styled.span`
@@ -402,6 +350,5 @@ const FooterItem = styled.div`
 const FooterTitle = styled.div`
   font-size: 12px;
   margin-bottom: 5px;
-  cursor: pointer;
   color: var(--color-dark1);
 `;

@@ -107,8 +107,9 @@ const ModalContent = styled.div`
  */
 const ModalTitle = styled.h2`
   margin-bottom: 20px;
-  margin-left: 30px;
   margin-right: 30px;
+  font-size: 20px;
+  font-weight: bold;
 `;
 
 /**

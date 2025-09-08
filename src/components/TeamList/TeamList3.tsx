@@ -26,14 +26,15 @@ const getColorByPosition = (position: string): string => {
 };
 
 // 모든 포지션 리스트를 미리 정의
-const allPositions = ["공격수", "수비수", "미드필더", "골키퍼"];
+const allPositions = ["ST", "WD", "미드필더", "골키퍼"];
 
 interface TeamList3Props {
   players: {
     id: number;
     name: string;
-    position: string;
-    detail_position: string;
+    position: string; // 예: "ST", "CF", "LW", "RW", "GK" 등
+    profileUrl?: string; // 프로필 이미지 URL
+    role?: string; // 다른 필드가 필요하면 추가
   }[];
   onPlayerSelect: (player: {
     detail_position: string;
@@ -74,7 +75,7 @@ const TeamList3: React.FC<TeamList3Props> = ({ players, onPlayerSelect }) => {
                   key={player.id}
                   onClick={() =>
                     onPlayerSelect({
-                      detail_position: player.detail_position,
+                      detail_position: player.position,
                       name: player.name,
                       position: player.position,
                     })
@@ -82,7 +83,7 @@ const TeamList3: React.FC<TeamList3Props> = ({ players, onPlayerSelect }) => {
                 >
                   {/* 선수의 상세 포지션 및 이름 출력 */}
                   <PlayerName>
-                    {player.detail_position}
+                    {player.position}
                     <br />
                     {player.name}
                   </PlayerName>

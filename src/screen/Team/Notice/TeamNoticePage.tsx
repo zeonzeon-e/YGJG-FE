@@ -5,6 +5,8 @@ import apiClient from "../../../api/apiClient";
 import { useLocation, useNavigate } from "react-router-dom";
 import Searchbar from "../../../components/Searchbar/Searchbar";
 import MiniButton from "../../../components/Button/MiniButton";
+import { FaEdit } from "react-icons/fa";
+import TopButton from "../../../components/Button/TopButton";
 
 const TeamNoticePage: React.FC = () => {
   const location = useLocation();
@@ -17,6 +19,25 @@ const TeamNoticePage: React.FC = () => {
     { id: 1, title: "필독 공지사항", createAt: new Date() },
     { id: 2, title: "포지션 안내", createAt: new Date() },
     { id: 3, title: "2024년 하반기 회비 안내", createAt: new Date() },
+    { id: 1, title: "필독 공지사항", createAt: new Date() },
+    { id: 2, title: "포지션 안내", createAt: new Date() },
+    { id: 3, title: "2024년 하반기 회비 안내", createAt: new Date() },
+    { id: 1, title: "필독 공지사항", createAt: new Date() },
+    { id: 2, title: "포지션 안내", createAt: new Date() },
+    { id: 3, title: "2024년 하반기 회비 안내", createAt: new Date() },
+    { id: 1, title: "필독 공지사항", createAt: new Date() },
+    { id: 2, title: "포지션 안내", createAt: new Date() },
+    { id: 3, title: "2024년 하반기 회비 안내", createAt: new Date() },
+    { id: 1, title: "필독 공지사항", createAt: new Date() },
+    { id: 2, title: "포지션 안내", createAt: new Date() },
+    { id: 3, title: "2024년 하반기 회비 안내", createAt: new Date() },
+    { id: 1, title: "필독 공지사항", createAt: new Date() },
+    { id: 2, title: "포지션 안내", createAt: new Date() },
+    { id: 3, title: "2024년 하반기 회비 안내", createAt: new Date() },
+    { id: 1, title: "필독 공지사항", createAt: new Date() },
+    { id: 2, title: "포지션 안내", createAt: new Date() },
+    { id: 3, title: "2024년 하반기 회비 안내", createAt: new Date() },
+    
   ]);
   const [filteredNotices, setFilteredNotices] = useState(noticeList);
 
@@ -49,7 +70,11 @@ const TeamNoticePage: React.FC = () => {
       <Container>
         <Searchbar onSearch={handleSearch} />
         <Wrapper>
-          <MiniButton onClick={() => navigate("create")}>공지 작성하기</MiniButton>
+          <MiniButton onClick={() => navigate("create")}>
+            <FlexContainer>
+            <FaEdit style={{ marginRight: "5px" }} size={15}/>공지 작성하기
+            </FlexContainer>
+            </MiniButton>
         </Wrapper>
         {filteredNotices.length > 0 ? (
           <NoticeList>
@@ -73,7 +98,9 @@ const TeamNoticePage: React.FC = () => {
             <NoticeTitle>결과가 없습니다.</NoticeTitle>
           </NoticeItem>
         )}
+        
       </Container>
+      <TopButton/>
     </>
   );
 };
@@ -94,7 +121,7 @@ const NoticeItem = styled.li`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 15px;
+  padding: 20px 15px;
   margin-bottom: 10px;
   border: 1px solid #ccc;
   border-radius: 8px;
@@ -115,3 +142,8 @@ const Wrapper = styled.div`
   margin-bottom: 20px;
   text-align: right;
 `;
+
+const FlexContainer = styled.div`
+  display: flex;
+  align-items: center;
+  `

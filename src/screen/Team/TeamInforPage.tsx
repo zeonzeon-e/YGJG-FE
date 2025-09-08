@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import Header2 from "../../components/Header/Header2/Header2";
@@ -7,8 +6,8 @@ import { FaLocationDot, FaPeopleGroup, FaHeart } from "react-icons/fa6";
 import { IoSettingsSharp } from "react-icons/io5";
 import { useNavigate } from "react-router-dom";
 import HorizontalLine from "../../components/Styled/HorizontalLine";
+import MainButton from "../../components/Button/MainButton";
 
-/* ─────────────────────────────── 더미 데이터 ─────────────────────────────── */
 interface TeamListItem {
   position: string;
   teamColor: string;
@@ -41,133 +40,14 @@ interface NoticeItem {
   createAt: Date;
 }
 
-// const dummyTeamList: TeamListItem[] = [
-//   {
-//     position: "FW",
-//     teamColor: "#FF6B6B",
-//     teamId: 1,
-//     teamImageUrl:
-//       "https://images.unsplash.com/photo-1508672019048-805c876b67e2?w=400&q=80",
-//     teamName: "서울 퓨리어스",
-//   },
-//   {
-//     position: "MF",
-//     teamColor: "#4ECDC4",
-//     teamId: 2,
-//     teamImageUrl:
-//       "https://images.unsplash.com/photo-1521412644187-c49fa049e84d?w=400&q=80",
-//     teamName: "부산 스톰",
-//   },
-// ];
-
-// const dummyTeamData: Record<number, TeamData> = {
-//   1: {
-//     activityDays: ["화요일", "목요일", "토요일"],
-//     activityTime: [20, 21, 22],
-//     ageRange: "20-30대",
-//     dues: "월 30,000원",
-//     invitedCode: "FURIOUS2025",
-//     matchLocation: "잠실생체구장",
-//     positionRequired: ["GK", "CB"],
-//     region: "서울",
-//     teamGender: "남성",
-//     teamImageUrl:
-//       "https://images.unsplash.com/photo-1508672019048-805c876b67e2?w=400&q=80",
-//     teamLevel: "아마추어 A",
-//     teamName: "서울 퓨리어스",
-//     team_introduce:
-//       "스피드와 조직력을 강점으로 하는 젊은 팀입니다. 즐기면서도 승리를 추구합니다!",
-//     town: "송파구",
-//   },
-//   2: {
-//     activityDays: ["월요일", "수요일", "금요일"],
-//     activityTime: [19, 20],
-//     ageRange: "30-40대",
-//     dues: "월 20,000원",
-//     invitedCode: "STORM2025",
-//     matchLocation: "사직실내체육관",
-//     positionRequired: ["FW"],
-//     region: "부산",
-//     teamGender: "혼성",
-//     teamImageUrl:
-//       "https://images.unsplash.com/photo-1521412644187-c49fa049e84d?w=400&q=80",
-//     teamLevel: "아마추어 B",
-//     teamName: "부산 스톰",
-//     team_introduce:
-//       "가족 같은 분위기에서 축구를 즐기는 친목 중심 팀입니다. 누구나 환영!",
-//     town: "부산진구",
-//   },
-// };
-
-const dummyNoticeList: Record<number, NoticeItem[]> = {
-  1: [
-    {
-      id: 101,
-      title: "4/15 연습경기 공지 – 필독",
-      createAt: new Date("2025-04-01T09:00:00"),
-    },
-    {
-      id: 102,
-      title: "4/10 회비 납부 안내",
-      createAt: new Date("2025-03-28T18:30:00"),
-    },
-  ],
-  2: [
-    {
-      id: 201,
-      title: "4/20 부산 시내 친선대회 참가신청",
-      createAt: new Date("2025-04-05T14:20:00"),
-    },
-  ],
-};
-/* ─────────────────────────────────────────────────────────────────────────── */
-
 const TeamInfoPage: React.FC = () => {
-  const [selectedTeam, setselectedTeam] = useState<{
-    teamId: number;
-    teamName: string;
-  }>({
-    teamId: 0,
-    teamName: "",
-  });
   const [teamList, setTeamList] = useState<TeamListItem[]>([]);
   const [teamData, setTeamData] = useState<TeamData>();
-  const [favoriteTeams, setFavoriteTeams] = useState<number[]>([]);
-  const [noticeList, setNoticeList] = useState<NoticeItem[]>([]);
+  const [teamId, setTeamId] = useState<string>("13");
 
   const navigate = useNavigate();
 
-  /* ─────────────────────────── 데이터 초기화 ─────────────────────────── */
   useEffect(() => {
-    // 더미 데이터 세팅
-    //setTeamList(dummyTeamList);
-    //if (dummyTeamList.length > 0) setselectedTeam(dummyTeamList[0]);
-
-    // 실제 API 사용 시 아래 로직 주석 해제
-    
-    const fetchTeamList = async () => {
-      try {
-        const response = await apiClient.get("api/team/1");
-        setTeamList(response.data);
-        setTeamData(response.data)
-        if (response.data.length > 0) setselectedTeam(response.data[0]);
-      } catch (err) {
-        console.error("Error fetching team list:", err);
-      }
-    };
-    fetchTeamList();
-    
-  }, []);
-
-  useEffect(() => {
-    if (selectedTeam.teamId === 0) return;
-
-    // 더미 데이터 세팅
-    setNoticeList(dummyNoticeList[selectedTeam.teamId] ?? []);
-
-    // 실제 API 사용 시 아래 로직 주석 해제
-    /*
-    const teamId = selectedTeam.teamId;
     const fetchTeamData = async () => {
       try {
         const response = await apiClient.get(`api/team/${teamId}`);
@@ -177,25 +57,8 @@ const TeamInfoPage: React.FC = () => {
       }
     };
 
-    const fetchNoticeList = async () => {
-      try {
-        const response = await apiClient.get("/api/announcement/member/get-all", {
-          params: { teamId },
-        });
-        setNoticeList(response.data);
-      } catch (err) {
-        console.error("데이터를 가져오는 중 에러가 발생했습니다.", err);
-      }
-    };
-
     fetchTeamData();
-    fetchNoticeList();
-    */
-  }, [selectedTeam]);
-
-  const handleTeamChange = (teamId: number, teamName: string) => {
-    setselectedTeam({ teamId, teamName });
-  };
+  }, []);
 
   const handleEditClick = (teamId: number) => {
     const teamEdit = teamList.find((item) => item.teamId === teamId);
@@ -208,25 +71,9 @@ const TeamInfoPage: React.FC = () => {
     });
   };
 
-  const handleNoticeClick = (teamId: number) => {
-    navigate("notice", { state: { teamId } });
-  };
-
-  const handleToggleFavorite = (teamId: number) => {
-    setFavoriteTeams((prevFavorites = []) => {
-      if (prevFavorites.includes(teamId)) {
-        return prevFavorites.filter((favTeam) => favTeam !== teamId);
-      } else {
-        return [...prevFavorites, teamId];
-      }
-    });
-  };
-
   return (
     <>
-      <Header2
-        text={teamData?.teamName}
-      />
+      <Header2 text={teamData?.teamName} />
 
       <Container>
         {teamData && (
@@ -249,73 +96,73 @@ const TeamInfoPage: React.FC = () => {
                   </TeamProfileText>
                 </TeamProfileInfor>
               </TeamProfile>
-              <TeamProfileSetting
-                onClick={() => handleEditClick(selectedTeam.teamId)}
+              {/* <TeamProfileSetting
+                onClick={() => handleEditClick(Number(teamId))}
               >
                 <IoSettingsSharp />
-              </TeamProfileSetting>
-            </ProfileWrapper> 
+              </TeamProfileSetting> */}
+            </ProfileWrapper>
             <CardWrapper>
               <Card>선수 수 : {teamData.memberCount}명</Card>
               <Card>회비/월 : {teamData.dues}원</Card>
-
             </CardWrapper>
             <TeamDetails>
-            <TeamTitle>팀 소개</TeamTitle>
-              <p style={{fontSize:"14px"}}>{teamData.team_introduce}</p>
+              <TeamTitle>팀 소개</TeamTitle>
+              <p style={{ fontSize: "14px" }}>{teamData.team_introduce}</p>
             </TeamDetails>
             <TeamDetails>
               {/* <p>팀 이름: {teamData.teamName}</p> */}
-              
+
               <>
                 <TeamTitle>주요 활동 일정</TeamTitle>
                 <ItemWrapper>
                   {teamData.activitySchedule.map((item, idx) => {
-                     const isActive = teamData.activitySchedule.includes(item); // 해당 요일이 활성화 상태인지 확인
-  
-                     var times = ''
-                     if (Array.isArray(item)) {
+                    const isActive = teamData.activitySchedule.includes(item); // 해당 요일이 활성화 상태인지 확인
+
+                    var times = "";
+                    if (Array.isArray(item)) {
                       // item이 배열일 때
-                      times = item.join(', ');  // '아침,점심'으로 결합
+                      times = item.join(", "); // '아침,점심'으로 결합
                     } else {
                       // item이 문자열일 때
-                      times = item.split(',').join(', ');
+                      times = item.split(",").join(", ");
                     }
-                    console.log(item)
-                     var dayName = ""
-                     switch(idx){
-                      case 0 : 
-                        dayName = "월" 
+                    console.log(item);
+                    var dayName = "";
+                    switch (idx) {
+                      case 0:
+                        dayName = "월";
                         break;
-                      case 1 : 
-                        dayName = "화" 
+                      case 1:
+                        dayName = "화";
                         break;
-                      case 2 : 
-                        dayName = "수" 
+                      case 2:
+                        dayName = "수";
                         break;
-                      case 3 : 
-                        dayName = "목" 
+                      case 3:
+                        dayName = "목";
                         break;
-                      case 4 : 
-                        dayName = "금" 
+                      case 4:
+                        dayName = "금";
                         break;
-                      case 5 : 
-                        dayName = "토" 
+                      case 5:
+                        dayName = "토";
                         break;
-                      case 6 : 
-                        dayName = "일" 
+                      case 6:
+                        dayName = "일";
                         break;
+                    }
 
-                     }
-
-                     return (
-                      item.length !== 0 && <ActivityDaysItem
-                        key={item}
-                       isActive={isActive}
-                        className="border-df shadow-df"
-                      >
-                        <div>{dayName}</div> <div>{times}</div>
-                      </ActivityDaysItem>
+                    return (
+                      item.length !== 0 && (
+                        <ActivityDaysItem
+                          key={item}
+                          isActive={isActive}
+                          className="border-df shadow-df"
+                        >
+                          <div>{dayName}</div> <div>{times}</div>
+                        </ActivityDaysItem>
+                      )
                     );
                   })}
                 </ItemWrapper>
@@ -339,11 +186,13 @@ const TeamInfoPage: React.FC = () => {
           </> */}
             </TeamDetails>
             <TeamDetails>
-                <TeamTitle>이런 사람을 찾고 있어요</TeamTitle>
-                
+              <TeamTitle>이런 사람을 찾고 있어요</TeamTitle>
             </TeamDetails>
           </>
         )}
+        <MainButton onClick={() => navigate(`/team/list/${teamId}/join`)}>
+          팀 가입하기
+        </MainButton>
       </Container>
     </>
   );
@@ -353,13 +202,13 @@ export default TeamInfoPage;
 
 // Styled Components
 const Container = styled.div`
-margin-top: 20px;
+  margin-top: 20px;
   padding-right: 20px;
   padding-left: 20px;
 `;
 
 const TeamDetails = styled.div`
-  margin-top: 20px;
+  margin-top: 10px;
   padding: 10px;
   border: 1px solid #ccc;
   border-radius: 8px;
@@ -397,15 +246,15 @@ const TeamProfileSetting = styled.div`
   right: 0;
 `;
 const CardWrapper = styled.div`
-  display:flex;
-  gap : 10px;
+  margin-top: 20px;
+  display: flex;
+  gap: 10px;
 `;
 const Card = styled.div`
   padding: 10px;
-  border: 1px solid black;
-  width:50%;
+  border: 1px solid #ccc;
+  width: 50%;
   border-radius: 8px;
-
 `;
 const ItemWrapper = styled.div`
   display: flex;
@@ -427,65 +276,7 @@ const ActivityDaysItem = styled.div<{ isActive: boolean }>`
       ? "var(--color-light2)"
       : "#ffffff"}; /* 활성화: 초록색, 비활성화: 회색 */
   color: ${({ isActive }) =>
-    isActive ? "var(--color-main)" : "#9e9e9e"}; /* 활성화: 흰색, 비활성화: 연한 회색 */
-`;
-const TimeWrapper = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 10px;
-`;
-
-const TimeItem = styled.div<{ isActive: boolean }>`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  width: 12px;
-  height: 50px;
-  margin: 0 1px;
-  border-radius: 20px;
-  background-color: ${({ isActive }) =>
-    isActive ? "#4caf50" : "#e0e0e0"}; /* 활성화: 초록색, 비활성화: 회색 */
-  color: ${({ isActive }) =>
-    isActive ? "#ffffff" : "#9e9e9e"}; /* 활성화: 흰색, 비활성화: 연한 회색 */
-`;
-
-const TimeItemWrpper = styled.div`
-  display: flex;
-  flex-direction: column;
-  font-size: 11px;
-  text-align: center;
-  white-space: pre-line;
-  align-self: flex-end;
-  align-items: center;
-`;
-const TimeTitle = styled.div`
-  word-break: keep-all;
-`;
-
-const NoticeList = styled.ul`
-  list-style: none;
-  padding: 0;
-`;
-
-const NoticeItem = styled.li`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px;
-  margin-bottom: 10px;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  background-color: white;
-`;
-
-const NoticeTitle = styled.div`
-  font-size: 14px;
-`;
-
-const NoticeDate = styled.div`
-  font-size: 12px;
-  color: #888;
-  white-space: nowrap;
+    isActive
+      ? "var(--color-main)"
+      : "#9e9e9e"}; /* 활성화: 흰색, 비활성화: 연한 회색 */
 `;

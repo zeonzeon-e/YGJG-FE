@@ -2,39 +2,16 @@ import React, { useState, useCallback, useEffect } from "react";
 import styled from "styled-components";
 import MiniButton from "../Button/MiniButton";
 import TeamList3 from "../TeamList/TeamList3";
+import { useParams } from "react-router-dom";
+import apiClient from "../../api/apiClient";
 
-const playersData = [
-  {
-    id: 1,
-    name: "이지현",
-    position: "공격수",
-    detail_position: "ST",
-  },
-  {
-    id: 2,
-    name: "이지현",
-    position: "수비수",
-    detail_position: "WD",
-  },
-  {
-    id: 3,
-    name: "최민석",
-    position: "수비수",
-    detail_position: "WD",
-  },
-  {
-    id: 4,
-    name: "김유성",
-    position: "미드필더",
-    detail_position: "MF",
-  },
-  {
-    id: 5,
-    name: "김민기",
-    position: "골키퍼",
-    detail_position: "GK",
-  },
-];
+interface Player {
+  id: number;
+  name: string;
+  position: string; // 예: "ST", "CF", "LW", "RW", "GK" 등
+  profileUrl?: string; // 프로필 이미지 URL
+  role?: string; // 다른 필드가 필요하면 추가
+}
 
 interface FormationModalProps {
   onClose: () => void;
@@ -58,8 +35,36 @@ const FormationModal: React.FC<FormationModalProps> = ({ onClose, onSave }) => {
     x: 0,
     y: 0,
   });
-  const [availablePlayers, setAvailablePlayers] = useState(playersData);
+  const [availablePlayers, setAvailablePlayers] = useState<Player[]>();
+  const { teamId } = useParams();
+  const numericTeamId = Number(teamId);
+  useEffect(() => {
+    const fetchPlayers = async () => {
+      if (!numericTeamId) return;
 
+      try {
+        const response = await apiClient.get<Player[]>(
+          `/api/team-strategy/get-position/name`,
+          {
+            params: {
+              positionName: "",
+              teamId: numericTeamId,
+            },
+            headers: {
+              "X-AUTH-TOKEN": "사용자 인증 토큰",
+            },
+          }
+        );
+
+        // 새로운 데이터 수신 후 무한 스크롤 상태 초기화
+        setAvailablePlayers(response.data);
+      } catch (error) {
+        console.error("Failed to fetch players:", error);
+      }
+    };
+
+    fetchPlayers();
+  }, []);
   useEffect(() => {
     const originalStyle = window.getComputedStyle(document.body).overflow;
     document.body.style.overflow = "hidden"; // Disable background scroll
@@ -122,12 +127,9 @@ const FormationModal: React.FC<FormationModalProps> = ({ onClose, onSave }) => {
       setCircles([...circles, newCircle]);
       // 선택된 선수를 availablePlayers에서 제거
       setAvailablePlayers((prevPlayers) =>
-        prevPlayers.filter(
+        prevPlayers?.filter(
           (p) =>
-            !(
-              p.name === player.name &&
-              p.detail_position === player.detail_position
-            )
+            !(p.name === player.name && p.position === player.detail_position)
         )
       );
     }
@@ -194,7 +196,7 @@ const FormationModal: React.FC<FormationModalProps> = ({ onClose, onSave }) => {
 
   const onReset = () => {
     setCircles([]);
-    setAvailablePlayers(playersData);
+    setAvailablePlayers([]);
   };
 
   return (
@@ -233,10 +235,12 @@ const FormationModal: React.FC<FormationModalProps> = ({ onClose, onSave }) => {
             ))}
           </FormationImageContainer>
 
-          <TeamList3
-            players={availablePlayers}
-            onPlayerSelect={handlePlayerSelect}
-          />
+          {availablePlayers && (
+            <TeamList3
+              players={availablePlayers}
+              onPlayerSelect={handlePlayerSelect}
+            />
+          )}
           <ColorSelectionContainer>
             <CircleButton
               color="red"
