@@ -5,8 +5,8 @@ import { FaChevronDown, FaChevronUp, FaStar } from "react-icons/fa6";
 import HorizontalLine from "../Styled/HorizontalLine";
 
 interface HeaderProps {
-  selectedTeam:  {teamId: number, teamName: string};
-  teams: {teamId: number, teamName: string}[];
+  selectedTeam: { teamId: number; teamName: string } | null;
+  teams: { teamId: number; teamName: string }[];
   onTeamChange: (teamId: number, teamName: string) => void;
   favoriteTeams: number[]; // 즐겨찾기된 팀 목록
   onToggleFavorite: (teamId: number, teamName: string) => void; // 즐겨찾기 토글 함수
@@ -26,9 +26,7 @@ const TeamNameWrapper = styled.div`
   align-items: center;
 `;
 
-const TeamName = styled.h1`
-
-`;
+const TeamName = styled.h1``;
 
 const DropdownButton = styled.button`
   margin-left: 8px;
@@ -52,7 +50,7 @@ const ModalContent = styled.div`
   position: absolute;
   top: 50px;
   left: 50%;
-  
+
   transform: translate(-50%, 0);
   background-color: white;
   padding: 5px;
@@ -112,7 +110,7 @@ const NavButton = styled.button`
   height: 20px;
   cursor: pointer;
   font-size: 14px;
-  &:first-child{
+  &:first-child {
     margin-bottom: 5px;
   }
 `;
@@ -137,22 +135,33 @@ const Header3: React.FC<HeaderProps> = ({
 
   const isFavorite = (teamId: number) => favoriteTeams.includes(teamId);
 
+  // selectedTeam이 null일 경우를 대비한 로직 추가
+  if (!selectedTeam) {
+    // 선택된 팀이 없으면 헤더에 기본 텍스트나 로딩 상태를 표시할 수 있습니다.
+    return (
+      <HeaderContainer>
+        <TeamName>팀 선택</TeamName>
+      </HeaderContainer>
+    );
+  }
+
   return (
     <>
       <HeaderContainer>
         <TeamNameWrapper>
           <TeamName>{selectedTeam.teamName}</TeamName>
           <DropdownButton onClick={toggleModal}>
-            {isModalOpen ? <FaChevronUp/> : <FaChevronDown /> }
+            {isModalOpen ? <FaChevronUp /> : <FaChevronDown />}
           </DropdownButton>
           <HorizontalLine />
         </TeamNameWrapper>
-        
       </HeaderContainer>
-      
 
       <ModalBackground isOpen={isModalOpen} onClick={toggleModal}>
-        <ModalContent className="border-df shadow-df" onClick={(e) => e.stopPropagation()}>
+        <ModalContent
+          className="border-df shadow-df"
+          onClick={(e) => e.stopPropagation()}
+        >
           <TeamList>
             {teams.map((team) => (
               <TeamListItem
@@ -161,16 +170,16 @@ const Header3: React.FC<HeaderProps> = ({
                 onClick={() => handleTeamSelect(team.teamId, team.teamName)}
               >
                 <LeftItems>
-                <StarIcon
-                  isFavorite={isFavorite(team.teamId)}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onToggleFavorite(team.teamId, team.teamName);
-                  }}
-                >
-                  {isFavorite(team.teamId) ? <FaStar /> : <FaStar />}
-                </StarIcon>
-                <TeamNameText>{team.teamName}</TeamNameText>
+                  <StarIcon
+                    isFavorite={isFavorite(team.teamId)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onToggleFavorite(team.teamId, team.teamName);
+                    }}
+                  >
+                    {isFavorite(team.teamId) ? <FaStar /> : <FaStar />}
+                  </StarIcon>
+                  <TeamNameText>{team.teamName}</TeamNameText>
                 </LeftItems>
                 <RightItem>
                   <NavButton
@@ -197,11 +206,8 @@ const Header3: React.FC<HeaderProps> = ({
               </TeamListItem>
             ))}
           </TeamList>
-          
         </ModalContent>
-        
       </ModalBackground>
-      
     </>
   );
 };

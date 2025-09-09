@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import styled from "styled-components";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa6";
 import {
   format,
@@ -13,202 +14,211 @@ import {
   isSameDay,
 } from "date-fns";
 import { ko } from "date-fns/locale";
-import "./Calendar.css";
 
-/**
- * Match 인터페이스 - 경기 정보를 나타내는 타입
- * @interface Match
- * @property {string} date - 경기 날짜 (형식: YYYY-MM-DD)
- * @property {string} time - 경기 시간
- * @property {string} teams - 팀 정보
- * @property {string} color - 색상 (경기 유형을 나타냄)
- */
-interface Match {
+// ⭐ 2. 재사용성을 위해 범용적인 Event 타입으로 변경
+interface CalendarEvent {
   date: string;
-  time: string;
-  teams: string;
   color: string;
 }
 
-/**
- * CalendarProps 인터페이스 - Calendar 컴포넌트의 props
- * @interface CalendarProps
- * @property {Match[]} matches - 경기 목록
- * @property {function} onDateSelect - 날짜 선택 시 호출되는 함수
- */
 interface CalendarProps {
-  matches: Match[];
+  events: CalendarEvent[];
   onDateSelect: (date: string) => void;
 }
 
-/**
- * Calendar 컴포넌트 - 달력을 표시하고 경기 정보를 관리
- * @param {CalendarProps} props - Calendar 컴포넌트에 전달되는 props
- * @param {Match[]} props.matches - 경기 목록
- * @param {function} props.onDateSelect - 날짜 선택 시 호출되는 함수
- * @returns {JSX.Element} Calendar 컴포넌트
- */
-const Calendar: React.FC<CalendarProps> = ({ matches, onDateSelect }) => {
-  // 현재 날짜를 저장하는 state
+const Calendar: React.FC<CalendarProps> = ({ events, onDateSelect }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
-  onDateSelect(format(currentDate, "yyyy-MM-dd"));
+  const [selectedDate, setSelectedDate] = useState(new Date());
 
-  /**
-   * renderHeader - 달력 헤더를 렌더링하는 함수
-   * @returns {JSX.Element} 헤더 컴포넌트
-   */
-  const renderHeader = () => {
-    const monthFormat = "MMMM"; // 월 형식
-    const yearFormat = "yyyy"; // 년도 형식
+  // ⭐ 1. 무한 렌더링을 유발하는 코드를 제거했습니다.
 
-    return (
-      <div className="header row flex-middle">
-        <div className="col col-start" onClick={prevMonth}>
-          <div className="icon-wrap">
-            <div className="icon">
-              <FaChevronLeft />
-            </div>
-          </div>
-        </div>
-        <div className="col col-center">
-          <div className="month">{format(currentDate, monthFormat)}</div>
-          <div className="year">{format(currentDate, yearFormat)}</div>
-        </div>
-        <div className="col col-end" onClick={nextMonth}>
-          <div className="icon-wrap">
-            <div className="icon">
-              <FaChevronRight />
-            </div>
-          </div>
-        </div>
-      </div>
-    );
+  const handleDateClick = (day: Date) => {
+    setCurrentDate(day);
+    setSelectedDate(day);
+    onDateSelect(format(day, "yyyy-MM-dd"));
   };
 
-  /**
-   * renderDays - 요일 헤더를 렌더링하는 함수
-   * @returns {JSX.Element} 요일 헤더 컴포넌트
-   */
-  const renderDays = () => {
-    const dateFormat = "EEEE"; // 요일 형식
+  const nextMonth = () => setCurrentDate(addMonths(currentDate, 1));
+  const prevMonth = () => setCurrentDate(subMonths(currentDate, 1));
+
+  const renderHeader = () => (
+    <HeaderRow>
+      <ArrowButton onClick={prevMonth}>
+        <FaChevronLeft />
+      </ArrowButton>
+      <MonthYear>
+        <span>{format(currentDate, "yyyy년")}</span>
+        <span>{format(currentDate, "MMMM", { locale: ko })}</span>
+      </MonthYear>
+      <ArrowButton onClick={nextMonth}>
+        <FaChevronRight />
+      </ArrowButton>
+    </HeaderRow>
+  );
+
+  const renderDaysOfWeek = () => {
     const days = [];
-
-    let startDate = startOfWeek(currentDate, { locale: ko }); // 한 주의 시작일 설정
-
-    // 요일을 한글로 렌더링
+    const startDate = startOfWeek(currentDate, { locale: ko });
     for (let i = 0; i < 7; i++) {
       days.push(
-        <div className="col col-center week" key={i}>
-          {format(addDays(startDate, i), dateFormat, { locale: ko }).charAt(0)}
-        </div>
+        <DayOfWeek key={i}>
+          {format(addDays(startDate, i), "E", { locale: ko })}
+        </DayOfWeek>
       );
     }
-
-    return <div className="days row">{days}</div>;
+    return <DaysRow>{days}</DaysRow>;
   };
 
-  /**
-   * renderCells - 달력의 날짜 셀을 렌더링하는 함수
-   * @returns {JSX.Element} 날짜 셀 컴포넌트
-   */
   const renderCells = () => {
-    const monthStart = startOfMonth(currentDate); // 현재 월의 시작일
-    const monthEnd = endOfMonth(monthStart); // 현재 월의 마지막일
-    const startDate = startOfWeek(monthStart, { locale: ko }); // 현재 월의 시작일이 포함된 주의 시작일
-    const endDate = endOfWeek(monthEnd, { locale: ko }); // 현재 월의 마지막일이 포함된 주의 마지막일
+    const monthStart = startOfMonth(currentDate);
+    const monthEnd = endOfMonth(monthStart);
+    const startDate = startOfWeek(monthStart, { locale: ko });
+    const endDate = endOfWeek(monthEnd, { locale: ko });
 
     const rows = [];
     let days = [];
     let day = startDate;
 
-    // 날짜 셀을 생성
     while (day <= endDate) {
       for (let i = 0; i < 7; i++) {
         const cloneDay = day;
-        const isDisabled = !isSameMonth(day, monthStart); // 현재 월이 아닌 날짜는 비활성화
         const dateString = format(day, "yyyy-MM-dd");
-
-        // 현재 날짜에 맞는 경기를 찾음
-        const dayMatches = matches.filter((match) => match.date === dateString);
+        const dayEvents = events.filter((event) => event.date === dateString);
 
         days.push(
-          <div
-            className={`col cell ${
-              isDisabled
-                ? "disabled"
-                : isSameDay(day, new Date())
-                ? "today"
-                : isSameDay(day, currentDate)
-                ? "selected"
-                : ""
-            }`}
+          <Cell
             key={day.toString()}
-            onClick={() => {
-              if (!isDisabled) {
-                onDateClick(cloneDay);
-                onDateSelect(dateString);
-              }
-            }}
+            isOtherMonth={!isSameMonth(day, monthStart)}
+            isSelected={isSameDay(day, selectedDate)}
+            isToday={isSameDay(day, new Date())}
+            onClick={() => handleDateClick(cloneDay)}
           >
-            <div className="number-wrap">
-              <span className="number">{format(day, "d")}</span>
-            </div>
-            {/* 조건에 따라 점 표시 */}
-            {!isDisabled && dayMatches.length > 0 && (
-              <div className="dots">
-                {dayMatches.map((match, idx) => (
-                  <div
-                    key={idx}
-                    className="dot"
-                    style={{ backgroundColor: match.color }}
-                  ></div>
-                ))}
-              </div>
-            )}
-          </div>
+            <DateNumber>{format(day, "d")}</DateNumber>
+            <DotsContainer>
+              {dayEvents.slice(0, 3).map((event, index) => (
+                <Dot key={index} color={event.color} />
+              ))}
+            </DotsContainer>
+          </Cell>
         );
-        day = addDays(day, 1); // 다음 날짜로 이동
+        day = addDays(day, 1);
       }
-      rows.push(
-        <div className="row" key={day.toString()}>
-          {days}
-        </div>
-      );
+      rows.push(<CalendarRow key={day.toString()}>{days}</CalendarRow>);
       days = [];
     }
-    return <div className="body">{rows}</div>;
-  };
-
-  /**
-   * onDateClick - 날짜 클릭 시 현재 월을 해당 날짜로 변경하는 함수
-   * @param {Date} day - 클릭한 날짜
-   */
-  const onDateClick = (day: Date) => {
-    setCurrentDate(day);
-  };
-
-  /**
-   * nextMonth - 다음 달로 이동하는 함수
-   */
-  const nextMonth = () => {
-    setCurrentDate(addMonths(currentDate, 1));
-  };
-
-  /**
-   * prevMonth - 이전 달로 이동하는 함수
-   */
-  const prevMonth = () => {
-    setCurrentDate(subMonths(currentDate, 1));
+    return <CalendarBody>{rows}</CalendarBody>;
   };
 
   return (
-    <div className="calendar">
+    <CalendarContainer>
       {renderHeader()}
-      {renderDays()}
+      {renderDaysOfWeek()}
       {renderCells()}
-      <div className="calendar-underline" />
-    </div>
+      <Underline />
+    </CalendarContainer>
   );
 };
 
 export default Calendar;
+
+// ⭐ 3. 기존 CSS를 Styled-components로 전환하여 일관성 유지
+const CalendarContainer = styled.div`
+  width: 100%;
+  background-color: #fff;
+  padding: 16px;
+  box-sizing: border-box;
+`;
+
+const HeaderRow = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+`;
+
+const ArrowButton = styled.button`
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  color: #333;
+`;
+
+const MonthYear = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  span:first-child {
+    font-size: 14px;
+    color: #888;
+  }
+  span:last-child {
+    font-size: 20px;
+    font-weight: 600;
+  }
+`;
+
+const DaysRow = styled.div`
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+  margin-bottom: 8px;
+`;
+
+const DayOfWeek = styled.div`
+  font-size: 14px;
+  font-weight: 500;
+  color: #999;
+`;
+
+const CalendarBody = styled.div``;
+const CalendarRow = styled.div`
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+`;
+
+const Cell = styled.div<{
+  isOtherMonth: boolean;
+  isSelected: boolean;
+  isToday: boolean;
+}>`
+  height: 50px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 4px;
+  cursor: pointer;
+  opacity: ${(props) => (props.isOtherMonth ? 0.3 : 1)};
+  background-color: ${(props) =>
+    props.isSelected ? "var(--color-subtle)" : "transparent"};
+  border-radius: 8px;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: #f7f7f7;
+  }
+`;
+
+const DateNumber = styled.span`
+  font-size: 14px;
+`;
+
+const DotsContainer = styled.div`
+  display: flex;
+  gap: 3px;
+  margin-top: 4px;
+`;
+
+const Dot = styled.div<{ color: string }>`
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: ${(props) => props.color};
+`;
+
+const Underline = styled.div`
+  height: 1px;
+  background-color: #eee;
+  margin-top: 16px;
+`;

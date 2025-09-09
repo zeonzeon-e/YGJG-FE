@@ -10,7 +10,6 @@ import FindPasswordPhonePage from "./screen/Auth/FindPasswordPhonePage";
 import MyPage from "./screen/My/Mypage";
 import TeamInfoEdit from "./screen/My/TeamInfoEdit";
 import GameStrategy from "./screen/Team/Manager/GameStrategy/GameStrategy";
-import PersonalCalenderPage from "./screen/My/PersonalCalendarPage";
 import JoinApprovalStatus from "./screen/My/JoinApprovalSataus";
 import { createGlobalStyle } from "styled-components";
 import TeamMemberListPage from "./screen/Team/TeamMemberListPage";
@@ -28,7 +27,6 @@ import TeamNoticeDetailPage from "./screen/Team/Notice/TeamNoticeDetailPage";
 import TeamNoticeCreatePage from "./screen/Team/Notice/TeamNoticeCreatePage";
 import TeamOutPage from "./screen/My/TeamOutPage";
 import TeamNoticeRewritePage from "./screen/Team/Notice/TeamNoticeRewritePage";
-import CalendarPage from "./screen/Team/Calendar/CalendarPage";
 import ProfileEditPage from "./screen/My/ProfileEditPage";
 import UnsubscribePage from "./screen/My/UnsubscribePage";
 import MTeaminforpage from "./screen/Team/Manager/MTeamInforPage";
@@ -42,6 +40,8 @@ import MTeamMemberAdmission from "./screen/Team/Manager/MTeamMemberAdmission";
 import MTeamMemberListPage from "./screen/Team/Manager/MTeamMemberListPage";
 import BottomNavBar from "./components/Nevigation/BottomNavBar";
 import ProtectedRoute from "./components/ProtectedRoute";
+import TeamCalendarPage from "./screen/Team/TeamCalendarPage";
+import PersonalCalendarPage from "./screen/My/PersonalCalendarPage";
 
 const GlobalStyle = createGlobalStyle`
   body, #root, .app-container {
@@ -117,6 +117,15 @@ root.render(
           path="/team/notice/:noticeId"
           element={<TeamNoticeDetailPage />}
         />
+        {/* 팀 캘린더 페이지 */}
+        <Route
+          path="/team/:teamId/calendar"
+          element={
+            <ProtectedRoute>
+              <TeamCalendarPage />
+            </ProtectedRoute>
+          }
+        />
         {/* 팀 탈퇴 사유 작성 페이지 */}
         <Route path="/out/:id" element={<TeamOutPage />} />
 
@@ -142,22 +151,29 @@ root.render(
         {/* 메인페이지(가입한 팀 정보 있음) */}
         <Route path="/myteam" element={<MainPage />} />
         {/* 마이페이지 */}
+        <Route path="/my" element={<MyPage />} />
+        {/* 개인 캘린더 */}
         <Route
-          path="/my"
+          path="/my/calendar"
           element={
             <ProtectedRoute>
-              <MyPage />
+              <PersonalCalendarPage />
             </ProtectedRoute>
           }
         />
-        {/* 개인 캘린더 */}
-        <Route path="/my/calendar" element={<PersonalCalenderPage />} />
         {/* 비밀번호 변경 */}
         <Route path="/my/change-pw" element={<ChangePasswordPage />} />
         {/* 가입 승인 현황 (대기, 승인, 탈락) */}
         <Route path="/my/joinstatus" element={<JoinApprovalStatus />} />
         {/* 본인 프로필 수정 */}
-        <Route path="/my/edit" element={<ProfileEditPage />} />
+        <Route
+          path="/my/edit"
+          element={
+            <ProtectedRoute>
+              <ProfileEditPage />
+            </ProtectedRoute>
+          }
+        />
 
         {/* 서비스 탈퇴 안내 페이지 */}
         <Route path="/my/unsub" element={<UnsubscribePage />} />

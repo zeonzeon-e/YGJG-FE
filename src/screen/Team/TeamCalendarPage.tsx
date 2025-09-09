@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from "react";
+import { useParams, useLocation, useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import Header2 from "../../components/Header/Header2/Header2";
 import Calendar from "../../components/Calendar/Calendar";
+import { useAuth } from "../../hooks/useAuth";
 import apiClient from "../../api/apiClient";
+import { TeamRole } from "../../stores/userStore"; // TeamRole 타입 임포트
 
 // 데이터 타입을 명확하게 정의합니다.
-// 개인 캘린더에서는 여러 팀을 구분하기 위한 teamName, teamColor가 필수적입니다.
 interface CalendarEvent {
   id: number;
   date: string;
@@ -14,55 +16,61 @@ interface CalendarEvent {
   endTime: string;
   location?: string;
   teamId: number;
-  teamName: string;
-  teamColor: string;
 }
 
-const PersonalCalendarPage: React.FC = () => {
-  const [allEvents, setAllEvents] = useState<CalendarEvent[]>([]);
+const TeamCalendarPage: React.FC = () => {
+  const { teamId } = useParams<{ teamId: string }>();
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  // 이전 페이지에서 teamName을 전달받지 못한 경우를 대비하여 기본값 설정
+  const teamName = location.state?.teamName || "팀";
+
+  const { getRoleByTeamId } = useAuth();
+  const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState<string>(
     new Date().toISOString().split("T")[0]
   );
 
-  // 컴포넌트가 마운트될 때, 사용자의 모든 일정을 한 번에 가져옵니다.
   useEffect(() => {
-    const fetchAllMyEvents = async () => {
+    const fetchTeamEvents = async () => {
+      if (!teamId) return;
       setIsLoading(true);
       try {
-        // 백엔드 API 엔드포인트 예시
         const response = await apiClient.get<CalendarEvent[]>(
-          "/api/my/calendar"
+          `/api/teams/${teamId}/calendar`
         );
-        setAllEvents(response.data);
+        setEvents(response.data);
       } catch (error) {
-        console.error("전체 일정을 불러오는 데 실패했습니다.", error);
+        console.error("팀 일정을 불러오는 데 실패했습니다.", error);
+        // 필요시 에러 처리 UI 추가
       } finally {
         setIsLoading(false);
       }
     };
-    fetchAllMyEvents();
-  }, []);
+    fetchTeamEvents();
+  }, [teamId]);
 
-  // 선택된 날짜에 해당하는 일정만 필터링합니다.
-  const filteredEvents = allEvents.filter(
-    (event) => event.date === selectedDate
-  );
+  const handleAddSchedule = () => {
+    // 일정 추가 페이지로 이동하는 로직
+    // navigate(`/team/${teamId}/calendar/new`);
+    alert("일정 추가 기능 구현 예정");
+  };
 
-  // Calendar 컴포넌트에 전달할 props 형식에 맞게 events를 변환합니다.
-  const calendarDisplayEvents = allEvents.map((event) => ({
-    ...event,
-    color: event.teamColor, // teamColor를 color 속성으로 매핑
-  }));
+  const filteredEvents = events.filter((event) => event.date === selectedDate);
+
+  const userRole = getRoleByTeamId(Number(teamId));
+  const isAdmin =
+    userRole?.role === "MANAGER" || userRole?.role === "SUB_MANAGER";
 
   return (
     <PageContainer>
-      <Header2 text="내 경기 일정" />
+      <Header2 text={`${teamName} 경기 일정`} />
 
       <CalendarContainer>
-        {/* Calendar 컴포넌트에는 teamColor가 매핑된 이벤트를 전달합니다. */}
         <Calendar
-          events={calendarDisplayEvents}
+          events={events.map((e) => ({ ...e, color: "#0e6244" }))}
           onDateSelect={setSelectedDate}
         />
       </CalendarContainer>
@@ -79,13 +87,11 @@ const PersonalCalendarPage: React.FC = () => {
           <InfoText>일정을 불러오는 중입니다...</InfoText>
         ) : filteredEvents.length > 0 ? (
           filteredEvents.map((event) => (
-            // 각 이벤트 카드에 고유의 팀 색상(teamColor)을 적용합니다.
-            <EventCard key={event.id} teamColor={event.teamColor}>
+            <EventCard key={event.id}>
               <EventTime>
                 {event.startTime} - {event.endTime}
               </EventTime>
               <EventDetails>
-                <EventTeamName>{event.teamName}</EventTeamName>
                 <EventTitle>{event.title}</EventTitle>
                 {event.location && (
                   <EventLocation>{event.location}</EventLocation>
@@ -97,11 +103,15 @@ const PersonalCalendarPage: React.FC = () => {
           <InfoText>선택된 날짜에 일정이 없습니다.</InfoText>
         )}
       </ScheduleListContainer>
+
+      {isAdmin && (
+        <AddScheduleButton onClick={handleAddSchedule}>+</AddScheduleButton>
+      )}
     </PageContainer>
   );
 };
 
-export default PersonalCalendarPage;
+export default TeamCalendarPage;
 
 // --- Styled Components ---
 
@@ -131,7 +141,7 @@ const ScheduleHeader = styled.h2`
   border-bottom: 1px solid #eee;
 `;
 
-const EventCard = styled.div<{ teamColor?: string }>`
+const EventCard = styled.div`
   display: flex;
   gap: 16px;
   padding: 16px;
@@ -139,27 +149,20 @@ const EventCard = styled.div<{ teamColor?: string }>`
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   margin-bottom: 12px;
-  border-left: 5px solid ${(props) => props.teamColor || "#ccc"};
+  border-left: 5px solid var(--color-main);
 `;
 
 const EventTime = styled.div`
   font-size: 14px;
   font-weight: 600;
-  color: #333;
+  color: var(--color-main);
   white-space: nowrap;
-  padding-top: 2px;
 `;
 
 const EventDetails = styled.div`
   display: flex;
   flex-direction: column;
   gap: 4px;
-`;
-
-const EventTeamName = styled.span`
-  font-size: 13px;
-  font-weight: 600;
-  color: #555;
 `;
 
 const EventTitle = styled.h3`
@@ -178,4 +181,27 @@ const InfoText = styled.p`
   text-align: center;
   color: #999;
   padding: 32px 0;
+`;
+
+const AddScheduleButton = styled.button`
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background-color: var(--color-main);
+  color: white;
+  border: none;
+  font-size: 32px;
+  font-weight: 300;
+  line-height: 56px;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  transition: transform 0.2s ease-in-out;
+
+  &:hover {
+    transform: scale(1.05);
+  }
 `;
