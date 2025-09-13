@@ -110,10 +110,8 @@ root.render(
         <Route path="/team/list" element={<TeamSelectListPage />} />
         {/* 팀 선수목록 페이지 */}
         <Route path="/team/:teamId/member" element={<TeamMemberListPage />} />
-        {/* 팀 캘린더 페이지 */}
-        <Route path="/team/:teamId/calendar" element={<CalendarPage />} />
         {/* 게시판 목록 페이지 */}
-        <Route path="/team/:teamId/notice" element={<TeamNoticePage />} />
+        <Route path="/team/notice" element={<TeamNoticePage />} />
         {/* 게시판 글 페이지 */}
         <Route
           path="/team/notice/:noticeId"
@@ -133,10 +131,7 @@ root.render(
 
         {/* 팀 매너지 관련 페이지 */}
         {/* 경기전략 페이지 */}
-        <Route
-          path="/manager/:teamId/team-strategy/:id"
-          element={<GameStrategy />}
-        />
+        <Route path="/team-strategy/:id" element={<GameStrategy />} />
         {/* 게시판 추가 페이지 */}
         <Route path="/team/notice/create" element={<TeamNoticeCreatePage />} />
         {/* 게시판 수정 페이지 */}

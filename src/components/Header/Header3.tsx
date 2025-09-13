@@ -3,20 +3,10 @@ import React, { useState } from "react";
 import styled from "styled-components";
 import { FaChevronDown, FaChevronUp, FaStar } from "react-icons/fa6";
 import HorizontalLine from "../Styled/HorizontalLine";
-import { useNavigate } from "react-router-dom";
 
 interface HeaderProps {
-<<<<<<< HEAD
-  selectedTeam: { teamId: number; teamName: string };
-  teams: {
-    teamImageUrl: any;
-    teamId: number;
-    teamName: string;
-  }[];
-=======
   selectedTeam: { teamId: number; teamName: string } | null;
   teams: { teamId: number; teamName: string }[];
->>>>>>> master
   onTeamChange: (teamId: number, teamName: string) => void;
   favoriteTeams: number[]; // 즐겨찾기된 팀 목록
   onToggleFavorite: (teamId: number, teamName: string) => void; // 즐겨찾기 토글 함수
@@ -36,13 +26,7 @@ const TeamNameWrapper = styled.div`
   align-items: center;
 `;
 
-<<<<<<< HEAD
-const TeamName = styled.h1`
-  font-size: 18px;
-`;
-=======
 const TeamName = styled.h1``;
->>>>>>> master
 
 const DropdownButton = styled.button`
   margin-left: 8px;
@@ -64,7 +48,7 @@ const ModalBackground = styled.div<{ isOpen: boolean }>`
 
 const ModalContent = styled.div`
   position: absolute;
-  top: 40px;
+  top: 50px;
   left: 50%;
 
   transform: translate(-50%, 0);
@@ -96,15 +80,14 @@ const TeamListItem = styled.li<{ isSelected: boolean }>`
 `;
 
 const StarIcon = styled.span<{ isFavorite: boolean }>`
-  font-size: 18px;
+  font-size: 24px;
   color: ${(props) =>
     props.isFavorite ? "var(--color-sub)" : "var(--color-dark1)"};
   cursor: pointer;
 `;
 
 const TeamNameText = styled.span`
-  font-size: 16px;
-  font-family: "Pretendard-Bold";
+  font-size: 14px;
 `;
 
 const LeftItems = styled.div`
@@ -124,24 +107,14 @@ const NavButton = styled.button`
   border: 1px solid var(--color-sub);
   border-radius: 6px;
   width: 80px;
-  height: 24px;
+  height: 20px;
   cursor: pointer;
-<<<<<<< HEAD
-  font-size: 13px;
-=======
   font-size: 14px;
->>>>>>> master
   &:first-child {
     margin-bottom: 5px;
   }
 `;
 
-const TeamProfileImg = styled.img`
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: #fff;
-`;
 const Header3: React.FC<HeaderProps> = ({
   selectedTeam,
   teams,
@@ -149,8 +122,6 @@ const Header3: React.FC<HeaderProps> = ({
   favoriteTeams,
   onToggleFavorite,
 }) => {
-  //const [isModalOpen, setIsModalOpen] = useState(false);
-  const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const toggleModal = () => {
@@ -178,12 +149,6 @@ const Header3: React.FC<HeaderProps> = ({
     <>
       <HeaderContainer>
         <TeamNameWrapper>
-          <StarIcon
-            style={{ marginRight: "5px" }}
-            isFavorite={isFavorite(selectedTeam.teamId)}
-          >
-            {isFavorite(selectedTeam.teamId) ? <FaStar /> : <FaStar />}
-          </StarIcon>
           <TeamName>{selectedTeam.teamName}</TeamName>
           <DropdownButton onClick={toggleModal}>
             {isModalOpen ? <FaChevronUp /> : <FaChevronDown />}
@@ -214,14 +179,7 @@ const Header3: React.FC<HeaderProps> = ({
                   >
                     {isFavorite(team.teamId) ? <FaStar /> : <FaStar />}
                   </StarIcon>
-<<<<<<< HEAD
-                  <TeamProfileImg src={team.teamImageUrl} />
-                  <RightItem>
-                    <TeamNameText>{team.teamName}</TeamNameText>
-                  </RightItem>
-=======
                   <TeamNameText>{team.teamName}</TeamNameText>
->>>>>>> master
                 </LeftItems>
                 <RightItem>
                   <NavButton
@@ -229,7 +187,7 @@ const Header3: React.FC<HeaderProps> = ({
                     onClick={(e) => {
                       e.stopPropagation();
                       // 공지사항으로 이동하는 로직 구현
-                      navigate(`/team/${team.teamId}/notice`);
+                      console.log(`${team.teamName}의 공지사항으로 이동`);
                     }}
                   >
                     공지사항
@@ -239,7 +197,7 @@ const Header3: React.FC<HeaderProps> = ({
                     onClick={(e) => {
                       e.stopPropagation();
                       // 팀 달력으로 이동하는 로직 구현
-                      navigate(`/team/${team.teamId}/calendar`);
+                      console.log(`${team.teamName}의 팀 달력으로 이동`);
                     }}
                   >
                     팀 달력

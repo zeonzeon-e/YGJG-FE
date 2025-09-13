@@ -151,34 +151,6 @@ const MainPage: React.FC = () => {
             />
           </ProfileWrapper>
 
-<<<<<<< HEAD
-      <Container>
-        {teamData && (
-          <>
-            <ProfileWrapper>
-              <TeamProfile>
-                <TeamProfileImg src={teamData.teamImageUrl} />
-                <TeamProfileInfor>
-                  <TeamProfileText>
-                    <FaLocationDot size={15} /> 홈그라운드
-                    <ColorText>{teamData.region}</ColorText>
-                  </TeamProfileText>
-                  <TeamProfileText>
-                    <FaPeopleGroup /> 연령대{" "}
-                    <ColorText>{teamData.ageRange}</ColorText>
-                  </TeamProfileText>
-                  <TeamProfileText>
-                    <FaHeart /> 내 포지션
-                  </TeamProfileText>
-                </TeamProfileInfor>
-              </TeamProfile>
-              <TeamProfileSetting
-                onClick={() => handleEditClick(selectedTeam.teamId)}
-              >
-                <IoSettingsSharp size={30} />
-              </TeamProfileSetting>
-            </ProfileWrapper>
-=======
           <StatsWrapper>
             <StatBox
               onClick={() => navigate(`/team/${selectedTeam.teamId}/members`)}
@@ -192,7 +164,6 @@ const MainPage: React.FC = () => {
               <strong>{teamData.dues.toLocaleString()}원</strong>
             </StatBox>
           </StatsWrapper>
->>>>>>> master
 
           <Section>
             <SectionTitle>주요 활동 일정</SectionTitle>
@@ -205,82 +176,6 @@ const MainPage: React.FC = () => {
             </ActivitySchedule>
           </Section>
 
-<<<<<<< HEAD
-            {/* <>
-          <TeamTitle>활동 시간</TeamTitle>
-          <TimeWrapper>
-        {timeBlock.map((hour, idx) => {
-          const isActive = teamData.activityTime.includes(hour); // 활성 상태 확인
-          return (
-            <TimeItemWrpper>
-            <TimeTitle>{hour === 0 ? "오전\n12시" : hour === 12 ? "오후\n12시" : hour === 6||hour === 9||hour === 15||hour === 18||hour === 21||hour === 3 ? `${hour}시` : ""}</TimeTitle>
-            <TimeItem key={hour} isActive={isActive}>
-
-            </TimeItem>
-            </TimeItemWrpper>
-
-          );
-        })}
-      </TimeWrapper>
-          </> */}
-
-            <TeamDetails className="shadow-df border-df">
-              <TeamTitle>
-                <div>공지사항</div>
-                <div
-                  style={{ color: "var(--color-info)" }}
-                  className="h5"
-                  onClick={() => handleNoticeClick(selectedTeam.teamId)}
-                >
-                  더보기
-                </div>
-              </TeamTitle>
-              {noticeList.length > 0 ? (
-                <NoticeList>
-                  {noticeList.slice(0, 2).map((notice) => (
-                    <NoticeItem
-                      className="shadow-df border-df"
-                      key={notice.id}
-                      onClick={() =>
-                        navigate(`notice/${notice.id}`, {
-                          state: {
-                            id: notice.id,
-                            teamId: selectedTeam.teamId,
-                          },
-                        })
-                      }
-                    >
-                      <NoticeTitle>{notice.title}</NoticeTitle>
-                      <NoticeDate>
-                        {new Date(notice.createAt).toLocaleDateString("ko-KR")}
-                      </NoticeDate>
-                    </NoticeItem>
-                  ))}
-                </NoticeList>
-              ) : (
-                <NoticeTitle>결과가 없습니다.</NoticeTitle>
-              )}
-            </TeamDetails>
-            <TeamDetails className="shadow-df border-df">
-              <TeamTitle>
-                <div>경기일정</div>
-                <div
-                  style={{ color: "var(--color-info)" }}
-                  className="h5"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    // 팀 달력으로 이동하는 로직 구현
-                    navigate(`/team/${selectedTeam.teamId}/calendar`);
-                  }}
-                >
-                  달력보기
-                </div>
-              </TeamTitle>
-            </TeamDetails>
-          </>
-        )}
-      </Container>
-=======
           <Section>
             <SectionHeader>
               <SectionTitle>공지사항</SectionTitle>
@@ -349,7 +244,6 @@ const MainPage: React.FC = () => {
           소속된 팀이 없거나 데이터를 불러올 수 없습니다.
         </LoadingContainer>
       )}
->>>>>>> master
     </>
   );
 };
@@ -370,67 +264,24 @@ const Container = styled.div`
 `;
 const ProfileWrapper = styled.div`
   display: flex;
-<<<<<<< HEAD
-  justify-content: space-between;
-  margin-top: 10px;
-`;
-const TeamProfile = styled.div`
-  display: flex;
-  justify-content: space-around;
-`;
-const TeamTitle = styled.div`
-  display: flex;
-  justify-content: space-between;
-=======
->>>>>>> master
   align-items: center;
   gap: 16px;
   margin-bottom: 24px;
 `;
-<<<<<<< HEAD
-const TeamProfileImg = styled.img`
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  margin-left: 30px;
-=======
 const ProfileImage = styled.img`
   width: 70px;
   height: 70px;
   border-radius: 50%;
   object-fit: cover;
   border: 1px solid #eee;
->>>>>>> master
 `;
 const ProfileInfo = styled.div`
   flex-grow: 1;
   display: flex;
   flex-direction: column;
-<<<<<<< HEAD
-  margin-left: 50px;
-  gap: 10px;
-  color: var(--color-dark2);
-`;
-const TeamProfileText = styled.div`
-  font-size: 16px;
-  align-items: center;
-  display: flex;
-  gap: 5px;
-`;
-const TeamProfileSetting = styled.div`
-  right: 0;
-`;
-
-const ColorText = styled.span`
-  color: var(--color-main);
-`;
-
-const ItemWrapper = styled.div`
-=======
   gap: 6px;
 `;
 const InfoText = styled.span`
->>>>>>> master
   display: flex;
   align-items: center;
   gap: 8px;
