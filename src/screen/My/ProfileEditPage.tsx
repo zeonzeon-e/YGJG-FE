@@ -129,7 +129,7 @@ const ProfileEditPage: React.FC = () => {
             />
             <MainButton width={100}>인증</MainButton>
           </FlexBox>
-          <SubTitle>생년월일 8자리</SubTitle>
+          <SubTitle>생년월일 6자리</SubTitle>
           <Input
             height={55}
             type="text"

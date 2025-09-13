@@ -2,160 +2,156 @@ import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import Header3 from "../../components/Header/Header3";
 import apiClient from "../../api/apiClient";
-import { FaLocationDot, FaPeopleGroup, FaHeart } from "react-icons/fa6";
+import { FaRegUserCircle, FaHeart, FaRocket } from "react-icons/fa";
 import { IoSettingsSharp } from "react-icons/io5";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../hooks/useAuth";
+import { TeamRole } from "../../stores/userStore";
+import { FaLocationDot } from "react-icons/fa6";
 
-interface TeamListItem {
-  position: string;
-  teamColor: string;
-  teamId: number;
-  teamImageUrl: string;
-  teamName: string;
+// --- 타입 정의 ---
+interface GameScheduleItem {
+  id: number;
+  date: string;
+  opponent: string;
+  location: string;
 }
-
-interface TeamData {
-  activityDays: string[];
-  activityTime: number[];
-  ageRange: string;
-  dues: string;
-  invitedCode: string;
-  matchLocation: string;
-  positionRequired: string[];
-  region: string;
-  teamGender: string;
-  teamImageUrl: string;
-  teamLevel: string;
-  teamName: string;
-  team_introduce: string;
-  town: string;
-}
-
 interface NoticeItem {
   id: number;
   title: string;
   createAt: Date;
+  isPinned?: boolean;
+}
+interface TeamData {
+  teamImageUrl: string;
+  region: string;
+  ageRange: string;
+  matchLocation: string;
+  playerCount: number;
+  dues: number;
+  mainActivityDay: string;
+  mainActivityStartTime: string;
+  mainActivityEndTime: string;
 }
 
-const dummyTeamList: TeamListItem[] = [
-  {
-    position: "FW",
-    teamColor: "#FF6B6B",
-    teamId: 1,
-    teamImageUrl:
-      "https://images.unsplash.com/photo-1508672019048-805c876b67e2?w=400&q=80",
-    teamName: "서울 퓨리어스",
-  },
-  {
-    position: "MF",
-    teamColor: "#4ECDC4",
-    teamId: 2,
-    teamImageUrl:
-      "https://images.unsplash.com/photo-1521412644187-c49fa049e84d?w=400&q=80",
-    teamName: "부산 스톰",
-  },
-];
+// --- 헬퍼 함수 ---
+const calculateDday = (dateString: string): string => {
+  const today = new Date();
+  const targetDate = new Date(dateString);
+  today.setHours(0, 0, 0, 0);
+  targetDate.setHours(0, 0, 0, 0);
+  const diffTime = targetDate.getTime() - today.getTime();
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  if (diffDays === 0) return "D-DAY";
+  if (diffDays > 0) return `D-${diffDays}`;
+  return `D+${Math.abs(diffDays)}`;
+};
+const formatDate = (dateString: string): string => {
+  const date = new Date(dateString);
+  const month = date.getMonth() + 1;
+  const day = date.getDate();
+  const dayOfWeek = ["일", "월", "화", "수", "목", "금", "토"][date.getDay()];
+  return `${String(month).padStart(2, "0")}/${String(day).padStart(
+    2,
+    "0"
+  )} ${dayOfWeek}요일`;
+};
 
 const MainPage: React.FC = () => {
-  const [selectedTeam, setselectedTeam] = useState<{
+  const { teams, isLoading: isAuthLoading } = useAuth();
+
+  const [selectedTeam, setSelectedTeam] = useState<{
     teamId: number;
     teamName: string;
-  }>({
-    teamId: 0,
-    teamName: "",
-  });
-  const [teamList, setTeamList] = useState<TeamListItem[]>([]);
-  const [teamData, setTeamData] = useState<TeamData>();
-  const [favoriteTeams, setFavoriteTeams] = useState<number[]>([]);
+  } | null>(null);
+  const [teamData, setTeamData] = useState<TeamData | null>(null);
   const [noticeList, setNoticeList] = useState<NoticeItem[]>([]);
-
+  const [gameScheduleList, setGameScheduleList] = useState<GameScheduleItem[]>(
+    []
+  );
+  const [favoriteTeams, setFavoriteTeams] = useState<number[]>([1]);
+  const [isPageLoading, setIsPageLoading] = useState<boolean>(true);
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (dummyTeamList.length > 0) setselectedTeam(dummyTeamList[0]);
-
-    const fetchTeamList = async () => {
-      try {
-        const response = await apiClient.get("api/myPage/teams");
-        setTeamList(response.data);
-        if (response.data.length > 0) setselectedTeam(response.data[0]);
-      } catch (err) {
-        console.error("Error fetching team list:", err);
-      }
-    };
-    fetchTeamList();
-  }, []);
+    if (teams && teams.length > 0 && !selectedTeam) {
+      setSelectedTeam({ teamId: teams[0].teamId, teamName: teams[0].teamName });
+    }
+  }, [teams, selectedTeam]);
 
   useEffect(() => {
-    if (selectedTeam.teamId === 0) return;
+    if (!selectedTeam) return;
 
-    const teamId = selectedTeam.teamId;
-    const fetchTeamData = async () => {
+    const fetchPageData = async () => {
+      setIsPageLoading(true);
       try {
-        const response = await apiClient.get(`api/team/${teamId}`);
-        setTeamData(response.data);
-      } catch (err) {
-        console.error("Error fetching team data:", err);
+        const teamId = selectedTeam.teamId;
+        const [teamDetailsRes, noticesRes, gamesRes] = await Promise.all([
+          apiClient.get<TeamData>(`/api/teams/${teamId}/details`),
+          apiClient.get<NoticeItem[]>(`/api/teams/${teamId}/notices`),
+          apiClient.get<GameScheduleItem[]>(`/api/teams/${teamId}/games`),
+        ]);
+        setTeamData(teamDetailsRes.data);
+        setNoticeList(noticesRes.data);
+        setGameScheduleList(gamesRes.data);
+      } catch (error) {
+        console.error("Failed to fetch page data:", error);
+      } finally {
+        setIsPageLoading(false);
       }
     };
 
-    const fetchNoticeList = async () => {
-      try {
-        const response = await apiClient.get(
-          "/api/announcement/member/get-all",
-          {
-            params: { teamId },
-          }
-        );
-        setNoticeList(response.data);
-      } catch (err) {
-        console.error("데이터를 가져오는 중 에러가 발생했습니다.", err);
-      }
-    };
-
-    fetchTeamData();
-    fetchNoticeList();
+    fetchPageData();
   }, [selectedTeam]);
 
-  const handleTeamChange = (teamId: number, teamName: string) => {
-    setselectedTeam({ teamId, teamName });
-  };
+  const handleTeamChange = (teamId: number, teamName: string) =>
+    setSelectedTeam({ teamId, teamName });
+  const handleEditClick = (teamId: number) => navigate(`/team-edit/${teamId}`);
 
-  const handleEditClick = (teamId: number) => {
-    const teamEdit = teamList.find((item) => item.teamId === teamId);
-    navigate(`/team-edit/${teamId}`, {
-      state: {
-        teamId: teamEdit?.teamId,
-        teamColor: teamEdit?.teamColor,
-        position: teamEdit?.position,
-      },
-    });
-  };
+  // 공지사항 이동을 위한 navigateTo 함수는 유지합니다.
+  const navigateToNotice = (path: string) =>
+    navigate(path, { state: { teamId: selectedTeam?.teamId } });
 
-  const handleNoticeClick = (teamId: number) => {
-    navigate("notice", { state: { teamId } });
-  };
+  if (isAuthLoading) {
+    return <div>사용자 정보 로딩 중...</div>;
+  }
 
-  const handleToggleFavorite = (teamId: number) => {
-    setFavoriteTeams((prevFavorites = []) => {
-      if (prevFavorites.includes(teamId)) {
-        return prevFavorites.filter((favTeam) => favTeam !== teamId);
-      } else {
-        return [...prevFavorites, teamId];
-      }
-    });
-  };
+  const currentTeamInfo = teams?.find((t) => t.teamId === selectedTeam?.teamId);
 
   return (
     <>
       <Header3
         selectedTeam={selectedTeam}
-        teams={teamList}
+        teams={teams || []}
         onTeamChange={handleTeamChange}
         favoriteTeams={favoriteTeams}
-        onToggleFavorite={handleToggleFavorite}
+        onToggleFavorite={() => {}}
       />
+      {isPageLoading ? (
+        <LoadingContainer>
+          페이지 데이터를 불러오는 중입니다...
+        </LoadingContainer>
+      ) : teamData && selectedTeam ? (
+        <Container>
+          <ProfileWrapper>
+            <ProfileImage src={teamData.teamImageUrl} alt="Profile" />
+            <ProfileInfo>
+              <InfoText>
+                <FaLocationDot /> 홈그라운드 {teamData.matchLocation}
+              </InfoText>
+              <InfoText>
+                <FaRegUserCircle /> 연령대 {teamData.ageRange}
+              </InfoText>
+              <InfoText>
+                <FaHeart /> 내 포지션 {currentTeamInfo?.position}
+              </InfoText>
+            </ProfileInfo>
+            <SettingsIcon
+              onClick={() => handleEditClick(selectedTeam.teamId)}
+            />
+          </ProfileWrapper>
 
+<<<<<<< HEAD
       <Container>
         {teamData && (
           <>
@@ -182,26 +178,34 @@ const MainPage: React.FC = () => {
                 <IoSettingsSharp size={30} />
               </TeamProfileSetting>
             </ProfileWrapper>
+=======
+          <StatsWrapper>
+            <StatBox
+              onClick={() => navigate(`/team/${selectedTeam.teamId}/members`)}
+            >
+              <span>선수 수</span>
+              <strong>{teamData.playerCount}</strong>
+              <ArrowSpan>&gt;</ArrowSpan>
+            </StatBox>
+            <StatBox>
+              <span>회비/월</span>
+              <strong>{teamData.dues.toLocaleString()}원</strong>
+            </StatBox>
+          </StatsWrapper>
+>>>>>>> master
 
-            {/* <p>팀 이름: {teamData.teamName}</p>  */}
-            {/* <p>소개: {teamData.team_introduce}</p>
-              <>
-                <TeamTitle>활동 요일</TeamTitle>
-                {/* <ItemWrapper>
-                  {activityDays.map((item) => {
-                    // const isActive = teamData.activityDays.includes(item); // 해당 요일이 활성화 상태인지 확인
-                    return (
-                      <ActivityDaysItem
-                        key={item}
-                        isActive={isActive}
-                        className="border-df shadow-df"
-                      >
-                        {item.slice(0, 1)}
-                      </ActivityDaysItem>
-                    );
-                  })}
-                </ItemWrapper> */}
+          <Section>
+            <SectionTitle>주요 활동 일정</SectionTitle>
+            <ActivitySchedule>
+              <DayBadge>{teamData.mainActivityDay}</DayBadge>
+              <TimeRange>
+                시작: {teamData.mainActivityStartTime} - 끝:{" "}
+                {teamData.mainActivityEndTime}
+              </TimeRange>
+            </ActivitySchedule>
+          </Section>
 
+<<<<<<< HEAD
             {/* <>
           <TeamTitle>활동 시간</TeamTitle>
           <TimeWrapper>
@@ -276,27 +280,97 @@ const MainPage: React.FC = () => {
           </>
         )}
       </Container>
+=======
+          <Section>
+            <SectionHeader>
+              <SectionTitle>공지사항</SectionTitle>
+              <MoreLink onClick={() => navigateToNotice("notice")}>
+                더보기
+              </MoreLink>
+            </SectionHeader>
+            <NoticeList>
+              {noticeList && noticeList.length > 0 ? (
+                noticeList.slice(0, 3).map((notice) => (
+                  <NoticeItem
+                    key={notice.id}
+                    onClick={() => navigateToNotice(`notice/${notice.id}`)}
+                  >
+                    <div>
+                      {notice.isPinned && <RocketIcon />}
+                      <span>{notice.title}</span>
+                    </div>
+                    <DateText>
+                      {new Date(notice.createAt)
+                        .toISOString()
+                        .split("T")[0]
+                        .replace(/-/g, ". ")}
+                    </DateText>
+                  </NoticeItem>
+                ))
+              ) : (
+                <NoDataText>등록된 공지사항이 없습니다.</NoDataText>
+              )}
+            </NoticeList>
+          </Section>
+
+          <Section>
+            <SectionHeader>
+              <SectionTitle>경기일정</SectionTitle>
+              <MoreLink
+                onClick={() =>
+                  navigate(`/team/${selectedTeam.teamId}/calendar`, {
+                    state: { teamName: selectedTeam.teamName },
+                  })
+                }
+              >
+                달력보기
+              </MoreLink>
+            </SectionHeader>
+            <GameList>
+              {gameScheduleList && gameScheduleList.length > 0 ? (
+                gameScheduleList.map((game) => (
+                  <GameItem key={game.id}>
+                    <GameDateInfo>
+                      <span>{formatDate(game.date)}</span>
+                      <DdayBadge>{calculateDday(game.date)}</DdayBadge>
+                    </GameDateInfo>
+                    <GameOpponent>{game.opponent}</GameOpponent>
+                    <GameLocation>{game.location}</GameLocation>
+                  </GameItem>
+                ))
+              ) : (
+                <NoDataBox>등록된 경기 일정이 없습니다.</NoDataBox>
+              )}
+            </GameList>
+          </Section>
+        </Container>
+      ) : (
+        <LoadingContainer>
+          소속된 팀이 없거나 데이터를 불러올 수 없습니다.
+        </LoadingContainer>
+      )}
+>>>>>>> master
     </>
   );
 };
 
 export default MainPage;
 
-// Styled Components
+// --- Styled Components (이전과 동일) ---
+const LoadingContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 50vh;
+  color: #888;
+`;
 const Container = styled.div`
-  padding-right: 20px;
-  padding-left: 20px;
+  padding: 16px;
+  background-color: #fff;
 `;
-
-const TeamDetails = styled.div`
-  margin-top: 20px;
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-`;
-
 const ProfileWrapper = styled.div`
   display: flex;
+<<<<<<< HEAD
   justify-content: space-between;
   margin-top: 10px;
 `;
@@ -307,18 +381,32 @@ const TeamProfile = styled.div`
 const TeamTitle = styled.div`
   display: flex;
   justify-content: space-between;
+=======
+>>>>>>> master
   align-items: center;
-  margin-bottom: 10px;
+  gap: 16px;
+  margin-bottom: 24px;
 `;
+<<<<<<< HEAD
 const TeamProfileImg = styled.img`
   width: 80px;
   height: 80px;
   border-radius: 50%;
   margin-left: 30px;
+=======
+const ProfileImage = styled.img`
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid #eee;
+>>>>>>> master
 `;
-const TeamProfileInfor = styled.div`
+const ProfileInfo = styled.div`
+  flex-grow: 1;
   display: flex;
   flex-direction: column;
+<<<<<<< HEAD
   margin-left: 50px;
   gap: 10px;
   color: var(--color-dark2);
@@ -338,80 +426,164 @@ const ColorText = styled.span`
 `;
 
 const ItemWrapper = styled.div`
-  display: flex;
-  justify-content: space-between;
+=======
+  gap: 6px;
 `;
-const ActivityDaysItem = styled.div<{ isActive: boolean }>`
-  width: 15px;
-  height: 15px;
-  border-radius: 8px;
-  padding: 10px;
+const InfoText = styled.span`
+>>>>>>> master
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-size: 14px;
-  text-align: center;
-  background-color: ${({ isActive }) =>
-    isActive
-      ? "var(--color-main)"
-      : "#ffffff"}; /* 활성화: 초록색, 비활성화: 회색 */
-  color: ${({ isActive }) =>
-    isActive ? "#ffffff" : "#9e9e9e"}; /* 활성화: 흰색, 비활성화: 연한 회색 */
+  color: #555;
 `;
-const TimeWrapper = styled.div`
+const SettingsIcon = styled(IoSettingsSharp)`
+  font-size: 24px;
+  color: #888;
+  cursor: pointer;
+`;
+const StatsWrapper = styled.div`
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+`;
+const StatBox = styled.div`
+  flex: 1;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-top: 10px;
-`;
+  padding: 16px;
+  border-radius: 12px;
+  background-color: #f7f7f7;
+  border: 1px solid #eee;
+  font-size: 15px;
+  color: #333;
+  cursor: pointer;
 
-const TimeItem = styled.div<{ isActive: boolean }>`
+  strong {
+    font-weight: 600;
+    color: var(--color-main);
+  }
+`;
+const ArrowSpan = styled.span`
+  color: #ccc;
+  font-weight: 600;
+`;
+const Section = styled.div`
+  margin-bottom: 24px;
+`;
+const SectionHeader = styled.div`
   display: flex;
-  flex-direction: column;
+  justify-content: space-between;
   align-items: center;
-  justify-content: center;
-  width: 12px;
-  height: 50px;
-  margin: 0 1px;
-  border-radius: 20px;
-  background-color: ${({ isActive }) =>
-    isActive ? "#4caf50" : "#e0e0e0"}; /* 활성화: 초록색, 비활성화: 회색 */
-  color: ${({ isActive }) =>
-    isActive ? "#ffffff" : "#9e9e9e"}; /* 활성화: 흰색, 비활성화: 연한 회색 */
+  margin-bottom: 12px;
 `;
-
-const TimeItemWrpper = styled.div`
+const SectionTitle = styled.h2`
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+`;
+const MoreLink = styled.a`
+  font-size: 14px;
+  color: #888;
+  cursor: pointer;
+`;
+const ActivitySchedule = styled.div`
   display: flex;
-  flex-direction: column;
-  font-size: 11px;
-  text-align: center;
-  white-space: pre-line;
-  align-self: flex-end;
   align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  background-color: #f7f7f7;
+  border-radius: 12px;
+  border: 1px solid #eee;
+  font-size: 15px;
 `;
-const TimeTitle = styled.div`
-  word-break: keep-all;
+const DayBadge = styled.span`
+  padding: 4px 10px;
+  background-color: #e9e9e9;
+  border-radius: 16px;
+  font-weight: 500;
 `;
-
+const TimeRange = styled.span`
+  color: var(--color-main);
+  font-weight: 600;
+`;
 const NoticeList = styled.ul`
   list-style: none;
-  padding: 0;
+  padding: 8px;
+  margin: 0;
+  background-color: #fff;
+  border-radius: 12px;
+  border: 1px solid #eee;
 `;
-
 const NoticeItem = styled.li`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px;
-  margin-bottom: 10px;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  background-color: white;
-`;
+  padding: 12px;
+  cursor: pointer;
 
-const NoticeTitle = styled.div`
+  &:not(:last-child) {
+    border-bottom: 1px solid #f5f5f5;
+  }
+`;
+const RocketIcon = styled(FaRocket)`
+  color: #ff4d4d;
+  margin-right: 8px;
+`;
+const DateText = styled.span`
+  font-size: 13px;
+  color: #999;
+  white-space: nowrap;
+`;
+const NoDataText = styled.div`
+  text-align: center;
+  padding: 20px;
+  color: #888;
   font-size: 14px;
 `;
-
-const NoticeDate = styled.div`
+const GameList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+`;
+const GameItem = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: auto auto;
+  gap: 4px 12px;
+  padding: 16px;
+  background-color: #fff;
+  border-radius: 12px;
+  border: 1px solid #eee;
+`;
+const NoDataBox = styled(NoDataText)`
+  background-color: #fff;
+  border: 1px solid #eee;
+  border-radius: 12px;
+`;
+const GameDateInfo = styled.div`
+  grid-column: 1 / 2;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+`;
+const DdayBadge = styled.span`
+  padding: 3px 8px;
+  background-color: #ffeeee;
+  color: #ff4d4d;
+  border-radius: 8px;
   font-size: 12px;
-  color: #888;
-  white-space: nowrap;
+  font-weight: 600;
+`;
+const GameOpponent = styled.span`
+  grid-column: 2 / 3;
+  text-align: right;
+  font-weight: 500;
+`;
+const GameLocation = styled.span`
+  grid-column: 1 / 3;
+  color: #777;
+  font-size: 14px;
 `;

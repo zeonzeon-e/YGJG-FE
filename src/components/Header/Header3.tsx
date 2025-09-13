@@ -6,12 +6,17 @@ import HorizontalLine from "../Styled/HorizontalLine";
 import { useNavigate } from "react-router-dom";
 
 interface HeaderProps {
+<<<<<<< HEAD
   selectedTeam: { teamId: number; teamName: string };
   teams: {
     teamImageUrl: any;
     teamId: number;
     teamName: string;
   }[];
+=======
+  selectedTeam: { teamId: number; teamName: string } | null;
+  teams: { teamId: number; teamName: string }[];
+>>>>>>> master
   onTeamChange: (teamId: number, teamName: string) => void;
   favoriteTeams: number[]; // 즐겨찾기된 팀 목록
   onToggleFavorite: (teamId: number, teamName: string) => void; // 즐겨찾기 토글 함수
@@ -31,9 +36,13 @@ const TeamNameWrapper = styled.div`
   align-items: center;
 `;
 
+<<<<<<< HEAD
 const TeamName = styled.h1`
   font-size: 18px;
 `;
+=======
+const TeamName = styled.h1``;
+>>>>>>> master
 
 const DropdownButton = styled.button`
   margin-left: 8px;
@@ -117,7 +126,11 @@ const NavButton = styled.button`
   width: 80px;
   height: 24px;
   cursor: pointer;
+<<<<<<< HEAD
   font-size: 13px;
+=======
+  font-size: 14px;
+>>>>>>> master
   &:first-child {
     margin-bottom: 5px;
   }
@@ -150,6 +163,16 @@ const Header3: React.FC<HeaderProps> = ({
   };
 
   const isFavorite = (teamId: number) => favoriteTeams.includes(teamId);
+
+  // selectedTeam이 null일 경우를 대비한 로직 추가
+  if (!selectedTeam) {
+    // 선택된 팀이 없으면 헤더에 기본 텍스트나 로딩 상태를 표시할 수 있습니다.
+    return (
+      <HeaderContainer>
+        <TeamName>팀 선택</TeamName>
+      </HeaderContainer>
+    );
+  }
 
   return (
     <>
@@ -191,10 +214,14 @@ const Header3: React.FC<HeaderProps> = ({
                   >
                     {isFavorite(team.teamId) ? <FaStar /> : <FaStar />}
                   </StarIcon>
+<<<<<<< HEAD
                   <TeamProfileImg src={team.teamImageUrl} />
                   <RightItem>
                     <TeamNameText>{team.teamName}</TeamNameText>
                   </RightItem>
+=======
+                  <TeamNameText>{team.teamName}</TeamNameText>
+>>>>>>> master
                 </LeftItems>
                 <RightItem>
                   <NavButton

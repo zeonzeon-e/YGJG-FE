@@ -1,3 +1,5 @@
+// src/screen/Auth/LoginPage.tsx
+
 import React, { useState, useCallback } from "react";
 import styled from "styled-components";
 import { Link, useNavigate } from "react-router-dom";
@@ -6,6 +8,7 @@ import { CgCloseO } from "react-icons/cg";
 import { RiKakaoTalkFill } from "react-icons/ri";
 import { FcGoogle } from "react-icons/fc";
 import { AxiosResponse } from "axios";
+import { useAuth } from "../../hooks/useAuth";
 import Header1 from "../../components/Header/Header1/Header1";
 import { setAccessToken, setRefreshToken } from "../../utils/authUtils";
 import apiClient from "../../api/apiClient";
@@ -16,6 +19,7 @@ const LoginPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string>("");
   const navigate = useNavigate();
+  const { handleLoginSuccess } = useAuth();
 
   const KAKAO_AUTH_URL =
     "https://kauth.kakao.com/oauth/authorize?response_type=code&client_id=6de9c9ef1556266bf0bab36b47b7360d&redirect_uri=http://localhost:3000/auth/kakao/callback";
@@ -66,22 +70,16 @@ const LoginPage: React.FC = () => {
     const loginData = { email, password };
 
     try {
-      const response: AxiosResponse<{ token: string; refreshToken: string }> =
-        await apiClient.post("api/sign/sign-in", loginData);
+      const response = await apiClient.post("api/sign/sign-in", loginData);
 
-      if (response.status === 200 || response.status === 201) {
+      if (response.status === 200) {
         const { token, refreshToken } = response.data;
-        setAccessToken(token);
-        setRefreshToken(refreshToken);
-        setPassword("");
-        goToMainPage();
+        await handleLoginSuccess(token, refreshToken);
       } else {
-        setErrorMessage("로그인에 실패했습니다. 다시 시도해주세요.");
+        setErrorMessage("로그인에 실패했습니다.");
       }
     } catch (error) {
-      setErrorMessage(
-        "로그인에 실패했습니다. 이메일과 비밀번호를 확인해주세요."
-      );
+      setErrorMessage("이메일과 비밀번호를 확인해주세요.");
     }
   };
 
