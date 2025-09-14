@@ -1,5 +1,5 @@
 import { FaMagnifyingGlass, FaXmark } from "react-icons/fa6";
-import {FaTimes} from "react-icons/fa";
+import { FaTimes } from "react-icons/fa";
 import { RiSendPlane2Fill } from "react-icons/ri";
 import React, { useState } from "react";
 import "./Searchbar.css";

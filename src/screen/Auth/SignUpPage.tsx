@@ -805,7 +805,10 @@ const SignupPage: React.FC = () => {
           }
         } else {
           // 일반 회원가입
-          const response = await apiClient.post("api/sign/sign-up", dataToSend);
+          const response = await apiClient.post("api/sign/sign-up", null, {
+            params: dataToSend,
+          });
+          console.log(response);
           if (response.status === 200 || response.status === 201) {
             alert("회원가입에 성공했습니다. 로그인 해주세요.");
             setStep(step + 1);
