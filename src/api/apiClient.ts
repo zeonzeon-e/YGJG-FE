@@ -103,7 +103,7 @@ apiClient.interceptors.response.use(
 
       try {
         const response = await axios.post(
-          "http://3.39.190.66:8080/auth/refresh",
+          "http://3.39.190.66:8080/auth/token/refresh",
           {
             refreshToken: refreshToken,
           }
