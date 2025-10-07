@@ -9,29 +9,38 @@ import { useAuth } from "../../hooks/useAuth";
 import { TeamRole } from "../../stores/userStore";
 import { FaLocationDot } from "react-icons/fa6";
 
-// --- 타입 정의 ---
+// --- 최종 타입 정의 ---
+// GET /api/team/{teamId} 응답 타입
+interface TeamDetailResponse {
+  activitySchedule: string[][];
+  ageRange: string;
+  dues: number;
+  inviteCode: string;
+  matchLocation: string;
+  memberCount: number;
+  positionRequired: string[];
+  region: string;
+  teamGender: string;
+  teamImageUrl: string;
+  teamLevel: string;
+  teamName: string;
+  team_introduce: string;
+  town: string;
+}
+
+// GET /api/announcement/member/get-all 응답 타입
+interface AnnouncementListItem {
+  id: number;
+  title: string;
+  createAt: string;
+}
+
+// 누락되었던 GameScheduleItem 타입 정의를 추가합니다.
 interface GameScheduleItem {
   id: number;
   date: string;
   opponent: string;
   location: string;
-}
-interface NoticeItem {
-  id: number;
-  title: string;
-  createAt: Date;
-  isPinned?: boolean;
-}
-interface TeamData {
-  teamImageUrl: string;
-  region: string;
-  ageRange: string;
-  matchLocation: string;
-  playerCount: number;
-  dues: number;
-  mainActivityDay: string;
-  mainActivityStartTime: string;
-  mainActivityEndTime: string;
 }
 
 // --- 헬퍼 함수 ---
@@ -46,6 +55,7 @@ const calculateDday = (dateString: string): string => {
   if (diffDays > 0) return `D-${diffDays}`;
   return `D+${Math.abs(diffDays)}`;
 };
+
 const formatDate = (dateString: string): string => {
   const date = new Date(dateString);
   const month = date.getMonth() + 1;
@@ -57,28 +67,41 @@ const formatDate = (dateString: string): string => {
   )} ${dayOfWeek}요일`;
 };
 
+// activitySchedule 데이터를 GameScheduleItem 타입으로 변환
+const parseActivitySchedule = (schedule: string[][]): GameScheduleItem[] => {
+  return schedule.map((item, index) => ({
+    id: index, // 고유한 id가 없으므로 배열 인덱스를 사용
+    date: item[0],
+    opponent: item[1] || "미정",
+    location: item[2] || "미정",
+  }));
+};
+
 const MainPage: React.FC = () => {
   const { teams, isLoading: isAuthLoading } = useAuth();
 
-  const [selectedTeam, setSelectedTeam] = useState<{
-    teamId: number;
-    teamName: string;
-  } | null>(null);
-  const [teamData, setTeamData] = useState<TeamData | null>(null);
-  const [noticeList, setNoticeList] = useState<NoticeItem[]>([]);
+  // selectedTeam 상태의 타입을 TeamRole로 변경
+  const [selectedTeam, setSelectedTeam] = useState<TeamRole | null>(null);
+  const [teamData, setTeamData] = useState<TeamDetailResponse | null>(null);
+  const [noticeList, setNoticeList] = useState<AnnouncementListItem[]>([]);
   const [gameScheduleList, setGameScheduleList] = useState<GameScheduleItem[]>(
     []
   );
-  const [favoriteTeams, setFavoriteTeams] = useState<number[]>([1]);
   const [isPageLoading, setIsPageLoading] = useState<boolean>(true);
   const navigate = useNavigate();
 
+  // 로그인된 유저 정보가 로딩되면 첫 팀을 선택합니다.
   useEffect(() => {
-    if (teams && teams.length > 0 && !selectedTeam) {
-      setSelectedTeam({ teamId: teams[0].teamId, teamName: teams[0].teamName });
+    if (!isAuthLoading && teams && teams.length > 0) {
+      if (!selectedTeam) {
+        // favoriteTeam 속성 오류를 해결하기 위해 userStore.ts 수정이 필요합니다.
+        // 아래 수정 사항을 먼저 적용해주세요.
+        setSelectedTeam(teams.find((team) => team.favoriteTeam) || teams[0]);
+      }
     }
-  }, [teams, selectedTeam]);
+  }, [teams, isAuthLoading, selectedTeam]);
 
+  // 선택된 팀이 변경될 때마다 데이터를 다시 불러옵니다.
   useEffect(() => {
     if (!selectedTeam) return;
 
@@ -86,14 +109,26 @@ const MainPage: React.FC = () => {
       setIsPageLoading(true);
       try {
         const teamId = selectedTeam.teamId;
-        const [teamDetailsRes, noticesRes, gamesRes] = await Promise.all([
-          apiClient.get<TeamData>(`/api/teams/${teamId}/details`),
-          apiClient.get<NoticeItem[]>(`/api/teams/${teamId}/notices`),
-          apiClient.get<GameScheduleItem[]>(`/api/teams/${teamId}/games`),
-        ]);
+
+        // 1. 팀 상세 정보 API 호출 (새로운 명세 적용)
+        const teamDetailsRes = await apiClient.get<TeamDetailResponse>(
+          `/api/team/${teamId}`
+        );
+
+        // 2. 공지사항 목록 API 호출 (새로운 명세 적용)
+        const noticesRes = await apiClient.get<AnnouncementListItem[]>(
+          "/api/announcement/member/get-all",
+          { params: { teamId } }
+        );
+
+        // 3. 경기 일정 데이터는 팀 상세 정보 응답에서 파싱
+        const parsedGameSchedule = parseActivitySchedule(
+          teamDetailsRes.data.activitySchedule
+        );
+
         setTeamData(teamDetailsRes.data);
         setNoticeList(noticesRes.data);
-        setGameScheduleList(gamesRes.data);
+        setGameScheduleList(parsedGameSchedule);
       } catch (error) {
         console.error("Failed to fetch page data:", error);
       } finally {
@@ -104,34 +139,55 @@ const MainPage: React.FC = () => {
     fetchPageData();
   }, [selectedTeam]);
 
-  const handleTeamChange = (teamId: number, teamName: string) =>
-    setSelectedTeam({ teamId, teamName });
-  const handleEditClick = (teamId: number) => navigate(`/team-edit/${teamId}`);
+  // Header3 컴포넌트의 onTeamChange prop에 맞게 함수 시그니처를 수정합니다.
+  const handleTeamChange = (teamId: number, teamName: string) => {
+    const newSelectedTeam = teams?.find((team) => team.teamId === teamId);
+    if (newSelectedTeam) {
+      setSelectedTeam(newSelectedTeam);
+    }
+  };
 
-  // 공지사항 이동을 위한 navigateTo 함수는 유지합니다.
-  const navigateToNotice = (path: string) =>
-    navigate(path, { state: { teamId: selectedTeam?.teamId } });
+  const handleEditClick = (teamId: number) => navigate(`/manager/${teamId}`);
+
+  // 공지사항 상세 페이지로 이동하는 함수
+  const navigateToNoticeDetail = (noticeId: number) => {
+    navigate(`/team/${selectedTeam?.teamId}/notice/${noticeId}`);
+  };
 
   if (isAuthLoading) {
-    return <div>사용자 정보 로딩 중...</div>;
+    return <LoadingContainer>사용자 정보 로딩 중...</LoadingContainer>;
   }
 
-  const currentTeamInfo = teams?.find((t) => t.teamId === selectedTeam?.teamId);
+  const currentTeamInfo = selectedTeam;
 
   return (
     <>
-      <Header3
-        selectedTeam={selectedTeam}
-        teams={teams || []}
-        onTeamChange={handleTeamChange}
-        favoriteTeams={favoriteTeams}
-        onToggleFavorite={() => {}}
-      />
+      {teams && teams.length > 0 ? (
+        <Header3
+          selectedTeam={selectedTeam}
+          teams={teams || []}
+          onTeamChange={handleTeamChange}
+          // favoriteTeams prop에 맞게 teams 배열을 필터링합니다.
+          favoriteTeams={teams
+            .filter((t) => t.favoriteTeam)
+            .map((t) => t.teamId)}
+          onToggleFavorite={() => {}}
+        />
+      ) : (
+        // 팀이 없을 때의 헤더
+        <Header3
+          selectedTeam={null}
+          teams={[]}
+          onTeamChange={handleTeamChange}
+          favoriteTeams={[]}
+          onToggleFavorite={() => {}}
+        />
+      )}
       {isPageLoading ? (
         <LoadingContainer>
           페이지 데이터를 불러오는 중입니다...
         </LoadingContainer>
-      ) : teamData && selectedTeam ? (
+      ) : teamData && currentTeamInfo ? (
         <Container>
           <ProfileWrapper>
             <ProfileImage src={teamData.teamImageUrl} alt="Profile" />
@@ -147,16 +203,16 @@ const MainPage: React.FC = () => {
               </InfoText>
             </ProfileInfo>
             <SettingsIcon
-              onClick={() => handleEditClick(selectedTeam.teamId)}
+              onClick={() => handleEditClick(currentTeamInfo.teamId)}
             />
           </ProfileWrapper>
 
           <StatsWrapper>
             <StatBox
-              onClick={() => navigate(`/team/${selectedTeam.teamId}/members`)}
+              onClick={() => navigate(`/team/${currentTeamInfo.teamId}/member`)}
             >
               <span>선수 수</span>
-              <strong>{teamData.playerCount}</strong>
+              <strong>{teamData.memberCount}</strong>
               <ArrowSpan>&gt;</ArrowSpan>
             </StatBox>
             <StatBox>
@@ -164,22 +220,39 @@ const MainPage: React.FC = () => {
               <strong>{teamData.dues.toLocaleString()}원</strong>
             </StatBox>
           </StatsWrapper>
-
+          <Section>
+            <SectionTitle>팀 소개</SectionTitle>
+            <TeamIntroduce>
+              {teamData.team_introduce || "등록된 팀 소개가 없습니다."}
+            </TeamIntroduce>
+          </Section>
           <Section>
             <SectionTitle>주요 활동 일정</SectionTitle>
-            <ActivitySchedule>
-              <DayBadge>{teamData.mainActivityDay}</DayBadge>
-              <TimeRange>
-                시작: {teamData.mainActivityStartTime} - 끝:{" "}
-                {teamData.mainActivityEndTime}
-              </TimeRange>
-            </ActivitySchedule>
+            {/* teamData의 activitySchedule을 사용하도록 수정 */}
+            {teamData &&
+            teamData.activitySchedule &&
+            teamData.activitySchedule.length > 0 ? (
+              <ActivitySchedule>
+                {/* activitySchedule의 첫 번째 요소에서 요일과 시간을 추출하여 표시합니다. */}
+                <DayBadge>{teamData.activitySchedule[0][0]}</DayBadge>
+                <TimeRange>
+                  시작: {teamData.activitySchedule[0][1] || "미정"} - 끝:{" "}
+                  {teamData.activitySchedule[0][2] || "미정"}
+                </TimeRange>
+              </ActivitySchedule>
+            ) : (
+              <NoDataText>등록된 활동 일정이 없습니다.</NoDataText>
+            )}
           </Section>
 
           <Section>
             <SectionHeader>
               <SectionTitle>공지사항</SectionTitle>
-              <MoreLink onClick={() => navigateToNotice("notice")}>
+              <MoreLink
+                onClick={() =>
+                  navigate(`/team/${currentTeamInfo.teamId}/notice`)
+                }
+              >
                 더보기
               </MoreLink>
             </SectionHeader>
@@ -188,10 +261,10 @@ const MainPage: React.FC = () => {
                 noticeList.slice(0, 3).map((notice) => (
                   <NoticeItem
                     key={notice.id}
-                    onClick={() => navigateToNotice(`notice/${notice.id}`)}
+                    onClick={() => navigateToNoticeDetail(notice.id)}
                   >
                     <div>
-                      {notice.isPinned && <RocketIcon />}
+                      {/* isPinned 필드가 없으므로 로직 삭제 */}
                       <span>{notice.title}</span>
                     </div>
                     <DateText>
@@ -213,8 +286,8 @@ const MainPage: React.FC = () => {
               <SectionTitle>경기일정</SectionTitle>
               <MoreLink
                 onClick={() =>
-                  navigate(`/team/${selectedTeam.teamId}/calendar`, {
-                    state: { teamName: selectedTeam.teamName },
+                  navigate(`/team/${currentTeamInfo.teamId}/calendar`, {
+                    state: { teamName: teamData.teamName },
                   })
                 }
               >
@@ -250,7 +323,7 @@ const MainPage: React.FC = () => {
 
 export default MainPage;
 
-// --- Styled Components (이전과 동일) ---
+// --- Styled Components (최종 수정) ---
 const LoadingContainer = styled.div`
   display: flex;
   justify-content: center;
@@ -306,7 +379,8 @@ const StatBox = styled.div`
   padding: 16px;
   border-radius: 12px;
   background-color: #f7f7f7;
-  border: 1px solid #eee;
+  border: 1px solid var(--color-border);
+  box-shadow: 0 1.5px 1.5px 0 var(--color-shabow);
   font-size: 15px;
   color: #333;
   cursor: pointer;
@@ -322,6 +396,15 @@ const ArrowSpan = styled.span`
 `;
 const Section = styled.div`
   margin-bottom: 24px;
+`;
+const TeamIntroduce = styled.p`
+  padding: 16px;
+  margin-top: 8px;
+  background-color: #f7f7f7;
+  border-radius: 12px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #555;
 `;
 const SectionHeader = styled.div`
   display: flex;
@@ -344,9 +427,11 @@ const ActivitySchedule = styled.div`
   align-items: center;
   justify-content: space-between;
   padding: 16px;
-  background-color: #f7f7f7;
+  margin-top: 8px;
+  background-color: #fff;
   border-radius: 12px;
-  border: 1px solid #eee;
+  border: 1px solid var(--color-border);
+  box-shadow: 0 1.5px 1.5px 0 var(--color-shabow);
   font-size: 15px;
 `;
 const DayBadge = styled.span`
@@ -361,11 +446,12 @@ const TimeRange = styled.span`
 `;
 const NoticeList = styled.ul`
   list-style: none;
-  padding: 8px;
+  padding: 0;
   margin: 0;
   background-color: #fff;
   border-radius: 12px;
-  border: 1px solid #eee;
+  border: 1px solid var(--color-border);
+  box-shadow: 0 1.5px 1.5px 0 var(--color-shabow);
 `;
 const NoticeItem = styled.li`
   display: flex;
@@ -379,7 +465,7 @@ const NoticeItem = styled.li`
   }
 `;
 const RocketIcon = styled(FaRocket)`
-  color: #ff4d4d;
+  color: var(--color-error);
   margin-right: 8px;
 `;
 const DateText = styled.span`
@@ -406,11 +492,13 @@ const GameItem = styled.div`
   padding: 16px;
   background-color: #fff;
   border-radius: 12px;
-  border: 1px solid #eee;
+  border: 1px solid var(--color-border);
+  box-shadow: 0 1.5px 1.5px 0 var(--color-shabow);
 `;
 const NoDataBox = styled(NoDataText)`
   background-color: #fff;
-  border: 1px solid #eee;
+  border: 1px solid var(--color-border);
+  box-shadow: 0 1.5px 1.5px 0 var(--color-shabow);
   border-radius: 12px;
 `;
 const GameDateInfo = styled.div`
