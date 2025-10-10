@@ -125,6 +125,10 @@ const MainPage: React.FC = () => {
         const parsedGameSchedule = parseActivitySchedule(
           teamDetailsRes.data.activitySchedule
         );
+        // const gameSchedule = await apiClient.get<AnnouncementListItem[]>(
+        //   "/api/team-strategy/get-strategy/monthly",
+        //   { params: { date:"01-01", teamId : teamId } }
+        // );
 
         setTeamData(teamDetailsRes.data);
         setNoticeList(noticesRes.data);

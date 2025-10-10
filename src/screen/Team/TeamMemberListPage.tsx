@@ -108,7 +108,7 @@ const TeamMemberListPage: React.FC = () => {
    * - 그 외는 회색
    */
   const getColorByPosition = (pos: string): string => {
-    const position = pos.toUpperCase().trim();
+    const position = pos.toUpperCase().trim() || "";
 
     // 공격수 계열
     if (["ST", "CF", "LW", "RW", "SS", "LF", "RF"].includes(position)) {

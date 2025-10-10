@@ -12,7 +12,7 @@ import Input2 from "../../../../components/Input/Input2";
 import KakaoMapModal from "../../../../components/Modal/KakaoAddress";
 import FormationModal from "../../../../components/Modal/FormationModal";
 import FormationListModal from "../../../../components/Modal/FormationListModal";
-
+import formationUrl from '@/assets/formation.png'; 
 interface CirclePosition {
   id: number;
   x: number;
@@ -169,7 +169,7 @@ const GameStrategy: React.FC = () => {
             </FormationButton>
           </Formation>
           <FormationImageContainer>
-            <FormationImage src="/formation.png" alt="Formation Field" />
+            <FormationImage src={`${process.env.PUBLIC_URL}/formation.png`} alt="Formation Field" />
             {formationCircles.map((circle) => (
               <FixedCircle
                 key={circle.id}

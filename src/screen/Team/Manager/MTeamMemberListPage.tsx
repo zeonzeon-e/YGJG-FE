@@ -109,7 +109,7 @@ const MTeamMemberListPage: React.FC = () => {
    */
   const getColorByPosition = (pos: string): string => {
     if (pos === null) return "#95a5a6";
-    const position = pos.toUpperCase().trim();
+    const position = pos.toUpperCase().trim() || "";
 
     // 공격수 계열
     if (["ST", "CF", "LW", "RW", "SS", "LF", "RF"].includes(position)) {

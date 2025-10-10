@@ -131,7 +131,7 @@ root.render(
 
         {/* 팀 매너지 관련 페이지 */}
         {/* 경기전략 페이지 */}
-        <Route path="/team-strategy/:id" element={<GameStrategy />} />
+        <Route path="/manager/:teamId/team-strategy/:id" element={<GameStrategy />} />
         {/* 게시판 추가 페이지 */}
         <Route
           path="/team/:teamId/notice/create"
