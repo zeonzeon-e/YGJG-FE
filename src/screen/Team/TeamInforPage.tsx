@@ -43,7 +43,7 @@ interface NoticeItem {
 const TeamInfoPage: React.FC = () => {
   const [teamList, setTeamList] = useState<TeamListItem[]>([]);
   const [teamData, setTeamData] = useState<TeamData>();
-  const [teamId, setTeamId] = useState<string>("13");
+  const [teamId, setTeamId] = useState<string>("14");
 
   const navigate = useNavigate();
 

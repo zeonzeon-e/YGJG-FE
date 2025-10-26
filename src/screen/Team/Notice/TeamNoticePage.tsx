@@ -32,7 +32,7 @@ const MOCK_NOTICES: Notice[] = [
     content:
       "다가오는 새 시즌을 맞아 새로운 유니폼 디자인을 선정하고자 합니다. 투표에 참여해주세요!",
     createAt: "2024-05-18T15:30:00Z",
-    isUrgent: false,
+    isUrgent: true,
   },
   {
     id: 3,
