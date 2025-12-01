@@ -12,7 +12,8 @@ import Input2 from "../../../../components/Input/Input2";
 import KakaoMapModal from "../../../../components/Modal/KakaoAddress";
 import FormationModal from "../../../../components/Modal/FormationModal";
 import FormationListModal from "../../../../components/Modal/FormationListModal";
-import formationUrl from '@/assets/formation.png'; 
+import formationUrl from "@/assets/formation.png";
+
 interface CirclePosition {
   id: number;
   x: number;
@@ -40,9 +41,11 @@ const GameStrategy: React.FC = () => {
   const handleAddressSelect = (address: string) => {
     setSelectedAddress(address);
   };
+
   const handleFormationSave2 = (circles: CirclePosition[]) => {
     setFormationCircles(circles); // Save formation circles
   };
+
   const handleFormationSave = (circles: CirclePosition[]) => {
     setFormationCircles(circles); // Save formation circles
   };
@@ -69,25 +72,30 @@ const GameStrategy: React.FC = () => {
               className="shadow-df"
               onClick={() => setShowSTimePicker(true)}
             >
-              {startTime || "시간을 선택하세요"}
+              {startTime ? "시작 시간 : "+ startTime : "시간을 선택하세요"}
             </StrategyButton>
             <StrategyButton
               className="shadow-df"
               onClick={() => setShowETimePicker(true)}
             >
-              {endTime || "시간을 선택하세요"}
+              {endTime ? "종료 시간 : "+ endTime : "시간을 선택하세요"}
             </StrategyButton>
           </PickerButton>
+
           {showDatePicker && (
             <CalendarModal
               onDateSelect={(date: Date) => {
                 setSelectedDate(date);
                 setShowDatePicker(false);
+                // ✅ 날짜 선택 직후 시작 시간 선택 모달 자동 오픈
+                setShowSTimePicker(true);
               }}
+              selectedDate={selectedDate ?? undefined}
               onClose={() => setShowDatePicker(false)}
             />
           )}
         </ItemDiv>
+
         {showSTimePicker && (
           <TimePickerModal
             onTimeSelect={(time: string) => {
@@ -101,6 +109,7 @@ const GameStrategy: React.FC = () => {
             onClose={() => setShowSTimePicker(false)}
           />
         )}
+
         {showETimePicker && (
           <TimePickerModal
             onTimeSelect={(time: string) => {
@@ -110,20 +119,27 @@ const GameStrategy: React.FC = () => {
             onClose={() => setShowETimePicker(false)}
           />
         )}
-        <Input
+
+        {/* 상대팀명 */}
+        <StyledInput
           type="text"
           placeholder="상대팀명을 입력해주세요"
           title="상대팀명을 입력해주세요"
         />
+
         <ItemDiv>
           <h4>경기장을 선택해주세요</h4>
           <AddressDiv value={selectedAddress}>
-            <Input2 type="string" height={35} value={selectedAddress}></Input2>
+            <StyledInput2
+              type="string"
+              height={35}
+              value={selectedAddress}
+            />
             {selectedAddress && (
-              <Input
+              <StyledInput
                 type="string"
                 placeholder="상세주소를 입력해주세요(선택)"
-              ></Input>
+              />
             )}
 
             <MainButton
@@ -142,12 +158,16 @@ const GameStrategy: React.FC = () => {
             )}
           </AddressDiv>
         </ItemDiv>
-        <Input
-          type="text"
-          placeholder="경기전술을 작성해주세요"
-          title="경기전술을 작성해주세요"
-          height={100}
-        />
+
+        {/* 경기 전술: textarea */}
+        <ItemDiv>
+          <h4>경기 전술을 작성해주세요</h4>
+          <StrategyTextarea
+            placeholder="경기전술을 작성해주세요"
+            title="경기전술을 작성해주세요"
+          />
+        </ItemDiv>
+
         <ItemDiv>
           <h4>포메이션을 알려주세요</h4>
           <Formation>
@@ -169,7 +189,10 @@ const GameStrategy: React.FC = () => {
             </FormationButton>
           </Formation>
           <FormationImageContainer>
-            <FormationImage src={`${process.env.PUBLIC_URL}/formation.png`} alt="Formation Field" />
+            <FormationImage
+              src={`${process.env.PUBLIC_URL}/formation.png`}
+              alt="Formation Field"
+            />
             {formationCircles.map((circle) => (
               <FixedCircle
                 key={circle.id}
@@ -185,6 +208,7 @@ const GameStrategy: React.FC = () => {
               </FixedCircle>
             ))}
           </FormationImageContainer>
+
           {/* 포메이션 생성하는 모달 */}
           {showFormationModal && (
             <FormationModal
@@ -199,6 +223,7 @@ const GameStrategy: React.FC = () => {
             />
           )}
         </ItemDiv>
+
         <MainButton>전략 게시하기</MainButton>
       </Container>
     </>
@@ -224,6 +249,76 @@ const StrategyButton = styled.button`
   border-radius: 8px;
   cursor: pointer;
   width: 90%;
+`;
+
+/** 공통 Input 스타일 */
+const StyledInput = styled(Input)`
+  width: 100%;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  padding: 10px 12px;
+  font-size: 14px;
+  box-sizing: border-box;
+  background-color: #ffffff;
+  margin-top: 8px;
+  min-height: 30px;
+
+  &:focus {
+    outline: none;
+    border-color: var(--color-main);
+    box-shadow: 0 0 0 2px rgba(0, 132, 255, 0.15);
+  }
+
+  &::placeholder {
+    color: #b0b0b0;
+  }
+`;
+
+const StyledInput2 = styled(Input2)`
+  width: 100%;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  padding: 8px 12px;
+  font-size: 14px;
+  box-sizing: border-box;
+  background-color: #ffffff;
+  margin-top: 8px;
+  margin-right: 8px;
+
+  &:focus {
+    outline: none;
+    border-color: var(--color-main);
+    box-shadow: 0 0 0 2px rgba(0, 132, 255, 0.15);
+  }
+
+  &::placeholder {
+    color: #b0b0b0;
+  }
+`;
+
+/** 경기 전술용 textarea 스타일 */
+const StrategyTextarea = styled.textarea`
+  width: 100%;
+  min-height: 100px;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  padding: 10px 12px;
+  font-size: 14px;
+  box-sizing: border-box;
+  background-color: #ffffff;
+  margin-top: 8px;
+  resize: vertical;
+  line-height: 1.5;
+
+  &:focus {
+    outline: none;
+    border-color: var(--color-main);
+    box-shadow: 0 0 0 2px rgba(0, 132, 255, 0.15);
+  }
+
+  &::placeholder {
+    color: #b0b0b0;
+  }
 `;
 
 const FormationButton = styled.button`
@@ -289,4 +384,6 @@ const AddressDiv = styled.div<{ value?: string }>`
   width: 100%;
   ${(props) => (props.value ? "" : "display: flex;")}
   align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
 `;
