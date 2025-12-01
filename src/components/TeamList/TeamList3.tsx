@@ -242,11 +242,13 @@ interface TeamList3Props {
     position: string;      // 세부 포지션 (ST, CM, ...)
     profileUrl?: string;
     role?: string;
+    teamMemberId: number;
   }[];
   onPlayerSelect: (player: {
     detail_position: string; // 세부 포지션 그대로 넘김 (예: "ST")
     name: string;
     position: string;        // ✅ 통합 포지션으로 넘김 (예: "공격수")
+    teamMemberId: number; // memberId
   }) => void;
 }
 
@@ -280,6 +282,7 @@ const TeamList3: React.FC<TeamList3Props> = ({ players, onPlayerSelect }) => {
                       detail_position: player.position,     // 세부 포지션(ST 등)
                       name: player.name,
                       position: comPosition(player.position), // ✅ 통합 포지션으로 전달
+                      teamMemberId: player.teamMemberId
                     })
                   }
                 >
