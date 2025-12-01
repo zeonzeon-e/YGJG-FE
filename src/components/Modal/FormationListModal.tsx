@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useEffect } from "react";
 import styled from "styled-components";
+import apiClient from "../../api/apiClient";
 
 interface FormationModal2Props {
   onClose: () => void;
@@ -31,6 +32,40 @@ const FormationListModal: React.FC<FormationModal2Props> = ({
     { id: 2, name: "확인중", isStarred: false },
     { id: 3, name: "10번", isStarred: false },
   ];
+
+    useEffect(() => {
+    // const fetchGameName = async () => {
+    //   if (!numericTeamId) return;
+    //   try {
+    //     const response = await apiClient.get<Player[]>(
+    //       `/api/team-strategy/get-position/name`,
+    //       {
+    //         params: { positionName: "", teamId: numericTeamId },
+    //       }
+    //     );
+    //     setAvailablePlayers(response.data ?? []);
+    //     setInitialPlayers(response.data ?? []);
+    //   } catch (error) {
+    //     console.error("Failed to fetch players:", error);
+    //   }
+    // };
+    // fetchGameName();
+
+    const fetchForamtionList = async () => {
+      try {
+        const response = await apiClient.get(
+          `/api/team-strategy/get/formation`,
+          {
+            params: { formationId: 3, teamId: 13 },
+          }
+        );
+        console.log(response)
+      } catch (error) {
+        console.error("Failed to fetch players:", error);
+      }
+    };
+    fetchForamtionList();
+  }, []);
   const [items, setItems] = useState<ListItem[]>(initialItems);
   const toggleStar = (id: number) => {
     setItems((prevItems) => {
