@@ -347,6 +347,7 @@ const ProfileWrapper = styled.div`
 `;
 const ProfileImage = styled.img`
   width: 70px;
+  min-width: 70px;
   height: 70px;
   border-radius: 50%;
   object-fit: cover;
