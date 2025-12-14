@@ -16,6 +16,34 @@ import {
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { TeamRole } from "../../stores/userStore";
+import { getAccessToken } from "../../utils/authUtils";
+
+// --- Dev Mock Data ---
+const DEV_MOCK_TEAM_DETAIL = {
+  activitySchedule: [
+    ["2024-05-20", "19:00", "21:00", "잠실 풋살장"],
+    ["2024-05-27", "19:00", "21:00", "잠실 풋살장"],
+  ],
+  ageRange: "20대",
+  dues: 30000,
+  inviteCode: "dev123",
+  matchLocation: "서울 송파구",
+  memberCount: 24,
+  positionRequired: ["FW", "DF"],
+  region: "서울",
+  teamGender: "남성",
+  teamImageUrl: "",
+  teamLevel: "중급",
+  teamName: "FC 개발자들",
+  team_introduce:
+    "개발자들을 위한 즐거운 풋살 모임입니다. 매주 월요일 저녁 잠실에서 찹니다. 초보자 환영!",
+  town: "잠실동",
+};
+
+const DEV_MOCK_NOTICES = [
+  { id: 1, title: "5월 회비 납부 안내", createAt: "2024-05-01" },
+  { id: 2, title: "이번 주 경기 시간 변경", createAt: "2024-05-15" },
+];
 
 // --- Types ---
 interface TeamDetailResponse {
@@ -106,6 +134,22 @@ const MainPage: React.FC = () => {
     const fetchPageData = async () => {
       setIsPageLoading(true);
       try {
+        // 🔧 개발 모드 체크
+        const token = getAccessToken();
+        if (token?.startsWith("dev-")) {
+          console.warn("[DEV MODE] Using mock data for MyTeam page");
+          await new Promise((resolve) => setTimeout(resolve, 500)); // 로딩 시뮬레이션
+
+          setTeamData(DEV_MOCK_TEAM_DETAIL as any);
+          setNoticeList(DEV_MOCK_NOTICES);
+          const parsedGameSchedule = parseActivitySchedule(
+            DEV_MOCK_TEAM_DETAIL.activitySchedule
+          );
+          setGameScheduleList(parsedGameSchedule);
+          setIsPageLoading(false);
+          return;
+        }
+
         const teamId = selectedTeam.teamId;
         const teamDetailsRes = await apiClient.get<TeamDetailResponse>(
           `/api/team/${teamId}`
