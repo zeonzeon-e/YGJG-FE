@@ -47,6 +47,7 @@ const BottomNavBar: React.FC = () => {
   // 현재 경로에 따라 선택된 탭 결정
   const getSelectedFromPath = (): NavItemType["value"] => {
     const path = location.pathname;
+    if (path.startsWith("/myteam")) return "home"; // /myteam을 먼저 체크 (홈)
     if (path.startsWith("/team")) return "users";
     if (path.startsWith("/my")) return "profile";
     return "home";
@@ -62,7 +63,8 @@ const BottomNavBar: React.FC = () => {
   }, [location.pathname]);
 
   const handleItemClick = (item: NavItemType) => {
-    if (selected !== item.value) {
+    // 현재 경로가 탭의 메인 경로와 다르면 이동 (하위 페이지에서 메인으로 돌아갈 수 있도록)
+    if (location.pathname !== item.path) {
       setSelected(item.value);
       navigate(item.path);
     }
