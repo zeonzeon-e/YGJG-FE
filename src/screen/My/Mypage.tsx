@@ -50,7 +50,7 @@ const MyPage: React.FC = () => {
           email: profileRes.data.email,
           imageUrl: profileRes.data.profileUrl,
         });
-        setTeamList(teamRes.data);
+        setTeamList(Array.isArray(teamRes.data) ? teamRes.data : []);
       } catch (err) {
         console.error("데이터 로드 실패:", err);
       } finally {
