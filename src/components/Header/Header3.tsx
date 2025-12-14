@@ -1,117 +1,194 @@
-// Header.tsx
 import React, { useState } from "react";
 import styled from "styled-components";
-import { FaChevronDown, FaChevronUp, FaStar } from "react-icons/fa6";
-import HorizontalLine from "../Styled/HorizontalLine";
+import {
+  HiChevronDown,
+  HiChevronUp,
+  HiStar,
+  HiOutlineStar,
+  HiMegaphone,
+  HiCalendar,
+  HiCheck,
+} from "react-icons/hi2";
+import { useNavigate } from "react-router-dom";
 
 interface HeaderProps {
   selectedTeam: { teamId: number; teamName: string } | null;
   teams: { teamId: number; teamName: string }[];
   onTeamChange: (teamId: number, teamName: string) => void;
-  favoriteTeams: number[]; // 즐겨찾기된 팀 목록
-  onToggleFavorite: (teamId: number, teamName: string) => void; // 즐겨찾기 토글 함수
+  favoriteTeams: number[];
+  onToggleFavorite: (teamId: number, teamName: string) => void;
 }
 
 const HeaderContainer = styled.header`
-  display: flex;
-  align-items: center;
-  justify-content: center; /* 가운데 정렬 */
-  height: 44px;
+  height: 56px;
   background-color: white;
-  position: relative;
-`;
-
-const TeamNameWrapper = styled.div`
   display: flex;
   align-items: center;
+  justify-content: center;
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  border-bottom: 1px solid #f0f0f0;
+  padding: 0 16px;
 `;
 
-const TeamName = styled.h1``;
-
-const DropdownButton = styled.button`
-  margin-left: 8px;
+const TeamSelectorButton = styled.button`
   background: none;
   border: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 17px;
+  font-family: "Pretendard-Bold";
+  color: #333;
   cursor: pointer;
-  font-size: 18px;
-`;
-
-const ModalBackground = styled.div<{ isOpen: boolean }>`
-  display: ${(props) => (props.isOpen ? "block" : "none")};
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  //background-color: rgba(0, 0, 0, 0.5);
-`;
-
-const ModalContent = styled.div`
-  position: absolute;
-  top: 50px;
-  left: 50%;
-
-  transform: translate(-50%, 0);
-  background-color: white;
-  padding: 5px;
+  padding: 8px 12px;
   border-radius: 8px;
+  transition: all 0.2s;
+
+  &:hover {
+    background-color: #f8f9fa;
+  }
+`;
+
+const IconWrapper = styled.span`
+  display: flex;
+  align-items: center;
+  font-size: 16px;
+  color: #666;
+`;
+
+// 드롭다운 오버레이 (헤더 아래 전체 화면)
+const ModalOverlay = styled.div`
+  position: fixed;
+  top: 56px; // 헤더 높이만큼 아래에서 시작
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.4);
+  z-index: 199;
+  backdrop-filter: blur(2px);
+  animation: fadeIn 0.2s ease-out;
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+`;
+
+const DropdownMenu = styled.div`
+  position: absolute;
+  top: 60px; // 헤더 바로 아래보다 약간 띄움
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 32px); // 좌우 여백
+  max-width: 400px;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+  z-index: 201;
+  overflow: hidden;
+  border: 1px solid #eee;
+  animation: slideDown 0.2s ease-out;
+
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translate(-50%, -10px);
+    }
+    to {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+  }
 `;
 
 const TeamList = styled.ul`
   list-style: none;
-  padding: 0;
+  padding: 8px;
   margin: 0;
+  max-height: 400px;
+  overflow-y: auto;
 `;
 
 const TeamListItem = styled.li<{ isSelected: boolean }>`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  width: 250px;
-  padding: 5px;
+  padding: 12px 16px;
+  border-radius: 12px;
   cursor: pointer;
   background-color: ${(props) =>
-    props.isSelected ? "#E7F0ED" : "transparent"};
-  border-radius: 8px;
+    props.isSelected ? "#effaf5" : "transparent"};
+  transition: background-color 0.2s;
+  margin-bottom: 4px;
+
   &:hover {
-    background-color: ${(props) => (props.isSelected ? "#E7F0ED" : "#f1f3f5")};
-    border-radius: 8px;
+    background-color: ${(props) => (props.isSelected ? "#effaf5" : "#f8f9fa")};
   }
 `;
 
-const StarIcon = styled.span<{ isFavorite: boolean }>`
-  font-size: 24px;
-  color: ${(props) =>
-    props.isFavorite ? "var(--color-sub)" : "var(--color-dark1)"};
+const LeftArea = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+`;
+
+const FavoriteButton = styled.button<{ isFavorite: boolean }>`
+  border: none;
+  background: none;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  font-size: 20px;
+  color: ${(props) => (props.isFavorite ? "#FFC107" : "#ddd")};
   cursor: pointer;
+  transition: transform 0.1s;
+
+  &:active {
+    transform: scale(0.9);
+  }
 `;
 
-const TeamNameText = styled.span`
-  font-size: 14px;
+const TeamNameText = styled.span<{ isSelected: boolean }>`
+  font-size: 16px;
+  font-weight: ${(props) => (props.isSelected ? "600" : "400")};
+  color: ${(props) => (props.isSelected ? "var(--color-main)" : "#333")};
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 `;
 
-const LeftItems = styled.div`
+const RightArea = styled.div`
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 `;
 
-const RightItem = styled.div`
-  display: flex;
-  align-items: center;
-  flex-direction: column;
-`;
-
-const NavButton = styled.button`
+const ActionButton = styled.button`
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid #eee;
   background: white;
-  border: 1px solid var(--color-sub);
-  border-radius: 6px;
-  width: 80px;
-  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #666;
+  font-size: 18px;
   cursor: pointer;
-  font-size: 14px;
-  &:first-child {
-    margin-bottom: 5px;
+  transition: all 0.2s;
+
+  &:hover {
+    background: var(--color-main);
+    color: white;
+    border-color: var(--color-main);
   }
 `;
 
@@ -123,24 +200,28 @@ const Header3: React.FC<HeaderProps> = ({
   onToggleFavorite,
 }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const navigate = useNavigate();
 
-  const toggleModal = () => {
-    setIsModalOpen((prev) => !prev);
-  };
+  const toggleModal = () => setIsModalOpen((prev) => !prev);
+  const closeModal = () => setIsModalOpen(false);
 
   const handleTeamSelect = (teamId: number, teamName: string) => {
     onTeamChange(teamId, teamName);
-    setIsModalOpen(false);
+    closeModal();
   };
 
   const isFavorite = (teamId: number) => favoriteTeams.includes(teamId);
 
-  // selectedTeam이 null일 경우를 대비한 로직 추가
+  // 선택된 팀이 없을 때
   if (!selectedTeam) {
-    // 선택된 팀이 없으면 헤더에 기본 텍스트나 로딩 상태를 표시할 수 있습니다.
     return (
       <HeaderContainer>
-        <TeamName>팀 선택</TeamName>
+        <TeamSelectorButton onClick={toggleModal}>
+          팀 선택{" "}
+          <IconWrapper>
+            <HiChevronDown />
+          </IconWrapper>
+        </TeamSelectorButton>
       </HeaderContainer>
     );
   }
@@ -148,66 +229,72 @@ const Header3: React.FC<HeaderProps> = ({
   return (
     <>
       <HeaderContainer>
-        <TeamNameWrapper>
-          <TeamName>{selectedTeam.teamName}</TeamName>
-          <DropdownButton onClick={toggleModal}>
-            {isModalOpen ? <FaChevronUp /> : <FaChevronDown />}
-          </DropdownButton>
-          <HorizontalLine />
-        </TeamNameWrapper>
+        <TeamSelectorButton onClick={toggleModal}>
+          {selectedTeam.teamName}
+          <IconWrapper>
+            {isModalOpen ? <HiChevronUp /> : <HiChevronDown />}
+          </IconWrapper>
+        </TeamSelectorButton>
       </HeaderContainer>
 
-      <ModalBackground isOpen={isModalOpen} onClick={toggleModal}>
-        <ModalContent
-          className="border-df shadow-df"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <TeamList>
-            {teams.map((team) => (
-              <TeamListItem
-                key={team.teamId}
-                isSelected={team.teamName === selectedTeam.teamName}
-                onClick={() => handleTeamSelect(team.teamId, team.teamName)}
-              >
-                <LeftItems>
-                  <StarIcon
-                    isFavorite={isFavorite(team.teamId)}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onToggleFavorite(team.teamId, team.teamName);
-                    }}
-                  >
-                    {isFavorite(team.teamId) ? <FaStar /> : <FaStar />}
-                  </StarIcon>
-                  <TeamNameText>{team.teamName}</TeamNameText>
-                </LeftItems>
-                <RightItem>
-                  <NavButton
-                    className="border-df shadow-df"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      // 공지사항으로 이동하는 로직 구현
-                      console.log(`${team.teamName}의 공지사항으로 이동`);
-                    }}
-                  >
-                    공지사항
-                  </NavButton>
-                  <NavButton
-                    className="border-df shadow-df"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      // 팀 달력으로 이동하는 로직 구현
-                      console.log(`${team.teamName}의 팀 달력으로 이동`);
-                    }}
-                  >
-                    팀 달력
-                  </NavButton>
-                </RightItem>
-              </TeamListItem>
-            ))}
-          </TeamList>
-        </ModalContent>
-      </ModalBackground>
+      {isModalOpen && (
+        <>
+          <ModalOverlay onClick={closeModal} />
+          <DropdownMenu onClick={(e) => e.stopPropagation()}>
+            <TeamList>
+              {teams.map((team) => (
+                <TeamListItem
+                  key={team.teamId}
+                  isSelected={team.teamName === selectedTeam.teamName}
+                  onClick={() => handleTeamSelect(team.teamId, team.teamName)}
+                >
+                  <LeftArea>
+                    <FavoriteButton
+                      isFavorite={isFavorite(team.teamId)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onToggleFavorite(team.teamId, team.teamName);
+                      }}
+                    >
+                      {isFavorite(team.teamId) ? <HiStar /> : <HiOutlineStar />}
+                    </FavoriteButton>
+                    <TeamNameText
+                      isSelected={team.teamName === selectedTeam.teamName}
+                    >
+                      {team.teamName}
+                    </TeamNameText>
+                    {team.teamName === selectedTeam.teamName && (
+                      <HiCheck color="var(--color-main)" size={16} />
+                    )}
+                  </LeftArea>
+
+                  <RightArea>
+                    <ActionButton
+                      title="공지사항"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/team/${team.teamId}/notice`);
+                      }}
+                    >
+                      <HiMegaphone size={16} />
+                    </ActionButton>
+                    <ActionButton
+                      title="팀 달력"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        // navigate(`/team/${team.teamId}/schedule`); // 추후 구현
+                        alert("일정 기능은 준비 중입니다!");
+                      }}
+                    >
+                      <HiCalendar size={16} />
+                    </ActionButton>
+                  </RightArea>
+                </TeamListItem>
+              ))}
+            </TeamList>
+          </DropdownMenu>
+        </>
+      )}
     </>
   );
 };
