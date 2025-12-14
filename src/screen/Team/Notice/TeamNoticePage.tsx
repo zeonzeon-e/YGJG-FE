@@ -14,12 +14,10 @@ import { getAccessToken } from "../../../utils/authUtils";
 import { useUserStore } from "../../../stores/userStore";
 
 // --- Types ---
-// API 명세: [{ createAt, id, title }]
 interface Notice {
   id: number;
   title: string;
   createAt: string;
-  // UI 전용 (API엔 없지만 목업이나 확장 고려)
   isUrgent?: boolean;
   writer?: string;
 }
@@ -68,28 +66,18 @@ const TeamNoticePage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
 
-  // 권한 체크
   const userRole = teamId ? getRoleByTeamId(Number(teamId)) : undefined;
-
-  // 개발 모드인지 체크
   const isDevMode = getAccessToken()?.startsWith("dev-");
-
-  // 권한 확인: 실제 API 역할이 있거나, 개발모드이면서 MANAGER 권한을 가진 더미 데이터일 경우
-  // 더미 데이터(LoginPage.tsx)에 FC 개발자들(teamId:1)은 MANAGER, 테스트 유나이티드(teamId:2)는 MEMBER로 설정됨.
   const isManager =
     userRole && ["MANAGER", "SUB_MANAGER"].includes(userRole.role);
-
-  // 글 쓰기 가능 여부
   const canWrite = isManager;
 
-  // 데이터 불러오기
   useEffect(() => {
     const fetchNoticeList = async () => {
       if (!teamId) return;
       setIsLoading(true);
 
       try {
-        // 🔧 개발 모드 체크
         const token = getAccessToken();
         if (token?.startsWith("dev-")) {
           console.warn("[DEV MODE] Using mock data for Notices");
@@ -115,7 +103,6 @@ const TeamNoticePage: React.FC = () => {
     fetchNoticeList();
   }, [teamId, numericTeamId]);
 
-  // 검색 필터링
   useEffect(() => {
     if (!searchQuery) {
       setFilteredNotices(noticeList);
@@ -128,7 +115,6 @@ const TeamNoticePage: React.FC = () => {
     setFilteredNotices(filtered);
   }, [searchQuery, noticeList]);
 
-  // 날짜 포맷팅
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     const month = date.getMonth() + 1;
@@ -141,7 +127,6 @@ const TeamNoticePage: React.FC = () => {
       <Header2 text="게시판" />
 
       <ContentContainer>
-        {/* 설명 및 검색 영역 */}
         <PageHeader>
           <PageTitleArea>
             <Title>공지사항</Title>
@@ -158,7 +143,6 @@ const TeamNoticePage: React.FC = () => {
           </SearchWrapper>
         </PageHeader>
 
-        {/* 리스트 영역 */}
         <NoticeList>
           {isLoading ? (
             <LoadingState>공지사항을 불러오고 있습니다...</LoadingState>
@@ -209,7 +193,6 @@ const TeamNoticePage: React.FC = () => {
         </NoticeList>
       </ContentContainer>
 
-      {/* 플로팅 작성 버튼 (관리자권한이 있을 때만 노출) */}
       {canWrite && (
         <FloatingActionButton
           onClick={() => navigate(`/team/${teamId}/notice/create`)}
@@ -229,6 +212,9 @@ const PageWrapper = styled.div`
   min-height: 100vh;
   background-color: #f8fafb;
   padding-bottom: 80px;
+  max-width: 600px;
+  margin: 0 auto;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
 `;
 
 const ContentContainer = styled.div`
@@ -373,8 +359,14 @@ const ChevronWrapper = styled.div`
 
 const FloatingActionButton = styled.button`
   position: fixed;
-  bottom: 25px;
-  right: 25px;
+  bottom: 90px;
+  /* Centering Logic for Desktop Webview */
+  left: 50%;
+  transform: translateX(
+    220px
+  ); /* 600px width / 2 = 300px center. Button(56px) + Margin(25px) approx 80px from edge. 300 - 80 = 220px */
+  margin-left: 0;
+
   width: 56px;
   height: 56px;
   border-radius: 50%;
@@ -389,9 +381,21 @@ const FloatingActionButton = styled.button`
   transition: transform 0.2s;
   z-index: 100;
 
+  @media (max-width: 620px) {
+    left: auto;
+    right: 25px;
+    transform: none;
+  }
+
   &:hover {
-    transform: scale(1.05);
+    transform: translateX(220px) scale(1.05); /* Maintain translation on hover */
     background: var(--color-main-darker);
+  }
+
+  @media (max-width: 620px) {
+    &:hover {
+      transform: scale(1.05); /* Reset translation on mobile hover */
+    }
   }
 `;
 

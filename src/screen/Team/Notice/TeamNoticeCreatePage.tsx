@@ -146,6 +146,9 @@ const PageWrapper = styled.div`
   flex-direction: column;
   position: relative;
   padding-bottom: 80px;
+  max-width: 600px;
+  margin: 0 auto;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
 `;
 
 const EditorContainer = styled.div`
@@ -238,6 +241,8 @@ const BottomBar = styled.div`
   bottom: 70px;
   left: 0;
   right: 0;
+  max-width: 600px;
+  margin: 0 auto;
   background: white;
   padding: 12px 20px;
   padding-bottom: 24px;
