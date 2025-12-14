@@ -87,8 +87,9 @@ const TeamSelectListPage: React.FC = () => {
     setIsLoading(true);
     try {
       const response = await apiClient.get("/api/search/join-team");
-      setTeams(response.data);
-      setDisplayedTeams(response.data);
+      const data = Array.isArray(response.data) ? response.data : [];
+      setTeams(data);
+      setDisplayedTeams(data);
     } catch (error) {
       console.error("팀 목록 가져오기 오류:", error);
 
@@ -159,8 +160,9 @@ const TeamSelectListPage: React.FC = () => {
         },
       });
 
-      setTeams(response.data);
-      setDisplayedTeams(response.data);
+      const data = Array.isArray(response.data) ? response.data : [];
+      setTeams(data);
+      setDisplayedTeams(data);
       setSearchKeyword("");
       setFilterOpen(false);
     } catch (error) {
