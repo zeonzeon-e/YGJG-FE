@@ -150,7 +150,7 @@ const MTeamMemberListPage: React.FC = () => {
     }
   };
 
-  // Position grouping logic
+  // Position grouping logic (Standardized to match /team/1/member)
   const matchesPositionCategory = (
     playerPos: string,
     filterCategory: string | null
@@ -160,11 +160,11 @@ const MTeamMemberListPage: React.FC = () => {
     const p = playerPos.toUpperCase();
     switch (filterCategory) {
       case "공격수":
-        return ["ST", "CF", "LW", "RW", "SS", "LF", "RF"].includes(p);
+        return ["ST", "CF", "LW", "RW", "SS", "FW"].includes(p);
       case "미드필더":
-        return ["CM", "CAM", "CDM", "LM", "RM", "AM", "DM", "MF"].includes(p);
+        return ["CM", "CAM", "CDM", "LM", "RM", "MF"].includes(p);
       case "수비수":
-        return ["CB", "LB", "RB", "LWB", "RWB", "WB", "SW", "DF"].includes(p);
+        return ["CB", "LB", "RB", "DF"].includes(p);
       case "골키퍼":
         return ["GK"].includes(p);
       default:

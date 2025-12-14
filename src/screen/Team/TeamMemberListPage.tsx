@@ -1,26 +1,24 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import {
   HiMagnifyingGlass,
-  HiUserCircle,
+  HiUser,
   HiChevronLeft,
-  HiFunnel,
   HiUsers,
 } from "react-icons/hi2";
 import apiClient from "../../api/apiClient";
 import { getAccessToken } from "../../utils/authUtils";
+import Header2 from "../../components/Header/Header2/Header2";
+import FilterBar from "../../components/Filter/FilterBar";
 
 // --- Types ---
-// API 명세서와 동일하게 구조 수정
 interface Player {
-  teamMemberId: number; // API: teamMemberId
+  teamMemberId: number;
   name: string;
   position: string;
   profileUrl?: string;
-  role?: string; // API: string (MANAGER | SUB_MANAGER | MEMBER)
-  // joinDate는 API 명세에 없음 -> UI 표시용으로 임의 추가하거나 제거
-  // 여기서는 API 구조를 엄격히 따르기 위해 선택적 속성으로 유지하되, 실제 API 연동 시엔 없을 수 있음을 감안
+  role?: string;
   joinDate?: string;
 }
 
@@ -68,41 +66,6 @@ const DEV_MOCK_PLAYERS: Player[] = [
     role: "MEMBER",
     joinDate: "2023-06-12",
   },
-  {
-    teamMemberId: 7,
-    name: "황인범",
-    position: "MF",
-    role: "MEMBER",
-    joinDate: "2023-07-08",
-  },
-  {
-    teamMemberId: 8,
-    name: "이재성",
-    position: "MF",
-    role: "MEMBER",
-    joinDate: "2023-08-01",
-  },
-  {
-    teamMemberId: 9,
-    name: "김영권",
-    position: "DF",
-    role: "MEMBER",
-    joinDate: "2023-09-14",
-  },
-  {
-    teamMemberId: 10,
-    name: "김문환",
-    position: "DF",
-    role: "MEMBER",
-    joinDate: "2023-10-09",
-  },
-  {
-    teamMemberId: 11,
-    name: "정우영",
-    position: "MF",
-    role: "MEMBER",
-    joinDate: "2023-11-22",
-  },
 ];
 
 const TeamMemberListPage: React.FC = () => {
@@ -111,84 +74,74 @@ const TeamMemberListPage: React.FC = () => {
   const numericTeamId = Number(teamId);
 
   // States
-  const [allPlayers, setAllPlayers] = useState<Player[]>([]);
-  const [displayedPlayers, setDisplayedPlayers] = useState<Player[]>([]);
-  const [searchKeyword, setSearchKeyword] = useState("");
-  const [positionFilter, setPositionFilter] = useState("ALL");
+  const [players, setPlayers] = useState<Player[]>([]);
   const [loading, setLoading] = useState(true);
-
-  // 무한 스크롤 관련 (간소화)
-  const [page, setPage] = useState(1);
-  const ITEMS_PER_PAGE = 20;
+  const [searchTerm, setSearchTerm] = useState("");
+  const [positionFilter, setPositionFilter] = useState<string | null>(null);
 
   useEffect(() => {
     fetchPlayers();
   }, [numericTeamId]);
 
-  // 필터링 및 검색 로직
-  useEffect(() => {
-    let result = allPlayers;
-
-    // 포지션 필터
-    if (positionFilter !== "ALL") {
-      if (positionFilter === "FW") {
-        result = result.filter((p) =>
-          ["ST", "CF", "LW", "RW", "SS", "FW"].includes(
-            p.position.toUpperCase()
-          )
-        );
-      } else if (positionFilter === "MF") {
-        result = result.filter((p) =>
-          ["CM", "CAM", "CDM", "LM", "RM", "MF"].includes(
-            p.position.toUpperCase()
-          )
-        );
-      } else if (positionFilter === "DF") {
-        result = result.filter((p) =>
-          ["CB", "LB", "RB", "DF"].includes(p.position.toUpperCase())
-        );
-      } else if (positionFilter === "GK") {
-        result = result.filter((p) => p.position.toUpperCase() === "GK");
-      }
-    }
-
-    // 검색어 필터
-    if (searchKeyword) {
-      result = result.filter((p) =>
-        p.name.toLowerCase().includes(searchKeyword.toLowerCase())
-      );
-    }
-
-    setDisplayedPlayers(result);
-  }, [allPlayers, positionFilter, searchKeyword]);
-
   const fetchPlayers = async () => {
     if (!numericTeamId) return;
     setLoading(true);
 
+    const token = getAccessToken();
     try {
-      // 🔧 개발 모드 체크
-      const token = getAccessToken();
       if (token?.startsWith("dev-")) {
-        console.warn("[DEV MODE] Using mock data for Team Members");
         await new Promise((resolve) => setTimeout(resolve, 500));
-        setAllPlayers(DEV_MOCK_PLAYERS);
+        setPlayers(DEV_MOCK_PLAYERS);
         setLoading(false);
         return;
       }
 
       const response = await apiClient.get<Player[]>(
         `/api/team/${numericTeamId}/memberList`,
-        {
-          params: { sort: "최신 가입순" },
-        }
+        { params: { sort: "최신 가입순" }, headers: { "X-AUTH-TOKEN": token } }
       );
-      setAllPlayers(response.data);
+      setPlayers(response.data);
     } catch (error) {
       console.error("Failed to fetch players:", error);
     } finally {
       setLoading(false);
     }
+  };
+
+  // Position grouping logic (Standardized)
+  const matchesPositionCategory = (
+    playerPos: string,
+    filterCategory: string | null
+  ) => {
+    if (!filterCategory || filterCategory === "전체") return true;
+
+    const p = playerPos.toUpperCase();
+    switch (filterCategory) {
+      case "공격수":
+        return ["ST", "CF", "LW", "RW", "SS", "FW"].includes(p);
+      case "미드필더":
+        return ["CM", "CAM", "CDM", "LM", "RM", "MF"].includes(p);
+      case "수비수":
+        return ["CB", "LB", "RB", "DF"].includes(p);
+      case "골키퍼":
+        return ["GK"].includes(p);
+      default:
+        return false;
+    }
+  };
+
+  const filteredPlayers = players.filter((p) => {
+    const matchesSearch = p.name
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase());
+    const matchesPosition = matchesPositionCategory(p.position, positionFilter);
+    return matchesSearch && matchesPosition;
+  });
+
+  const getRoleBadge = (role?: string) => {
+    if (role === "MANAGER") return <RoleBadge type="manager">운영진</RoleBadge>;
+    if (role === "SUB_MANAGER") return <RoleBadge type="sub">매니저</RoleBadge>;
+    return null;
   };
 
   const getColorByPosition = (pos: string): string => {
@@ -202,88 +155,52 @@ const TeamMemberListPage: React.FC = () => {
     return "#95a5a6";
   };
 
-  const getRoleBadge = (role?: string) => {
-    if (role === "MANAGER") return <RoleBadge type="manager">운영진</RoleBadge>;
-    if (role === "SUB_MANAGER") return <RoleBadge type="sub">매니저</RoleBadge>;
-    return null;
-  };
-
-  // 상세 프로필 이동 (현재 라우트 없음 -> 추후 구현 or 모달)
-  const handleMemberClick = (memberId: number) => {
-    // navigate(`/user/${memberId}`); // 🚧 아직 프로필 상세 페이지가 없음
-    alert("선수 상세 프로필 기능은 준비 중입니다! 🚧");
-  };
-
   return (
     <PageWrapper>
-      {/* 헤더 */}
-      <Header>
-        <BackButton onClick={() => navigate(-1)}>
-          <HiChevronLeft size={24} />
-        </BackButton>
-        <HeaderTitle>팀 멤버</HeaderTitle>
-        <div style={{ width: 24 }} /> {/* 레이아웃 균형용 */}
-      </Header>
+      <Header2 text="팀 멤버" />
 
-      <ContentContainer>
-        {/* 상단 통계 카드 */}
-        <StatsCard>
-          <StatsItem>
-            <StatsLabel>총 인원</StatsLabel>
-            <StatsValue>{allPlayers.length}명</StatsValue>
-          </StatsItem>
-          <StatsDivider />
-          <StatsItem>
-            <StatsLabel>이번 달 신규</StatsLabel>
-            <StatsValue new>+2명</StatsValue>
-          </StatsItem>
-        </StatsCard>
-
-        {/* 검색 및 필터 */}
-        <SearchFilterSection>
-          <SearchWrapper>
-            <HiMagnifyingGlass color="#999" size={18} />
+      <Container>
+        {/* Search */}
+        <SearchSection>
+          <SearchInputWrapper>
+            <HiMagnifyingGlass color="#999" size={20} />
             <SearchInput
-              placeholder="이름으로 검색"
-              value={searchKeyword}
-              onChange={(e) => setSearchKeyword(e.target.value)}
+              placeholder="멤버 이름 검색"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
             />
-          </SearchWrapper>
+          </SearchInputWrapper>
+        </SearchSection>
 
-          <FilterScroll>
-            {["ALL", "FW", "MF", "DF", "GK"].map((pos) => (
-              <FilterChip
-                key={pos}
-                active={positionFilter === pos}
-                onClick={() => setPositionFilter(pos)}
-              >
-                {pos === "ALL" ? "전체" : pos}
-              </FilterChip>
-            ))}
-          </FilterScroll>
-        </SearchFilterSection>
+        {/* FilterBar */}
+        <FilterBar
+          onFilterChange={(val) =>
+            setPositionFilter(val === "전체" ? null : val)
+          }
+        />
+        <div style={{ height: 16 }} />
 
-        {/* 멤버 리스트 */}
+        <ListHeader>
+          <MemberCount>총 {filteredPlayers.length}명</MemberCount>
+        </ListHeader>
+
+        {/* List */}
         <MemberList>
           {loading ? (
             <LoadingState>멤버 정보를 불러오는 중...</LoadingState>
-          ) : displayedPlayers.length > 0 ? (
-            displayedPlayers.map((player) => (
-              <MemberCard
-                key={player.teamMemberId}
-                onClick={() => handleMemberClick(player.teamMemberId)}
-              >
+          ) : filteredPlayers.length > 0 ? (
+            filteredPlayers.map((player) => (
+              <MemberCard key={player.teamMemberId}>
                 <MemberAvatar src={player.profileUrl} />
                 <MemberInfo>
-                  <MemberNameRow>
+                  <NameRow>
                     <Name>{player.name}</Name>
                     {getRoleBadge(player.role)}
-                  </MemberNameRow>
+                  </NameRow>
                   <MemberMeta>
                     <PositionBox color={getColorByPosition(player.position)}>
                       {player.position}
                     </PositionBox>
-                    {/* joinDate는 API에 없으므로 데이터 있을 때만 표시 */}
                     {player.joinDate && (
                       <JoinDate>{player.joinDate} 가입</JoinDate>
                     )}
@@ -294,11 +211,11 @@ const TeamMemberListPage: React.FC = () => {
           ) : (
             <EmptyState>
               <HiUsers size={40} color="#ddd" />
-              <p>검색 결과가 없습니다.</p>
+              <p>검색된 멤버가 없습니다.</p>
             </EmptyState>
           )}
         </MemberList>
-      </ContentContainer>
+      </Container>
     </PageWrapper>
   );
 };
@@ -309,128 +226,50 @@ export default TeamMemberListPage;
 const PageWrapper = styled.div`
   min-height: 100vh;
   background: #f8fafb;
-`;
-
-const Header = styled.div`
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px 20px;
-  background: white;
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  border-bottom: 1px solid #f0f0f0;
-`;
-
-const BackButton = styled.button`
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 4px;
-  display: flex;
-  align-items: center;
-  color: var(--color-dark2);
-`;
-
-const HeaderTitle = styled.h1`
-  font-size: 18px;
-  font-family: "Pretendard-Bold";
-  color: var(--color-dark2);
-`;
-
-const ContentContainer = styled.div`
-  padding: 20px;
+  flex-direction: column;
   max-width: 600px;
   margin: 0 auto;
 `;
 
-const StatsCard = styled.div`
-  background: white;
-  border-radius: 16px;
+const Container = styled.div`
   padding: 20px;
-  display: flex;
-  align-items: center;
-  margin-bottom: 24px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
-`;
-
-const StatsItem = styled.div`
   flex: 1;
-  text-align: center;
 `;
 
-const StatsLabel = styled.div`
-  font-size: 13px;
-  color: var(--color-dark1);
-  margin-bottom: 4px;
-`;
-
-const StatsValue = styled.div<{ new?: boolean }>`
-  font-size: 20px;
-  font-family: "Pretendard-Bold";
-  color: ${(props) => (props.new ? "var(--color-main)" : "var(--color-dark2)")};
-`;
-
-const StatsDivider = styled.div`
-  width: 1px;
-  height: 40px;
-  background: #f0f0f0;
-`;
-
-const SearchFilterSection = styled.div`
+const SearchSection = styled.div`
   margin-bottom: 20px;
 `;
 
-const SearchWrapper = styled.div`
+const SearchInputWrapper = styled.div`
   background: white;
   border-radius: 12px;
   padding: 12px 16px;
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 12px;
+  gap: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
   border: 1px solid #eee;
-
-  &:focus-within {
-    border-color: var(--color-main);
-    box-shadow: 0 0 0 3px rgba(14, 98, 68, 0.1);
-  }
 `;
 
 const SearchInput = styled.input`
   border: none;
   outline: none;
-  width: 100%;
   font-size: 15px;
-
+  width: 100%;
   &::placeholder {
-    color: #bbb;
+    color: #ccc;
   }
 `;
 
-const FilterScroll = styled.div`
-  display: flex;
-  gap: 8px;
-  overflow-x: auto;
-  padding-bottom: 4px;
-
-  &::-webkit-scrollbar {
-    display: none;
-  }
+const ListHeader = styled.div`
+  margin-bottom: 12px;
 `;
 
-const FilterChip = styled.button<{ active: boolean }>`
-  padding: 8px 16px;
-  border-radius: 20px;
-  font-size: 13px;
-  font-family: "Pretendard-SemiBold";
-  border: 1px solid ${(props) => (props.active ? "var(--color-main)" : "#eee")};
-  background: ${(props) => (props.active ? "var(--color-main)" : "white")};
-  color: ${(props) => (props.active ? "white" : "var(--color-dark1)")};
-  white-space: nowrap;
-  cursor: pointer;
-  transition: all 0.2s;
+const MemberCount = styled.span`
+  font-size: 14px;
+  font-weight: 600;
+  color: #555;
 `;
 
 const MemberList = styled.div`
@@ -447,11 +286,7 @@ const MemberCard = styled.div`
   align-items: center;
   gap: 16px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
-  transition: transform 0.2s;
-
-  &:hover {
-    transform: translateY(-2px);
-  }
+  border: 1px solid #f0f0f0;
 `;
 
 const MemberAvatar = styled.div<{ src?: string }>`
@@ -463,26 +298,13 @@ const MemberAvatar = styled.div<{ src?: string }>`
   background-size: cover;
   background-position: center;
   flex-shrink: 0;
-
-  ${(props) =>
-    !props.src &&
-    `
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    &::after {
-      content: "👤";
-      font-size: 24px;
-      color: #ccc;
-    }
-  `}
 `;
 
 const MemberInfo = styled.div`
   flex: 1;
 `;
 
-const MemberNameRow = styled.div`
+const NameRow = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
