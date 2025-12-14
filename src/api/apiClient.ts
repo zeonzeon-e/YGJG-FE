@@ -12,7 +12,7 @@ import {
  * @type {AxiosInstance}
  */
 const apiClient: AxiosInstance = axios.create({
-  baseURL: "http://54.180.123.45:8080", // API 기본 URL
+  baseURL: "", // 프록시 사용으로 빈 문자열 (setupProxy.js에서 처리)
   headers: {
     "Content-Type": "application/x-www-form-urlencoded",
   },
@@ -103,7 +103,7 @@ apiClient.interceptors.response.use(
 
       try {
         const response = await axios.post(
-          "http://54.180.123.45:8080/auth/token/refresh",
+          "/auth/token/refresh", // 프록시를 통해 요청
           {
             refreshToken: refreshToken,
           }

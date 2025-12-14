@@ -81,7 +81,6 @@ const PhoneVerification: React.FC<{
   phone: string;
   setPhone: (value: string) => void;
 }> = ({ onNext, phone, setPhone }) => {
-  const [realVerificationCode, setRealVerificationCode] = useState("");
   const [verificationCode, setVerificationCode] = useState("");
   const [isVerified, setIsVerified] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -89,21 +88,36 @@ const PhoneVerification: React.FC<{
 
   const handleSMS = async (phone: string) => {
     try {
-      const phoneNum = phone;
-      const response = await apiClient.post("/api/sign/send-sms", phoneNum);
-      setRealVerificationCode(response.data.certificationNum);
-    } catch (error) {
-      console.error(error);
+      const response = await apiClient.post("/api/sign/send-sms", null, {
+        params: { phoneNum: phone },
+      });
+      if (response.data) {
+        setSuccess("인증번호가 발송되었습니다.");
+        setError(null);
+      }
+    } catch (error: any) {
+      console.error("SMS 발송 오류:", error);
+      setError("인증번호 발송에 실패했습니다. 다시 시도해주세요.");
+      setSuccess(null);
     }
   };
 
-  const handleVerify = () => {
-    if (verificationCode === realVerificationCode) {
-      setIsVerified(true);
-      setError(null);
-      setSuccess("인증이 완료되었습니다.");
-    } else {
-      setError("인증번호가 일치하지 않습니다.");
+  const handleVerify = async () => {
+    try {
+      const response = await apiClient.post("/api/sign/verify", null, {
+        params: { certificationNumber: verificationCode },
+      });
+      if (response.data.success) {
+        setIsVerified(true);
+        setError(null);
+        setSuccess("인증이 완료되었습니다.");
+      } else {
+        setError(response.data.msg || "인증에 실패했습니다.");
+        setSuccess(null);
+      }
+    } catch (error: any) {
+      console.error("인증 확인 오류:", error);
+      setError(error.response?.data?.msg || "인증번호가 일치하지 않습니다.");
       setSuccess(null);
     }
   };
