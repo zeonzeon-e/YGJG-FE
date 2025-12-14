@@ -3,12 +3,49 @@
 import React, { useState, useCallback } from "react";
 import styled, { keyframes } from "styled-components";
 import { Link, useNavigate } from "react-router-dom";
-import { HiEye, HiEyeSlash, HiXCircle } from "react-icons/hi2";
+import {
+  HiEye,
+  HiEyeSlash,
+  HiXCircle,
+  HiWrenchScrewdriver,
+} from "react-icons/hi2";
 import { RiKakaoTalkFill } from "react-icons/ri";
 import { FcGoogle } from "react-icons/fc";
 import { useAuth } from "../../hooks/useAuth";
 import { setAccessToken, setRefreshToken } from "../../utils/authUtils";
+import { useUserStore } from "../../stores/userStore";
 import apiClient from "../../api/apiClient";
+
+// 개발용 목업 데이터
+const DEV_MOCK_USER = {
+  id: 999,
+  name: "개발자 테스터",
+  email: "dev@test.com",
+  gender: "MALE" as const,
+  birthDate: "1995-01-15",
+  profileImageUrl: undefined,
+};
+
+const DEV_MOCK_TEAMS = [
+  {
+    teamId: 1,
+    teamName: "FC 개발자들",
+    role: "MANAGER" as const,
+    position: "MF" as const,
+    teamColor: "#0e6244",
+    teamImageUrl: "",
+    favoriteTeam: true,
+  },
+  {
+    teamId: 2,
+    teamName: "테스트 유나이티드",
+    role: "MEMBER" as const,
+    position: "FW" as const,
+    teamColor: "#3b82f6",
+    teamImageUrl: "",
+    favoriteTeam: false,
+  },
+];
 
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState<string>("");
@@ -23,6 +60,25 @@ const LoginPage: React.FC = () => {
     "https://kauth.kakao.com/oauth/authorize?response_type=code&client_id=6de9c9ef1556266bf0bab36b47b7360d&redirect_uri=http://localhost:3000/auth/kakao/callback";
   const GOOGLE_AUTH_URL =
     "https://accounts.google.com/o/oauth2/v2/auth?response_type=code&client_id=405167826298-s3a0rdn0e407de1upa54vvrhrshaiu18.apps.googleusercontent.com&redirect_uri=http://localhost:3000/auth/google/callback&scope=email%20profile";
+
+  // 🔧 개발용 로그인 바이패스
+  const handleDevLogin = () => {
+    // 토큰 설정 (더미)
+    setAccessToken("dev-access-token-12345");
+    setRefreshToken("dev-refresh-token-12345");
+
+    // zustand store에 직접 데이터 주입
+    useUserStore.setState({
+      isLoggedIn: true,
+      user: DEV_MOCK_USER,
+      teams: DEV_MOCK_TEAMS,
+      isLoading: false,
+      error: null,
+    });
+
+    // 메인 페이지로 이동
+    navigate("/myteam");
+  };
 
   const isValidEmail = (email: string): boolean => {
     const emailRegex = /\S+@\S+\.\S+/;
@@ -195,6 +251,15 @@ const LoginPage: React.FC = () => {
 
         {/* 하단 정보 */}
         <BottomInfo>© 2024 요기조기. All rights reserved.</BottomInfo>
+
+        {/* 🔧 개발용 로그인 버튼 */}
+        <DevLoginSection>
+          <DevLoginButton type="button" onClick={handleDevLogin}>
+            <HiWrenchScrewdriver size={18} />
+            개발용 바이패스 로그인
+          </DevLoginButton>
+          <DevHint>백엔드 없이 목업 데이터로 테스트</DevHint>
+        </DevLoginSection>
       </ContentWrapper>
     </PageWrapper>
   );
@@ -538,4 +603,39 @@ const BottomInfo = styled.p`
   color: var(--color-dark1);
   margin-top: 32px;
   animation: ${fadeIn} 0.6s ease 0.2s backwards;
+`;
+
+/* 🔧 개발용 버튼 스타일 */
+const DevLoginSection = styled.div`
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px dashed #e0e0e0;
+  text-align: center;
+  animation: ${fadeIn} 0.6s ease 0.3s backwards;
+`;
+
+const DevLoginButton = styled.button`
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 12px 20px;
+  font-size: 14px;
+  font-family: "Pretendard-SemiBold";
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 152, 0, 0.4);
+  }
+`;
+
+const DevHint = styled.p`
+  font-size: 11px;
+  color: #999;
+  margin-top: 8px;
 `;

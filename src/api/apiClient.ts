@@ -92,12 +92,19 @@ apiClient.interceptors.response.use(
       isRefreshing = true;
 
       const refreshToken = getRefreshToken();
+      const accessToken = getAccessToken();
+
+      // 🔧 개발용 토큰인 경우 리프레시 시도하지 않음
+      if (accessToken?.startsWith("dev-") || refreshToken?.startsWith("dev-")) {
+        console.warn("[DEV MODE] 개발용 토큰 - API 호출 스킵");
+        isRefreshing = false;
+        return Promise.reject(error);
+      }
 
       if (!refreshToken) {
-        alert("refreshToken 없음");
+        console.warn("refreshToken 없음");
         removeTokens();
-        window.location.href = "/login"; // 로그인 페이지로 리다이렉트
-        alert("refreshToken 없음");
+        window.location.href = "/login";
         return Promise.reject(error);
       }
 
@@ -123,10 +130,10 @@ apiClient.interceptors.response.use(
 
         return apiClient(originalRequest);
       } catch (err) {
-        alert("refreshToken이 있지만 에러 발생");
+        console.error("토큰 갱신 실패:", err);
         isRefreshing = false;
         removeTokens();
-        window.location.href = "/login"; // 로그인 페이지로 리다이렉트
+        window.location.href = "/login";
         return Promise.reject(err);
       }
     }
