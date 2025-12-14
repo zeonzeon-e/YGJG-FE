@@ -42,6 +42,7 @@ import BottomNavBar from "./components/Nevigation/BottomNavBar";
 import ProtectedRoute from "./components/ProtectedRoute";
 import TeamCalendarPage from "./screen/Team/TeamCalendarPage";
 import PersonalCalendarPage from "./screen/My/PersonalCalendarPage";
+import AlarmPage from "./screen/My/AlarmPage";
 
 const GlobalStyle = createGlobalStyle`
   body, #root, .app-container {
@@ -174,6 +175,15 @@ root.render(
           element={
             <ProtectedRoute>
               <ProfileEditPage />
+            </ProtectedRoute>
+          }
+        />
+        {/* 알림 센터 */}
+        <Route
+          path="/my/alarm"
+          element={
+            <ProtectedRoute>
+              <AlarmPage />
             </ProtectedRoute>
           }
         />
