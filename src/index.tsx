@@ -3,7 +3,7 @@ import ReactDOM from "react-dom/client";
 import "./index.css";
 import App from "./App";
 import reportWebVitals from "./reportWebVitals";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import LoginPage from "./screen/Auth/LoginPage";
 import FindPasswordPage from "./screen/Auth/FindPasswordPage";
 import FindPasswordPhonePage from "./screen/Auth/FindPasswordPhonePage";
@@ -63,7 +63,7 @@ root.render(
       {/* <App /> */}
       <GlobalStyle />
       <Routes>
-        <Route path="/" element={<IntroPage />} />
+        <Route path="/" element={<Navigate to="/login" replace />} />
 
         {/* 로그인 페이지 */}
         <Route path="/signup" element={<SignUpPage />} />
