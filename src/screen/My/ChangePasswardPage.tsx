@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from "react";
-import styled from "styled-components";
+import styled, { css } from "styled-components";
 import { useNavigate } from "react-router-dom";
-import { FaTimesCircle } from "react-icons/fa";
+import {
+  HiCheckCircle,
+  HiExclamationCircle,
+  HiLockClosed,
+} from "react-icons/hi2";
 import apiClient from "../../api/apiClient";
 import Header2 from "../../components/Header/Header2/Header2";
-import Modal1 from "../../components/Modal/Modal1";
+import { getAccessToken } from "../../utils/authUtils";
 
 const ChangePasswordPage: React.FC = () => {
   const navigate = useNavigate();
@@ -12,220 +16,322 @@ const ChangePasswordPage: React.FC = () => {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-
-  const [passwordError, setPasswordError] = useState("");
-  const [confirmError, setConfirmError] = useState("");
-
-  const [isSubmittable, setIsSubmittable] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  // 새 비밀번호 유효성 검사 함수
-  const validatePassword = (password: string): boolean => {
-    const regex =
-      /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[!@#$%^&*()_+])[a-zA-Z\d!@#$%^&*()_+]{8,15}$/;
-    if (password && !regex.test(password)) {
-      setPasswordError("영문, 숫자, 특수문자 8-15자 조합으로 입력해주세요");
-      return false;
-    }
-    setPasswordError("");
-    return true;
-  };
+  // Validation States
+  const [isValidLength, setIsValidLength] = useState(false);
+  const [hasNumber, setHasNumber] = useState(false);
+  const [hasSpecial, setHasSpecial] = useState(false);
+  const [isMatch, setIsMatch] = useState(false);
 
-  // 유효성 검사 로직
+  // Real-time validation
   useEffect(() => {
-    const isPasswordValid = validatePassword(newPassword);
-    const doPasswordsMatch =
-      newPassword !== "" && newPassword === confirmPassword;
+    setIsValidLength(newPassword.length >= 8 && newPassword.length <= 15);
+    setHasNumber(/\d/.test(newPassword));
+    setHasSpecial(/[!@#$%^&*()_+]/.test(newPassword));
+  }, [newPassword]);
 
-    if (confirmPassword && !doPasswordsMatch) {
-      setConfirmError("비밀번호가 일치하지 않아요");
-    } else {
-      setConfirmError("");
-    }
+  useEffect(() => {
+    setIsMatch(newPassword !== "" && newPassword === confirmPassword);
+  }, [newPassword, confirmPassword]);
 
-    if (currentPassword && isPasswordValid && doPasswordsMatch) {
-      setIsSubmittable(true);
-    } else {
-      setIsSubmittable(false);
-    }
-  }, [currentPassword, newPassword, confirmPassword]);
+  const isFormValid =
+    currentPassword.length > 0 &&
+    isValidLength &&
+    hasNumber &&
+    hasSpecial &&
+    isMatch;
 
-  // 비밀번호 변경 제출 핸들러
   const handleSubmit = async () => {
-    if (!isSubmittable || isLoading) return;
+    if (!isFormValid || isLoading) return;
+
+    if (!window.confirm("비밀번호를 변경하시겠습니까?")) return;
 
     setIsLoading(true);
     try {
+      // Mock for Dev Mode
+      const token = getAccessToken();
+      if (token?.startsWith("dev-")) {
+        await new Promise((r) => setTimeout(r, 1000));
+        alert("비밀번호가 성공적으로 변경되었습니다. (Dev Mode)");
+        navigate("/my");
+        return;
+      }
+
       await apiClient.put("/api/my/password", {
-        // 실제 API 엔드포인트로 수정 필요
-        currentPassword: currentPassword,
-        newPassword: newPassword,
+        currentPassword,
+        newPassword,
       });
-      setIsModalOpen(true);
+
+      alert("비밀번호가 성공적으로 변경되었습니다.");
+      navigate("/my");
     } catch (error: any) {
-      // API 에러 처리 (예: 현재 비밀번호 불일치)
-      alert(error.response?.data?.message || "비밀번호 변경에 실패했습니다.");
+      console.error("Password change failed", error);
+      const msg =
+        error.response?.data?.message ||
+        "비밀번호 변경에 실패했습니다. 기존 비밀번호를 확인해주세요.";
+      alert(msg);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleModalClose = () => {
-    setIsModalOpen(false);
-    navigate("/my"); // 변경 완료 후 마이페이지로 이동
-  };
-
   return (
-    <>
-      <div style={{ margin: "10px" }}>
-        <Header2 text="비밀번호 변경" />
-        <Container>
-          <Subtitle>새로운 비밀번호를 입력해주세요.</Subtitle>
+    <PageWrapper>
+      <Header2 text="비밀번호 변경" />
+
+      <Container>
+        <Description>
+          안전을 위해 주기적으로 비밀번호를 변경해주세요.
+          <br />
+          영문, 숫자, 특수문자를 포함해 8~15자로 설정해야 합니다.
+        </Description>
+
+        <FormSection>
+          <InputGroup>
+            <Label>현재 비밀번호</Label>
+            <InputWrapper>
+              <InputIcon>
+                <HiLockClosed />
+              </InputIcon>
+              <Input
+                type="password"
+                placeholder="현재 사용하는 비밀번호"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+              />
+            </InputWrapper>
+          </InputGroup>
+
+          <Divider />
 
           <InputGroup>
-            <Label>기존 비밀번호</Label>
-            <Input
-              type="password"
-              placeholder="비밀번호"
-              value={currentPassword}
-              onChange={(e) => setCurrentPassword(e.target.value)}
-            />
+            <Label>새 비밀번호</Label>
+            <InputWrapper>
+              <InputIcon>
+                <HiLockClosed />
+              </InputIcon>
+              <Input
+                type="password"
+                placeholder="새로운 비밀번호"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+              />
+            </InputWrapper>
+
+            {/* Validation Criteria */}
+            <ValidationRules>
+              <RuleItem valid={isValidLength}>
+                {isValidLength ? <HiCheckCircle /> : <HiExclamationCircle />}{" "}
+                8~15자
+              </RuleItem>
+              <RuleItem valid={hasNumber}>
+                {hasNumber ? <HiCheckCircle /> : <HiExclamationCircle />} 숫자
+                포함
+              </RuleItem>
+              <RuleItem valid={hasSpecial}>
+                {hasSpecial ? <HiCheckCircle /> : <HiExclamationCircle />}{" "}
+                특수문자 포함 (@$!%*?& 등)
+              </RuleItem>
+            </ValidationRules>
           </InputGroup>
 
           <InputGroup>
-            <Label>새로운 비밀번호</Label>
-            <Input
-              type="password"
-              placeholder="비밀번호"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              hasError={!!passwordError}
-            />
-            {passwordError ? (
-              <ErrorMessage>{passwordError}</ErrorMessage>
-            ) : (
-              <HintMessage>
-                영문, 숫자, 특수문자 8-15자 조합으로 입력해주세요
-              </HintMessage>
+            <Label>새 비밀번호 확인</Label>
+            <InputWrapper className={isMatch && newPassword ? "valid" : ""}>
+              <InputIcon>
+                <HiLockClosed />
+              </InputIcon>
+              <Input
+                type="password"
+                placeholder="새로운 비밀번호를 한 번 더 입력"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+              />
+              {isMatch && newPassword && (
+                <ValidIcon>
+                  <HiCheckCircle />
+                </ValidIcon>
+              )}
+            </InputWrapper>
+            {!isMatch && confirmPassword && (
+              <ErrorText>비밀번호가 일치하지 않습니다.</ErrorText>
             )}
           </InputGroup>
+        </FormSection>
 
-          <InputGroup>
-            <Label>새로운 비밀번호 확인</Label>
-            <Input
-              type="password"
-              placeholder="새로운 비밀번호 확인"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              hasError={!!confirmError}
-            />
-            {confirmError && (
-              <ErrorMessage>
-                <FaTimesCircle /> {confirmError}
-              </ErrorMessage>
-            )}
-          </InputGroup>
-
+        <BottomButtonArea>
           <SubmitButton
+            disabled={!isFormValid || isLoading}
             onClick={handleSubmit}
-            disabled={!isSubmittable || isLoading}
           >
-            {isLoading ? "변경 중..." : "비밀번호 변경하기"}
+            {isLoading ? "변경 중..." : "변경 완료"}
           </SubmitButton>
-        </Container>
-
-        <Modal1
-          isOpen={isModalOpen}
-          onClose={handleModalClose}
-          onConfirm={handleModalClose}
-        >
-          <ModalText>비밀번호 변경이 완료되었습니다.</ModalText>
-        </Modal1>
-      </div>
-    </>
+        </BottomButtonArea>
+      </Container>
+    </PageWrapper>
   );
 };
 
 export default ChangePasswordPage;
 
-// --- Styled Components (시안에 맞게 재구성) ---
-const Container = styled.div`
-  padding: 24px 16px;
+/* --- Styled Components --- */
+
+const PageWrapper = styled.div`
+  min-height: 100vh;
+  background-color: #ffffff;
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 55px); /* 헤더 높이를 제외한 전체 높이 */
+  max-width: 600px;
+  margin: 0 auto;
 `;
 
-const Subtitle = styled.h2`
-  font-size: 20px;
-  font-weight: 600;
-  margin-bottom: 32px;
-  color: #333;
+const Container = styled.div`
+  padding: 24px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+`;
+
+const Description = styled.p`
+  font-size: 14px;
+  color: #666;
+  line-height: 1.5;
+  margin-bottom: 30px;
+  background: #f8f9fa;
+  padding: 16px;
+  border-radius: 12px;
+`;
+
+const FormSection = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  flex: 1;
+`;
+
+const Divider = styled.div`
+  height: 1px;
+  background: #f1f3f5;
+  margin: 8px 0;
 `;
 
 const InputGroup = styled.div`
-  margin-bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 `;
 
 const Label = styled.label`
-  display: block;
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 600;
   color: #333;
-  margin-bottom: 8px;
+  margin-left: 4px;
 `;
 
-const Input = styled.input<{ hasError?: boolean }>`
-  width: 100%;
-  padding: 12px 16px;
-  border: 1px solid ${({ hasError }) => (hasError ? "#e74c3c" : "#ddd")};
-  border-radius: 8px;
-  font-size: 16px;
-  box-sizing: border-box;
+const InputWrapper = styled.div`
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid #e9ecef;
+  padding: 0 12px;
+  height: 50px;
+  transition: all 0.2s;
 
-  &:focus {
-    border-color: ${({ hasError }) =>
-      hasError ? "#e74c3c" : "var(--color-main)"};
-    outline: none;
+  &:focus-within {
+    border-color: #00b894;
+    box-shadow: 0 0 0 3px rgba(0, 184, 148, 0.1);
+  }
+
+  &.valid {
+    border-color: #00b894;
+    background-color: #f0fdf4;
   }
 `;
 
-const HintMessage = styled.p`
-  font-size: 13px;
-  color: #888;
-  margin-top: 8px;
+const InputIcon = styled.div`
+  color: #adb5bd;
+  font-size: 20px;
+  margin-right: 10px;
+  display: flex;
+  align-items: center;
 `;
 
-const ErrorMessage = styled.p`
-  font-size: 13px;
-  color: #e74c3c;
-  margin-top: 8px;
+const Input = styled.input`
+  flex: 1;
+  border: none;
+  background: none;
+  font-size: 15px;
+  height: 100%;
+  outline: none;
+
+  &::placeholder {
+    color: #ced4da;
+  }
+`;
+
+const ValidIcon = styled.div`
+  color: #00b894;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+`;
+
+const ValidationRules = styled.div`
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+  padding-left: 4px;
+`;
+
+const RuleItem = styled.div<{ valid: boolean }>`
+  font-size: 12px;
   display: flex;
   align-items: center;
   gap: 4px;
+  color: ${(props) => (props.valid ? "#00b894" : "#adb5bd")};
+  font-weight: ${(props) => (props.valid ? "600" : "400")};
+  transition: color 0.2s;
+`;
+
+const ErrorText = styled.span`
+  font-size: 12px;
+  color: #fa5252;
+  margin-left: 4px;
+`;
+
+const BottomButtonArea = styled.div`
+  margin-top: 40px;
+  padding-bottom: 80px;
 `;
 
 const SubmitButton = styled.button`
   width: 100%;
-  padding: 15px;
-  // margin-top: 100px;
-  background-color: var(--color-main);
+  height: 52px;
+  border-radius: 14px;
+  background-color: #212529;
   color: white;
-  border: none;
-  border-radius: 8px;
   font-size: 16px;
-  font-weight: bold;
+  font-weight: 700;
+  border: none;
   cursor: pointer;
-  transition: background-color 0.2s ease-in-out;
+  transition: all 0.2s;
 
   &:disabled {
-    background-color: #e0e0e0;
+    background-color: #e9ecef;
+    color: #adb5bd;
     cursor: not-allowed;
   }
-`;
 
-const ModalText = styled.p`
-  font-size: 18px;
-  font-weight: bold;
+  &:not(:disabled):hover {
+    background-color: #343a40;
+    transform: translateY(-2px);
+  }
+
+  &:not(:disabled):active {
+    transform: translateY(0);
+  }
 `;
