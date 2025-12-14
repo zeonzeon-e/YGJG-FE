@@ -91,7 +91,16 @@ const TeamSelectListPage: React.FC = () => {
       setDisplayedTeams(response.data);
     } catch (error) {
       console.error("팀 목록 가져오기 오류:", error);
-      setLoginModalOpen(true);
+
+      // 🔧 개발 모드 체크 - dev 토큰인 경우 모달 표시 안함
+      const token = getAccessToken();
+      if (token?.startsWith("dev-")) {
+        console.warn("[DEV MODE] API 호출 실패 - 더미 데이터 사용");
+        setTeams([]);
+        setDisplayedTeams([]);
+      } else {
+        setLoginModalOpen(true);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -638,6 +647,7 @@ const CreateTeamButton = styled.button`
   position: absolute;
   top: 32px;
   right: 20px;
+  z-index: 10; /* ContentContainer(z-index: 2)보다 높게 */
   display: flex;
   align-items: center;
   gap: 6px;
@@ -720,6 +730,7 @@ const SearchSection = styled.div`
 
 const SearchInputWrapper = styled.div`
   flex: 1;
+  min-width: 0; /* 플렉스 오버플로우 방지 */
   display: flex;
   align-items: center;
   background: white;
@@ -773,6 +784,8 @@ const SearchButton = styled.button`
   font-family: "Pretendard-SemiBold";
   cursor: pointer;
   transition: all 0.2s ease;
+  flex-shrink: 0;
+  white-space: nowrap;
 
   &:hover {
     background: var(--color-main-darker);
