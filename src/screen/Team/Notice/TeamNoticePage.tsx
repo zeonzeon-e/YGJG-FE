@@ -67,7 +67,6 @@ const TeamNoticePage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
 
   const userRole = teamId ? getRoleByTeamId(Number(teamId)) : undefined;
-  const isDevMode = getAccessToken()?.startsWith("dev-");
   const isManager =
     userRole && ["MANAGER", "SUB_MANAGER"].includes(userRole.role);
   const canWrite = isManager;

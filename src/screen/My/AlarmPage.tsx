@@ -1,17 +1,15 @@
 import React, { useState, useEffect } from "react";
-import styled, { css } from "styled-components";
+import styled from "styled-components";
 import {
   HiBell,
   HiMegaphone,
   HiTrophy,
   HiClock,
   HiUserGroup,
-  HiCheck,
   HiTrash,
   HiExclamationCircle,
 } from "react-icons/hi2";
 import Header2 from "../../components/Header/Header2/Header2";
-import { getAccessToken } from "../../utils/authUtils";
 
 // --- Types ---
 type NotificationType =

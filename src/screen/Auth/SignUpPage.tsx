@@ -7,11 +7,6 @@ import ScrollProgress from "../../components/ScrollProgress/ScrollProgress";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { MdClose } from "react-icons/md";
 import { FaCheck } from "react-icons/fa6";
-import {
-  getAccessToken,
-  setAccessToken,
-  setRefreshToken,
-} from "../../utils/authUtils";
 import RadioButton from "../../components/Button/RadioButton";
 import KakaoMapModal from "../../components/Modal/KakaoAddress";
 import apiClient from "../../api/apiClient";
@@ -318,6 +313,7 @@ const PersonalInfo: React.FC<PersonalInfoProps> = ({
   const [confirmPasswordError, setConfirmPasswordError] = useState<
     string | null
   >(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [generalError, setGeneralError] = useState<string | null>(null);
   const [emailChecked, setEmailChecked] = useState(false);
   const [success, setSuccess] = useState<string | null>(null);
@@ -385,7 +381,7 @@ const PersonalInfo: React.FC<PersonalInfoProps> = ({
         setEmailChecked(false);
         setSuccess(null);
       } else {
-        const pattern = /^[A-Za-z0-9_\.\-]+@[A-Za-z0-9\-]+\.[A-za-z0-9\-]+/;
+        const pattern = /^[A-Za-z0-9_.-]+@[A-Za-z0-9-]+\.[A-za-z0-9-]+/;
         if (pattern.test(email) === true) {
           setEmailError(null);
           setEmailChecked(true);
@@ -785,11 +781,6 @@ const SignupPage: React.FC = () => {
       setIsLoading(true);
       try {
         const dataToSend = { ...updatedData };
-        const accessToken = getAccessToken();
-        const headers = {
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
-        };
         if (isSocialLogin) {
           // 소셜 로그인 회원 추가정보 입력 시 name 제외
           const { name, ...dataWithoutName } = dataToSend;

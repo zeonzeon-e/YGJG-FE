@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
 import styled from "styled-components";
 import {
   HiMagnifyingGlass,
@@ -61,7 +61,6 @@ const DEV_MOCK_PLAYERS: Player[] = [
 
 const MTeamMemberListPage: React.FC = () => {
   const { teamId } = useParams<{ teamId: string }>();
-  const navigate = useNavigate();
   const [players, setPlayers] = useState<Player[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -103,6 +102,7 @@ const MTeamMemberListPage: React.FC = () => {
 
   useEffect(() => {
     if (teamId) fetchPlayers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [teamId]);
 
   const handleRoleChange = async (

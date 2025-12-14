@@ -1,12 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import styled from "styled-components";
-import {
-  HiMagnifyingGlass,
-  HiUser,
-  HiChevronLeft,
-  HiUsers,
-} from "react-icons/hi2";
+import { HiMagnifyingGlass, HiUsers } from "react-icons/hi2";
 import apiClient from "../../api/apiClient";
 import { getAccessToken } from "../../utils/authUtils";
 import Header2 from "../../components/Header/Header2/Header2";
@@ -70,7 +65,6 @@ const DEV_MOCK_PLAYERS: Player[] = [
 
 const TeamMemberListPage: React.FC = () => {
   const { teamId } = useParams();
-  const navigate = useNavigate();
   const numericTeamId = Number(teamId);
 
   // States
@@ -81,6 +75,7 @@ const TeamMemberListPage: React.FC = () => {
 
   useEffect(() => {
     fetchPlayers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [numericTeamId]);
 
   const fetchPlayers = async () => {

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import styled from "styled-components";
-import { HiCheck, HiChevronRight, HiUserGroup } from "react-icons/hi2";
+import { HiChevronRight, HiUserGroup } from "react-icons/hi2";
 
 import Header2 from "../../../components/Header/Header2/Header2";
 import apiClient from "../../../api/apiClient";

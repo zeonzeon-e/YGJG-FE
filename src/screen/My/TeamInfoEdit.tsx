@@ -1,10 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import styled from "styled-components";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { CompactPicker } from "react-color";
 import {
   HiCheck,
-  HiChevronLeft,
   HiExclamationTriangle,
   HiArrowRightOnRectangle,
 } from "react-icons/hi2";

@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import styled from "styled-components";
-import Header2 from "../../../components/Header/Header2/Header2";
 import apiClient from "../../../api/apiClient";
 import { FaPen, FaTrash } from "react-icons/fa";
 import { HiChevronLeft, HiCalendarDays, HiUserCircle } from "react-icons/hi2";

@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import GlobalStyles from "../../components/Styled/GlobalStyled";
-import Header1 from "../../components/Header/Header1/Header1";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom"; // React Router 사용
 import apiClient from "../../api/apiClient"; // apiClient 임포트
@@ -30,11 +29,9 @@ const TeamJoinPage: React.FC = () => {
     position: "",
     // age: 0,
   });
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
   const [content, setContent] = useState<string>("");
   const [position, setPosition] = useState<string>("");
-  const [teamId, setTeamId] = useState<string>("13");
+  const [teamId] = useState<string>("13");
   const [completeOpen, setCompleteOpen] = useState(false);
   const [complete, setComplete] = useState(false);
   const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -77,30 +74,6 @@ const TeamJoinPage: React.FC = () => {
     }
   };
 
-  function calculateAge(birthNumber: number): number {
-    const birthStr = birthNumber.toString(); // "20010713"
-    const birthYear = parseInt(birthStr.slice(0, 4));
-    const birthMonth = parseInt(birthStr.slice(4, 6));
-    const birthDay = parseInt(birthStr.slice(6, 8));
-
-    const today = new Date();
-    const currentYear = today.getFullYear();
-    const currentMonth = today.getMonth() + 1; // 0부터 시작하므로 +1
-    const currentDay = today.getDate();
-
-    let age = currentYear - birthYear;
-
-    // 아직 생일이 안 지났다면 한 살 빼기
-    if (
-      currentMonth < birthMonth ||
-      (currentMonth === birthMonth && currentDay < birthDay)
-    ) {
-      age--;
-    }
-
-    return age;
-  }
-
   useEffect(() => {
     const profileData = async () => {
       try {
@@ -119,12 +92,11 @@ const TeamJoinPage: React.FC = () => {
         setPosition(response.data.position);
       } catch (err) {
         console.error(err);
-        setError("데이터를 가져오는 중 에러가 발생했습니다.");
       }
     };
 
     profileData();
-    console.log(profile);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {

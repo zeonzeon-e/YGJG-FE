@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams, useLocation, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import styled from "styled-components";
 import Header2 from "../../components/Header/Header2/Header2";
 import Calendar from "../../components/Calendar/Calendar";
@@ -68,8 +68,6 @@ const DEV_MOCK_SCHEDULES: ScheduleApiData[] = [
 
 const TeamCalendarPage: React.FC = () => {
   const { teamId } = useParams<{ teamId: string }>();
-  const navigate = useNavigate();
-  const location = useLocation();
 
   const getRoleByTeamId = useUserStore((state) => state.getRoleByTeamId);
   const [events, setEvents] = useState<CalendarEvent[]>([]);
@@ -178,6 +176,7 @@ const TeamCalendarPage: React.FC = () => {
 
   useEffect(() => {
     fetchSchedules();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [teamId, selectedDate]);
 
   const filteredEvents = events.filter((e) => e.date === selectedDate);
@@ -540,10 +539,6 @@ const TimeText = styled.span`
 const TitleText = styled.div`
   font-size: 17px;
   color: #333;
-`;
-
-const TeamName = styled.span`
-  font-family: "Pretendard-Bold";
 `;
 
 const OpponentName = styled.span`

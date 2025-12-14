@@ -2,19 +2,9 @@ import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import Header2 from "../../components/Header/Header2/Header2";
 import apiClient from "../../api/apiClient";
-import { FaLocationDot, FaPeopleGroup, FaHeart } from "react-icons/fa6";
-import { IoSettingsSharp } from "react-icons/io5";
+import { FaLocationDot, FaPeopleGroup } from "react-icons/fa6";
 import { useNavigate } from "react-router-dom";
-import HorizontalLine from "../../components/Styled/HorizontalLine";
 import MainButton from "../../components/Button/MainButton";
-
-interface TeamListItem {
-  position: string;
-  teamColor: string;
-  teamId: number;
-  teamImageUrl: string;
-  teamName: string;
-}
 
 interface TeamData {
   activitySchedule: string[];
@@ -34,16 +24,9 @@ interface TeamData {
   memberCount: string;
 }
 
-interface NoticeItem {
-  id: number;
-  title: string;
-  createAt: Date;
-}
-
 const TeamInfoPage: React.FC = () => {
-  const [teamList, setTeamList] = useState<TeamListItem[]>([]);
   const [teamData, setTeamData] = useState<TeamData>();
-  const [teamId, setTeamId] = useState<string>("14");
+  const [teamId] = useState<string>("14");
 
   const navigate = useNavigate();
 
@@ -58,18 +41,8 @@ const TeamInfoPage: React.FC = () => {
     };
 
     fetchTeamData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  const handleEditClick = (teamId: number) => {
-    const teamEdit = teamList.find((item) => item.teamId === teamId);
-    navigate(`/team-edit/${teamId}`, {
-      state: {
-        teamId: teamEdit?.teamId,
-        teamColor: teamEdit?.teamColor,
-        position: teamEdit?.position,
-      },
-    });
-  };
 
   return (
     <>
@@ -241,9 +214,6 @@ const TeamProfileInfor = styled.div`
 `;
 const TeamProfileText = styled.div`
   font-size: 14px;
-`;
-const TeamProfileSetting = styled.div`
-  right: 0;
 `;
 const CardWrapper = styled.div`
   margin-top: 20px;

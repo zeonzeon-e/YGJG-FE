@@ -81,7 +81,7 @@ const ModalOverlay = styled.div`
 `;
 
 const DropdownMenu = styled.div`
-  position: absolute;
+  position: fixed;
   top: 60px; // 헤더 바로 아래보다 약간 띄움
   left: 50%;
   transform: translateX(-50%);

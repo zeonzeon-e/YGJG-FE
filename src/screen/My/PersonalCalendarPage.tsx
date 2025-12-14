@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import styled from "styled-components";
-import { HiUserGroup, HiMapPin, HiClock } from "react-icons/hi2";
+import { HiMapPin, HiClock } from "react-icons/hi2";
 
 import Header2 from "../../components/Header/Header2/Header2";
 import Calendar from "../../components/Calendar/Calendar";

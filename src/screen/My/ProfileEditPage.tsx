@@ -8,6 +8,7 @@ import Input from "../../components/Input/Input";
 import RadioButton from "../../components/Button/RadioButton";
 import KakaoMapModal from "../../components/Modal/KakaoAddress";
 const ProfileEditPage: React.FC = () => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [profileData, setProfileData] = useState({
     birthDate: "",
     email: "",
@@ -23,10 +24,6 @@ const ProfileEditPage: React.FC = () => {
     imageUrl: string;
   } | null>(null);
   const [showMapModal, setShowMapModal] = useState(false);
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { id, value } = e.target;
-    setProfileData((prev) => ({ ...prev, [id]: value }));
-  };
 
   const handleSubmit = async () => {
     try {
@@ -194,10 +191,6 @@ const ProfileEmail = styled.div`
   margin-bottom: 10px;
 `;
 
-const Divider = styled.div`
-  border-bottom: 1px solid var(--color-light2);
-  margin: 20px 0;
-`;
 const SubTitle = styled.p`
   color: black;
   margin-top: 8px;

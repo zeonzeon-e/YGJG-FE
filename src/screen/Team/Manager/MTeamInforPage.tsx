@@ -8,7 +8,6 @@ import {
   HiUserGroup,
   HiClipboardDocument,
   HiCog6Tooth,
-  HiPencilSquare,
   HiMegaphone,
   HiCalendarDays,
   HiUserPlus,

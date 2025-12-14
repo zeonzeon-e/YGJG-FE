@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import styled, { keyframes, css } from "styled-components";
-import { FaHome, FaUsers, FaUser } from "react-icons/fa";
 import { HiHome, HiUserGroup, HiUser } from "react-icons/hi2";
 
 // Types
@@ -60,6 +59,7 @@ const BottomNavBar: React.FC = () => {
   // 경로 변경 시 선택 상태 업데이트
   useEffect(() => {
     setSelected(getSelectedFromPath());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname]);
 
   const handleItemClick = (item: NavItemType) => {

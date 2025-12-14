@@ -14,7 +14,6 @@ import {
   HiSparkles,
 } from "react-icons/hi2";
 import apiClient from "../../api/apiClient";
-import { getAccessToken } from "../../utils/authUtils";
 
 interface TeamItem {
   position: string;

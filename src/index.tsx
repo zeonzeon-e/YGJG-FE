@@ -1,7 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import "./index.css";
-import App from "./App";
 import reportWebVitals from "./reportWebVitals";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import LoginPage from "./screen/Auth/LoginPage";
@@ -14,7 +13,6 @@ import JoinApprovalStatus from "./screen/My/JoinApprovalSataus";
 import { createGlobalStyle } from "styled-components";
 import TeamMemberListPage from "./screen/Team/TeamMemberListPage";
 import SignUpPage from "./screen/Auth/SignUpPage";
-import IntroPage from "./screen/IntroPage";
 import InvitePage from "./screen/Invite/InvitePage";
 import KakaoRedirectHandler from "./screen/Auth/KakaoRedirectHandler";
 import GoogleRedirectHandler from "./screen/Auth/GoogleRedirectHandler";
