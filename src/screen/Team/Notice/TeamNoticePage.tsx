@@ -3,220 +3,203 @@ import styled from "styled-components";
 import Header2 from "../../../components/Header/Header2/Header2";
 import apiClient from "../../../api/apiClient";
 import { useNavigate, useParams } from "react-router-dom";
-import MainButton from "../../../components/Button/MainButton";
-import { FaPen, FaSearch, FaMapPin } from "react-icons/fa";
-import { MdViewList, MdGridView } from "react-icons/md";
+import {
+  HiPencil,
+  HiMagnifyingGlass,
+  HiMegaphone,
+  HiChevronRight,
+  HiOutlineDocumentText,
+} from "react-icons/hi2";
+import { getAccessToken } from "../../../utils/authUtils";
+import { useUserStore } from "../../../stores/userStore";
 
-// 공지사항 데이터 타입 정의
+// --- Types ---
 interface Notice {
   id: number;
   title: string;
-  content: string;
   createAt: string;
-  isUrgent: boolean;
+  isUrgent?: boolean;
+  writer?: string;
 }
 
-// 임시 데이터 (Mock Data)
-const MOCK_NOTICES: Notice[] = [
+// --- Dev Mock Data ---
+const DEV_MOCK_NOTICES: Notice[] = [
   {
     id: 1,
-    title: "필독! 팀 회비 납부 공지",
-    content:
-      "안녕하세요. 팀원 여러분, 2024년 2분기 팀 회비 납부 기간입니다. 늦지 않게 납부 부탁드립니다.",
-    createAt: "2024-05-20T10:00:00Z",
+    title: "📢 [필독] 5월 팀 정기 회비 납부 안내",
+    createAt: "2024-05-20T10:00:00",
     isUrgent: true,
+    writer: "박지성(매니저)",
   },
   {
     id: 2,
-    title: "새 유니폼 디자인 투표",
-    content:
-      "다가오는 새 시즌을 맞아 새로운 유니폼 디자인을 선정하고자 합니다. 투표에 참여해주세요!",
-    createAt: "2024-05-18T15:30:00Z",
-    isUrgent: true,
+    title: "새 유니폼 디자인 투표 결과 발표",
+    createAt: "2024-05-18T15:30:00",
+    isUrgent: false,
+    writer: "이강인(부매니저)",
   },
   {
     id: 3,
-    title: "팀 연습 경기 일정 공지",
-    content:
-      "이번 주 토요일 오후 3시, 00풋살장에서 연습 경기가 있습니다. 많은 참여 부탁드립니다.",
-    createAt: "2024-05-15T09:00:00Z",
+    title: "이번 주 주말 연습 경기 일정 변경",
+    createAt: "2024-05-15T09:00:00",
+    isUrgent: true,
+    writer: "박지성",
+  },
+  {
+    id: 4,
+    title: "신입 회원 환영회 일정",
+    createAt: "2024-05-10T11:20:00",
     isUrgent: false,
+    writer: "김민재",
   },
 ];
 
 const TeamNoticePage: React.FC = () => {
   const navigate = useNavigate();
   const { teamId } = useParams<{ teamId: string }>();
+  const numericTeamId = Number(teamId);
+
+  const getRoleByTeamId = useUserStore((state) => state.getRoleByTeamId);
 
   const [noticeList, setNoticeList] = useState<Notice[]>([]);
   const [filteredNotices, setFilteredNotices] = useState<Notice[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [isGridView, setIsGridView] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+
+  const userRole = teamId ? getRoleByTeamId(Number(teamId)) : undefined;
+  const isManager =
+    userRole && ["MANAGER", "SUB_MANAGER"].includes(userRole.role);
+  const canWrite = isManager;
 
   useEffect(() => {
     const fetchNoticeList = async () => {
-      if (!teamId) {
-        setError("팀 ID를 찾을 수 없습니다. 올바른 경로로 접근해주세요.");
-        setIsLoading(false);
-        return;
-      }
+      if (!teamId) return;
+      setIsLoading(true);
+
       try {
-        setIsLoading(true);
-        // 실제 API 호출
-        // const response = await apiClient.get(`/api/announcement/member/get-all`, {
-        //   params: { teamId },
-        // });
-        // const fetchedData: Notice[] = response.data;
+        const token = getAccessToken();
+        if (token?.startsWith("dev-")) {
+          console.warn("[DEV MODE] Using mock data for Notices");
+          await new Promise((resolve) => setTimeout(resolve, 500));
+          setNoticeList(DEV_MOCK_NOTICES);
+          return;
+        }
 
-        // 실제 API 호출 대신 임시 데이터 사용 (개발 단계)
-        const fetchedData: Notice[] = MOCK_NOTICES;
-
-        setNoticeList(fetchedData);
-        setFilteredNotices(fetchedData);
-        setError(null);
+        const response = await apiClient.get<Notice[]>(
+          `/api/announcement/member/get-all`,
+          {
+            params: { teamId: numericTeamId },
+          }
+        );
+        setNoticeList(response.data);
       } catch (err) {
-        console.error("데이터를 가져오는 중 에러가 발생했습니다.", err);
-        setError("데이터를 불러오는 데 실패했습니다. 다시 시도해주세요.");
+        console.error("Failed to fetch notices:", err);
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchNoticeList();
-  }, [teamId]);
+  }, [teamId, numericTeamId]);
 
-  const handleSearch = () => {
+  useEffect(() => {
+    if (!searchQuery) {
+      setFilteredNotices(noticeList);
+      return;
+    }
+    const lowerQuery = searchQuery.toLowerCase();
     const filtered = noticeList.filter((notice) =>
-      notice.title.toLowerCase().includes(searchQuery.toLowerCase())
+      notice.title.toLowerCase().includes(lowerQuery)
     );
     setFilteredNotices(filtered);
-  };
+  }, [searchQuery, noticeList]);
 
-  const handleListView = () => {
-    setIsGridView(false);
-  };
-
-  const handleGridView = () => {
-    setIsGridView(true);
-  };
-
-  const handleCreateNotice = () => {
-    navigate(`/team/${teamId}/notice/create`);
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const month = date.getMonth() + 1;
+    const day = date.getDate();
+    return `${month}월 ${day}일`;
   };
 
   return (
-    <>
-      <Header2 text="공지사항" />
-      <Container>
-        <TopControls>
-          <SearchInputWrapper>
+    <PageWrapper>
+      <Header2 text="게시판" />
+
+      <ContentContainer>
+        <PageHeader>
+          <PageTitleArea>
+            <Title>공지사항</Title>
+            <SubTitle>팀의 중요한 소식을 확인하세요</SubTitle>
+          </PageTitleArea>
+
+          <SearchWrapper>
+            <HiMagnifyingGlass color="#999" size={20} />
             <SearchInput
-              type="text"
-              placeholder="공지사항 제목으로 검색"
+              placeholder="검색어 입력"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyPress={(e) => {
-                if (e.key === "Enter") {
-                  handleSearch();
-                }
-              }}
             />
-            <SearchButton onClick={handleSearch}>
-              <FaSearch size={16} />
-            </SearchButton>
-          </SearchInputWrapper>
-          <ViewButtons>
-            <ListButton onClick={handleListView} isActive={!isGridView}>
-              <MdViewList
-                size={24}
-                color={!isGridView ? "white" : "var(--color-main)"}
-              />
-            </ListButton>
-            <GridButton onClick={handleGridView} isActive={isGridView}>
-              <MdGridView
-                size={24}
-                color={isGridView ? "white" : "var(--color-main)"}
-              />
-            </GridButton>
-          </ViewButtons>
-        </TopControls>
+          </SearchWrapper>
+        </PageHeader>
 
-        {isLoading ? (
-          <InfoMessage>공지사항을 불러오는 중입니다...</InfoMessage>
-        ) : error ? (
-          <ErrorMessage>{error}</ErrorMessage>
-        ) : filteredNotices.length > 0 ? (
-          isGridView ? (
-            <NoticeGrid>
-              {filteredNotices.map((notice) => (
-                <GridItem
-                  key={notice.id}
-                  className="shadow-df"
-                  onClick={() =>
-                    navigate(`/team/${teamId}/notice/${notice.id}`)
-                  }
-                >
-                  {/* isUrgent props을 GridTitle에 전달 */}
-                  <NoticeTitle isUrgent={notice.isUrgent}>
-                    {notice.isUrgent && (
-                      <FaMapPin
-                        color="var(--color-error)"
-                        style={{ marginRight: "8px" }}
-                      />
+        <NoticeList>
+          {isLoading ? (
+            <LoadingState>공지사항을 불러오고 있습니다...</LoadingState>
+          ) : filteredNotices.length > 0 ? (
+            filteredNotices.map((notice) => (
+              <NoticeCard
+                key={notice.id}
+                onClick={() => navigate(`/team/${teamId}/notice/${notice.id}`)}
+                isUrgent={!!notice.isUrgent}
+              >
+                <IconWrapper isUrgent={!!notice.isUrgent}>
+                  {notice.isUrgent ? (
+                    <HiMegaphone />
+                  ) : (
+                    <HiOutlineDocumentText />
+                  )}
+                </IconWrapper>
+                <TextContent>
+                  <NoticeTitleWrapper>
+                    {notice.isUrgent && <Badge>필독</Badge>}
+                    <NoticeTitle>{notice.title}</NoticeTitle>
+                  </NoticeTitleWrapper>
+                  <NoticeMeta>
+                    <DateText>{formatDate(notice.createAt)}</DateText>
+                    {notice.writer && (
+                      <WriterText>· {notice.writer}</WriterText>
                     )}
-                    {notice.title}
-                  </NoticeTitle>
-                  <GridContent>
-                    {notice.content.length > 80
-                      ? `${notice.content.substring(0, 80)}...`
-                      : notice.content}
-                  </GridContent>
-                  <GridDate>
-                    {new Date(notice.createAt).toLocaleDateString("ko-KR")}
-                  </GridDate>
-                </GridItem>
-              ))}
-            </NoticeGrid>
+                  </NoticeMeta>
+                </TextContent>
+                <ChevronWrapper>
+                  <HiChevronRight />
+                </ChevronWrapper>
+              </NoticeCard>
+            ))
           ) : (
-            <NoticeList>
-              {filteredNotices.map((notice) => (
-                <NoticeItem
-                  className="shadow-df border-df"
-                  key={notice.id}
-                  isUrgent={notice.isUrgent}
-                  onClick={() =>
-                    navigate(`/team/${teamId}/notice/${notice.id}`)
-                  }
+            <EmptyState>
+              <EmptyIcon>📭</EmptyIcon>
+              <p>등록된 공지사항이 없습니다.</p>
+              {canWrite && (
+                <CreateButtonSmall
+                  onClick={() => navigate(`/team/${teamId}/notice/create`)}
                 >
-                  <NoticeTitle isUrgent={notice.isUrgent}>
-                    {notice.isUrgent && <UrgentPinIcon />}
-                    {notice.title}
-                  </NoticeTitle>
-                  <NoticeDate>
-                    {new Date(notice.createAt).toLocaleDateString("ko-KR")}
-                  </NoticeDate>
-                </NoticeItem>
-              ))}
-            </NoticeList>
-          )
-        ) : (
-          <EmptyStateContainer>
-            <p>
-              아직 첫 게시글이 없네요. <br />첫 게시글을 작성해 보세요!
-            </p>
-            <MainButton onClick={handleCreateNotice}>
-              첫 게시글 작성하기
-            </MainButton>
-          </EmptyStateContainer>
-        )}
-        
-      </Container>
-      <FloatingButton className="shadow-df" onClick={handleCreateNotice}>
-        <FaPen size={24} />
-      </FloatingButton>
-    </>
+                  첫 글 작성하기
+                </CreateButtonSmall>
+              )}
+            </EmptyState>
+          )}
+        </NoticeList>
+      </ContentContainer>
+
+      {canWrite && (
+        <FloatingActionButton
+          onClick={() => navigate(`/team/${teamId}/notice/create`)}
+        >
+          <HiPencil size={24} />
+        </FloatingActionButton>
+      )}
+    </PageWrapper>
   );
 };
 
@@ -224,215 +207,229 @@ export default TeamNoticePage;
 
 // --- Styled Components ---
 
-const Container = styled.div`
+const PageWrapper = styled.div`
+  min-height: 100vh;
+  background-color: #f8fafb;
+  padding-bottom: 80px;
+  max-width: 600px;
+  margin: 0 auto;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
+`;
+
+const ContentContainer = styled.div`
   padding: 20px;
 `;
 
-const TopControls = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-  gap: 10px;
+const PageHeader = styled.div`
+  margin-bottom: 24px;
 `;
 
-const SearchInputWrapper = styled.div`
-  position: relative;
-  flex-grow: 1;
-  min-width: 0;
+const PageTitleArea = styled.div`
+  margin-bottom: 16px;
 `;
 
-const SearchInput = styled.input`
-  width: 100%;
-  height: 40px;
-  padding: 0 45px 0 15px;
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
-  font-size: 16px;
-  outline: none;
-  box-sizing: border-box;
+const Title = styled.h2`
+  font-size: 24px;
+  font-family: "Pretendard-Bold";
+  color: var(--color-dark2);
+  margin-bottom: 4px;
 `;
 
-const SearchButton = styled.button`
-  position: absolute;
-  right: 0;
-  top: 0;
-  width: 40px;
-  height: 40px;
-  background-color: var(--color-main);
-  color: white;
-  border: none;
-  border-radius: 0 8px 8px 0;
-  cursor: pointer;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  &:hover {
-    background-color: var(--color-main-darker);
-  }
-`;
-
-const ViewButtons = styled.div`
-  display: flex;
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
-  overflow: hidden;
-`;
-
-const ViewButton = styled.button<{ isActive: boolean }>`
-  background-color: ${(props) =>
-    props.isActive ? "var(--color-main)" : "white"};
-  border: none;
-  cursor: pointer;
-  padding: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background-color 0.3s ease;
-`;
-
-const ListButton = styled(ViewButton)`
-  border-right: 1px solid var(--color-border);
-`;
-
-const GridButton = styled(ViewButton)``;
-
-const InfoMessage = styled.p`
-  text-align: center;
-  margin-top: 20px;
-  color: var(--color-dark1);
-`;
-
-const ErrorMessage = styled(InfoMessage)`
-  color: var(--color-error);
-`;
-
-const FloatingButton = styled.button`
-  position: fixed;
-  bottom: 80px;
-  right: 20px;
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  background-color: var(--color-main);
-  color: white;
-  border: none;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  cursor: pointer;
-  z-index: 1000;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  &:hover {
-    background-color: var(--color-main-darker);
-  }
-`;
-
-// 리스트 뷰 스타일
-const NoticeList = styled.ul`
-  list-style: none;
-  padding: 0;
-`;
-
-const NoticeItem = styled.li<{ isUrgent: boolean }>`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20px 15px;
-  margin-bottom: 10px;
-  border: ${(props) =>
-    props.isUrgent
-      ? "1px solid var(--color-main)"
-      : "1px solid var(--color-border)"};
-  border-radius: 8px;
-  background-color: white;
-  cursor: pointer;
-`;
-
-const NoticeTitle = styled.div<{ isUrgent: boolean }>`
-  font-size: 16px;
-  font-weight: bold;
-  color: ${(props) => (props.isUrgent ? "var(--color-main)" : "black")};
-  display: flex;
-  align-items: center;
-`;
-
-const NoticeDate = styled.div`
+const SubTitle = styled.p`
   font-size: 14px;
   color: #888;
 `;
 
-const UrgentPinIcon = styled(FaMapPin)`
-  margin-right: 8px;
-  color: var(--color-error);
-  font-size: 18px;
-`;
-
-// 데이터 없음 상태 스타일
-const EmptyStateContainer = styled.div`
+const SearchWrapper = styled.div`
+  background: white;
+  border-radius: 14px;
+  padding: 12px 16px;
   display: flex;
-  flex-direction: column;
-  justify-content: center;
   align-items: center;
-  text-align: center;
-  height: 300px;
-  p {
-    font-size: 18px;
-    color: var(--color-dark1);
-    margin-bottom: 20px;
+  gap: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+  border: 1px solid #eee;
+  transition: all 0.2s;
+
+  &:focus-within {
+    border-color: var(--color-main);
+    box-shadow: 0 0 0 3px rgba(14, 98, 68, 0.1);
   }
 `;
 
-// 그리드 뷰 스타일
-const NoticeGrid = styled.ul`
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: 15px;
-  list-style: none;
-  padding: 0;
+const SearchInput = styled.input`
+  border: none;
+  width: 100%;
+  font-size: 15px;
+  outline: none;
+
+  &::placeholder {
+    color: #bbb;
+  }
 `;
 
-const GridItem = styled.li`
+const NoticeList = styled.div`
   display: flex;
   flex-direction: column;
-  padding: 15px;
-  border: 1px solid var(--color-main);
-  border-radius: 8px;
-  background-color: white;
-  box-shadow: 0 2px 4px var(--color-shabow);
-  cursor: pointer;
+  gap: 12px;
 `;
 
-const GridTitle = styled.div<{ isUrgent: boolean }>`
-  font-size: 15px;
+const NoticeCard = styled.div<{ isUrgent: boolean }>`
+  background: white;
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+  border: 1px solid
+    ${(props) => (props.isUrgent ? "rgba(229, 62, 62, 0.2)" : "transparent")};
+  background-color: ${(props) => (props.isUrgent ? "#fffbfc" : "white")};
+  cursor: pointer;
+  transition: transform 0.2s;
+
+  &:hover {
+    transform: translateY(-2px);
+  }
+`;
+
+const IconWrapper = styled.div<{ isUrgent: boolean }>`
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background-color: ${(props) => (props.isUrgent ? "#ffe5e5" : "#f0f7ff")};
+  color: ${(props) =>
+    props.isUrgent ? "var(--color-error)" : "var(--color-main)"};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+`;
+
+const TextContent = styled.div`
+  flex: 1;
+  min-width: 0;
+`;
+
+const NoticeTitleWrapper = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+`;
+
+const Badge = styled.span`
+  background-color: var(--color-error);
+  color: white;
+  font-size: 10px;
   font-weight: bold;
+  padding: 2px 6px;
+  border-radius: 4px;
+  flex-shrink: 0;
+`;
+
+const NoticeTitle = styled.div`
+  font-size: 16px;
+  font-family: "Pretendard-SemiBold";
+  color: var(--color-dark2);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  margin-bottom: 5px;
-  color: ${(props) => (props.isUrgent ? "var(--color-main)" : "black")};
+`;
+
+const NoticeMeta = styled.div`
   display: flex;
   align-items: center;
+  font-size: 13px;
+  color: #999;
 `;
 
-const GridContent = styled.p`
-  font-size: 12px;
-  color: var(--color-dark1);
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  line-height: 1.4;
+const DateText = styled.span``;
+
+const WriterText = styled.span`
+  margin-left: 4px;
 `;
 
-const GridDate = styled.div`
-  font-size: 10px;
-  color: #888;
-  margin-top: auto;
-  text-align: right;
+const ChevronWrapper = styled.div`
+  color: #ccc;
+  font-size: 20px;
 `;
 
-const FlexContainer = styled.div`
+const FloatingActionButton = styled.button`
+  position: fixed;
+  bottom: 90px;
+  /* Centering Logic for Desktop Webview */
+  left: 50%;
+  transform: translateX(
+    220px
+  ); /* 600px width / 2 = 300px center. Button(56px) + Margin(25px) approx 80px from edge. 300 - 80 = 220px */
+  margin-left: 0;
+
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--color-main);
+  color: white;
+  border: none;
+  box-shadow: 0 4px 15px rgba(14, 98, 68, 0.4);
   display: flex;
   align-items: center;
-  `
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.2s;
+  z-index: 100;
+
+  @media (max-width: 620px) {
+    left: auto;
+    right: 25px;
+    transform: none;
+  }
+
+  &:hover {
+    transform: translateX(220px) scale(1.05); /* Maintain translation on hover */
+    background: var(--color-main-darker);
+  }
+
+  @media (max-width: 620px) {
+    &:hover {
+      transform: scale(1.05); /* Reset translation on mobile hover */
+    }
+  }
+`;
+
+const LoadingState = styled.div`
+  text-align: center;
+  padding: 40px;
+  color: #999;
+  font-size: 14px;
+`;
+
+const EmptyState = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 0;
+  gap: 16px;
+
+  p {
+    color: #bbb;
+    font-size: 15px;
+  }
+`;
+
+const EmptyIcon = styled.div`
+  font-size: 40px;
+`;
+
+const CreateButtonSmall = styled.button`
+  padding: 8px 16px;
+  background-color: var(--color-main);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  font-family: "Pretendard-SemiBold";
+`;

@@ -1,15 +1,14 @@
 import React, { useEffect, useState } from "react";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
-import Header2 from "../../../components/Header/Header2/Header2";
-import NoticeCard1 from "../../../components/Notice/NoticeCard1/NoticeCard1";
-import apiClient from "../../../api/apiClient";
-import MiniButton from "../../../components/Button/MiniButton";
-import Modal2 from "../../../components/Modal/Modal2";
+import { useNavigate, useParams } from "react-router-dom";
 import styled from "styled-components";
-import { FaPen, FaRegTrashCan } from "react-icons/fa6";
+import apiClient from "../../../api/apiClient";
+import { FaPen, FaTrash } from "react-icons/fa";
+import { HiChevronLeft, HiCalendarDays, HiUserCircle } from "react-icons/hi2";
+import Modal2 from "../../../components/Modal/Modal2";
 import { useUserStore } from "../../../stores/userStore";
+import { getAccessToken } from "../../../utils/authUtils";
 
-// 공지사항 상세 데이터 타입 정의
+// --- Types ---
 interface NoticeDetail {
   announcementId: number;
   content: string;
@@ -20,39 +19,28 @@ interface NoticeDetail {
   writer: string;
 }
 
-// 임시 데이터 (Mock Data)
-const MOCK_NOTICE_DETAILS: NoticeDetail[] = [
-  {
-    announcementId: 1,
-    title: "필독! 팀 회비 납부 공지",
-    content:
-      "안녕하세요. 팀원 여러분, 2024년 2분기 팀 회비 납부 기간입니다. 늦지 않게 납부 부탁드립니다. \n\n자세한 내용은 아래 계좌로 입금 후 총무에게 확인 문자를 보내주세요.",
-    createdAt: "2024-05-20T10:00:00Z",
-    updatedAt: "2024-05-20T10:00:00Z",
-    imageUrl: "https://i.ibb.co/6y4t6y3/temp-image.png",
-    writer: "김주장",
-  },
-  {
-    announcementId: 2,
-    title: "새 유니폼 디자인 투표",
-    content:
-      "다가오는 새 시즌을 맞아 새로운 유니폼 디자인을 선정하고자 합니다. A, B, C 세 가지 디자인 중 마음에 드는 디자인에 투표해주세요! 투표 링크는 팀 채팅방을 참고하세요.",
-    createdAt: "2024-05-18T15:30:00Z",
-    updatedAt: "2024-05-19T10:00:00Z",
-    imageUrl: "",
-    writer: "박총무",
-  },
-  {
-    announcementId: 3,
-    title: "팀 연습 경기 일정 공지",
-    content:
-      "이번 주 토요일 오후 3시, 00풋살장에서 연습 경기가 있습니다. 많은 참여 부탁드립니다. 참가 가능 여부를 댓글로 남겨주세요.",
-    createdAt: "2024-05-15T09:00:00Z",
-    updatedAt: "",
-    imageUrl: "",
-    writer: "이감독",
-  },
-];
+// --- Dev Mock Data ---
+const DEV_MOCK_NOTICE_DETAIL: NoticeDetail = {
+  announcementId: 1,
+  title: "📢 [필독] 5월 팀 정기 회비 납부 안내",
+  content: `안녕하세요. 팀원 여러분, 
+2024년 2분기 팀 회비 납부 기간입니다. 
+
+이번 분기는 풋살장 예약비 인상으로 인해 불가피하게 회비가 소폭 인상되었습니다. 
+팀 운영을 위해 늦지 않게 납부 부탁드립니다.
+
+📅 납부 기한: 2024년 5월 31일까지
+💰 납부 금액: 30,000원
+🏦 입금 계좌: 카카오뱅크 3333-00-0000000 (예금주: 박총무)
+
+입금 후에는 반드시 단톡방에 "입금 완료"라고 남겨주세요!
+문의사항은 총무에게 개인 톡 부탁드립니다.`,
+  createdAt: "2024-05-20T10:00:00",
+  updatedAt: "2024-05-20T10:00:00",
+  writer: "박총무",
+  imageUrl:
+    "https://images.unsplash.com/photo-1574629810360-7efbbe195018?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+};
 
 const TeamNoticeDetailPage: React.FC = () => {
   const navigate = useNavigate();
@@ -60,131 +48,179 @@ const TeamNoticeDetailPage: React.FC = () => {
     teamId: string;
     noticeId: string;
   }>();
+  const numericTeamId = Number(teamId);
 
   const getRoleByTeamId = useUserStore((state) => state.getRoleByTeamId);
-
   const [noticeDetail, setNoticeDetail] = useState<NoticeDetail | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // 권한 체크
   const userRole = teamId ? getRoleByTeamId(Number(teamId)) : undefined;
-
-  // 수정: userRole이 undefined일 가능성을 명시적으로 처리
   const isManager =
-    userRole &&
-    (userRole.role === "MANAGER" || userRole.role === "SUB_MANAGER");
+    userRole && ["MANAGER", "SUB_MANAGER"].includes(userRole.role);
+  // 개발 모드에서는 항상 관리자 권한 부여 (테스트용)
+  const isDevMode = getAccessToken()?.startsWith("dev-");
+  const canEdit = isManager || isDevMode;
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    const year = date.getFullYear();
-    const month = (date.getMonth() + 1).toString().padStart(2, "0");
-    const day = date.getDate().toString().padStart(2, "0");
-    return `${year}-${month}-${day}`;
+    return `${date.getFullYear()}년 ${
+      date.getMonth() + 1
+    }월 ${date.getDate()}일 ${date.getHours()}:${date
+      .getMinutes()
+      .toString()
+      .padStart(2, "0")}`;
   };
 
   useEffect(() => {
-    if (!teamId || !noticeId) {
-      setError("잘못된 접근입니다. 팀 또는 공지 ID를 찾을 수 없습니다.");
-      setIsLoading(false);
-      return;
-    }
+    const fetchDetail = async () => {
+      if (!teamId || !noticeId) return;
+      setIsLoading(true);
 
-    const fetchedDetail = async () => {
       try {
-        setIsLoading(true);
-        const foundNotice = MOCK_NOTICE_DETAILS.find(
-          (item) => item.announcementId === Number(noticeId)
-        );
-
-        if (foundNotice) {
-          setNoticeDetail(foundNotice);
-          setError(null);
-        } else {
-          setError("해당 공지사항을 찾을 수 없습니다.");
+        // 🔧 개발 모드 체크
+        const token = getAccessToken();
+        if (token?.startsWith("dev-")) {
+          console.warn("[DEV MODE] Using mock data for Notice Detail");
+          await new Promise((resolve) => setTimeout(resolve, 500));
+          setNoticeDetail(DEV_MOCK_NOTICE_DETAIL);
+          return;
         }
+
+        const response = await apiClient.get<NoticeDetail>(
+          `/api/announcement/member/detail`,
+          {
+            params: {
+              teamId: numericTeamId,
+              announcementId: noticeId,
+            },
+          }
+        );
+        setNoticeDetail(response.data);
       } catch (err) {
-        console.error("데이터를 가져오는 중 에러가 발생했습니다.", err);
-        setError("데이터를 불러오는 데 실패했습니다.");
+        console.error("Failed to fetch notice detail:", err);
+        setError("공지사항을 불러오지 못했습니다.");
       } finally {
         setIsLoading(false);
       }
     };
-    fetchedDetail();
-  }, [teamId, noticeId]);
 
-  const handleRewrite = () => {
-    navigate(`/team/${teamId}/notice/rewrite/${noticeId}`);
-  };
+    fetchDetail();
+  }, [teamId, noticeId, numericTeamId]);
 
-  const handleRemove = () => {
-    setIsModalOpen(true);
-  };
+  const handleRemove = () => setIsModalOpen(true);
 
   const handleConfirmRemove = async () => {
     try {
-      alert("공지사항이 성공적으로 삭제되었습니다.");
-      setIsModalOpen(false);
+      // 🔧 개발 모드 삭제 시뮬레이션
+      if (isDevMode) {
+        alert("[개발 모드] 공지사항이 삭제되었습니다.");
+        navigate(`/team/${teamId}/notice`);
+        return;
+      }
+
+      await apiClient.get(`/api/announcement/manager/delete`, {
+        params: {
+          announcementId: noticeId,
+          teamId: numericTeamId,
+        },
+      });
+      alert("삭제되었습니다.");
       navigate(`/team/${teamId}/notice`);
     } catch (error) {
-      console.error("공지사항 삭제 중 오류 발생:", error);
-      alert("공지사항 삭제에 실패했습니다.");
+      console.error("삭제 실패:", error);
+      alert("삭제에 실패했습니다.");
+    } finally {
       setIsModalOpen(false);
     }
   };
 
   return (
-    <>
-      <Header2 text="공지사항" line={true} />
-      <div>
+    <PageWrapper>
+      <Header>
+        <BackButton onClick={() => navigate(-1)}>
+          <HiChevronLeft size={24} />
+        </BackButton>
+        <HeaderTitle>공지사항</HeaderTitle>
+        <div style={{ width: 24 }} />
+      </Header>
+
+      <ContentContainer>
         {isLoading ? (
-          <InfoMessage>공지사항을 불러오는 중입니다...</InfoMessage>
+          <LoadingState>불러오는 중...</LoadingState>
         ) : error ? (
-          <ErrorMessage>{error}</ErrorMessage>
+          <ErrorState>{error}</ErrorState>
         ) : noticeDetail ? (
           <>
-            <div style={{ padding: "20px 20px 100px 20px" }}>
-              <NoticeCard1
-                title={noticeDetail.title}
-                createDate={formatDate(noticeDetail.createdAt)}
-                updateDate={
-                  noticeDetail.updatedAt
-                    ? formatDate(noticeDetail.updatedAt)
-                    : ""
-                }
-                writer={noticeDetail.writer}
-                img={noticeDetail.imageUrl || ""}
-              >
-                <p>{noticeDetail.content}</p>
-              </NoticeCard1>
-            </div>
-            {isManager && (
-              <FixedButtonWrapper>
-                <MiniButton onClick={handleRemove}>
-                  <FaRegTrashCan /> 삭제하기
-                </MiniButton>
-                <MiniButton onClick={handleRewrite}>
-                  <FaPen /> 수정하기
-                </MiniButton>
-              </FixedButtonWrapper>
-            )}
+            <TitleSection>
+              <NoticeTitle>{noticeDetail.title}</NoticeTitle>
+              <MetaInfo>
+                <MetaItem>
+                  <HiUserCircle size={16} />
+                  <span>{noticeDetail.writer}</span>
+                </MetaItem>
+                <MetaDivider />
+                <MetaItem>
+                  <HiCalendarDays size={16} />
+                  <span>{formatDate(noticeDetail.createdAt)}</span>
+                </MetaItem>
+              </MetaInfo>
+            </TitleSection>
+
+            <Divider />
+
+            <BodySection>
+              {noticeDetail.imageUrl && (
+                <ImageWrapper>
+                  <NoticeImage src={noticeDetail.imageUrl} alt="공지 이미지" />
+                </ImageWrapper>
+              )}
+              <ContentText>
+                {noticeDetail.content.split("\n").map((line, i) => (
+                  <span key={i}>
+                    {line}
+                    <br />
+                  </span>
+                ))}
+              </ContentText>
+            </BodySection>
           </>
-        ) : (
-          <InfoMessage>해당 공지사항을 찾을 수 없습니다.</InfoMessage>
-        )}
-      </div>
+        ) : null}
+      </ContentContainer>
+
+      {/* 관리자(또는 개발모드)일 때만 수정/삭제 버튼 노출 */}
+      {canEdit && !isLoading && !error && (
+        <BottomActionBar>
+          <ActionButton
+            onClick={() =>
+              navigate(`/team/${teamId}/notice/rewrite/${noticeId}`)
+            }
+          >
+            <FaPen size={14} /> 수정
+          </ActionButton>
+          <DeleteButton onClick={handleRemove}>
+            <FaTrash size={14} /> 삭제
+          </DeleteButton>
+        </BottomActionBar>
+      )}
+
       <Modal2
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        title="공지사항을 삭제하시겠습니까?"
+        title="삭제하시겠습니까?"
         confirmText="삭제"
         cancelText="취소"
         onConfirm={handleConfirmRemove}
       >
-        <p>삭제 시 복구할 수 없습니다.</p>
-        <p>그래도 삭제하시겠습니까?</p>
+        <p style={{ color: "#666", fontSize: "14px", lineHeight: "1.5" }}>
+          이 공지사항을 정말 삭제하시겠습니까?
+          <br />
+          삭제 후에는 복구할 수 없습니다.
+        </p>
       </Modal2>
-    </>
+    </PageWrapper>
   );
 };
 
@@ -192,22 +228,160 @@ export default TeamNoticeDetailPage;
 
 // --- Styled Components ---
 
-const InfoMessage = styled.p`
-  text-align: center;
-  margin-top: 20px;
-  color: var(--color-dark1);
+const PageWrapper = styled.div`
+  min-height: 100vh;
+  background: white;
+  padding-bottom: 80px;
 `;
 
-const ErrorMessage = styled(InfoMessage)`
-  color: var(--color-error);
-`;
-
-const FixedButtonWrapper = styled.div`
+const Header = styled.div`
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  background: white;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  border-bottom: 1px solid #f0f0f0;
+`;
+
+const BackButton = styled.button`
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  color: var(--color-dark2);
+`;
+
+const HeaderTitle = styled.h1`
+  font-size: 18px;
+  font-family: "Pretendard-Bold";
+  color: var(--color-dark2);
+`;
+
+const ContentContainer = styled.div`
+  padding: 24px 20px;
+`;
+
+const TitleSection = styled.div`
+  margin-bottom: 20px;
+`;
+
+const NoticeTitle = styled.h2`
+  font-size: 22px;
+  font-family: "Pretendard-Bold";
+  color: #111;
+  line-height: 1.4;
+  margin-bottom: 12px;
+`;
+
+const MetaInfo = styled.div`
+  display: flex;
+  align-items: center;
   gap: 10px;
+  color: #888;
+  font-size: 13px;
+`;
+
+const MetaItem = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 4px;
+`;
+
+const MetaDivider = styled.div`
+  width: 1px;
+  height: 12px;
+  background: #eee;
+`;
+
+const Divider = styled.div`
+  height: 1px;
+  background: #f0f0f0;
+  margin: 0 -20px 24px -20px;
+`;
+
+const BodySection = styled.div`
+  font-size: 16px;
+  color: #333;
+  line-height: 1.7;
+`;
+
+const ImageWrapper = styled.div`
+  margin-bottom: 24px;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+`;
+
+const NoticeImage = styled.img`
   width: 100%;
+  height: auto;
+  display: block;
+`;
+
+const ContentText = styled.p`
+  white-space: pre-wrap;
+  word-break: break-all;
+`;
+
+const BottomActionBar = styled.div`
   position: fixed;
-  bottom: 20px;
-  z-index: 1000;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  max-width: 600px;
+  margin: 0 auto;
+  background: white;
+  border-top: 1px solid #f0f0f0;
+  padding: 12px 20px;
+  display: flex;
+  gap: 10px;
+  padding-bottom: max(12px, env(safe-area-inset-bottom));
+`;
+
+const ActionButton = styled.button`
+  flex: 1;
+  height: 48px;
+  border-radius: 12px;
+  border: 1px solid #eee;
+  background: white;
+  color: var(--color-dark2);
+  font-size: 15px;
+  font-family: "Pretendard-SemiBold";
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    background: #f8f9fa;
+  }
+`;
+
+const DeleteButton = styled(ActionButton)`
+  flex: 0.5;
+  color: var(--color-error);
+  border-color: rgba(229, 62, 62, 0.2);
+
+  &:hover {
+    background: #fff5f5;
+  }
+`;
+
+const LoadingState = styled.div`
+  text-align: center;
+  padding: 60px 0;
+  color: #999;
+`;
+
+const ErrorState = styled.div`
+  text-align: center;
+  padding: 60px 0;
+  color: var(--color-error);
 `;

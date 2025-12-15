@@ -1,231 +1,364 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import styled from "styled-components";
-import FilterBar from "../../components/Filter/FilterBar";
-import HorizontalLine from "../../components/Styled/HorizontalLine";
-import Header2 from "../../components/Header/Header2/Header2";
+import { HiMagnifyingGlass, HiUsers } from "react-icons/hi2";
 import apiClient from "../../api/apiClient";
+import { getAccessToken } from "../../utils/authUtils";
+import Header2 from "../../components/Header/Header2/Header2";
+import FilterBar from "../../components/Filter/FilterBar";
 
+// --- Types ---
 interface Player {
-  id: number;
+  teamMemberId: number;
   name: string;
-  position: string; // 예: "ST", "CF", "LW", "RW", "GK" 등
-  profileUrl?: string; // 프로필 이미지 URL
-  role?: string; // 다른 필드가 필요하면 추가
+  position: string;
+  profileUrl?: string;
+  role?: string;
+  joinDate?: string;
 }
 
+// --- Dev Mock Data ---
+const DEV_MOCK_PLAYERS: Player[] = [
+  {
+    teamMemberId: 1,
+    name: "박지성",
+    position: "MF",
+    role: "MANAGER",
+    joinDate: "2023-01-01",
+  },
+  {
+    teamMemberId: 2,
+    name: "손흥민",
+    position: "FW",
+    role: "MEMBER",
+    joinDate: "2023-02-15",
+  },
+  {
+    teamMemberId: 3,
+    name: "김민재",
+    position: "DF",
+    role: "MEMBER",
+    joinDate: "2023-03-10",
+  },
+  {
+    teamMemberId: 4,
+    name: "이강인",
+    position: "MF",
+    role: "SUB_MANAGER",
+    joinDate: "2023-04-05",
+  },
+  {
+    teamMemberId: 5,
+    name: "조현우",
+    position: "GK",
+    role: "MEMBER",
+    joinDate: "2023-05-20",
+  },
+  {
+    teamMemberId: 6,
+    name: "황희찬",
+    position: "FW",
+    role: "MEMBER",
+    joinDate: "2023-06-12",
+  },
+];
+
 const TeamMemberListPage: React.FC = () => {
-  // URL 파라미터에서 teamId 추출
   const { teamId } = useParams();
   const numericTeamId = Number(teamId);
 
-  // 서버에서 받아온 전체 플레이어 목록
-  const [allPlayers, setAllPlayers] = useState<Player[]>([]);
+  // States
+  const [players, setPlayers] = useState<Player[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [positionFilter, setPositionFilter] = useState<string | null>(null);
 
-  // 포지션, 정렬 필터 (백엔드에 전달)
-  const [positionFilter, setPositionFilter] = useState<string>("전체");
-  const [sortFilter, setSortFilter] = useState<string>("최신 가입순");
-
-  // 100명씩 표시하는 무한 스크롤 관련 상태
-  const [itemsToShow, setItemsToShow] = useState<number>(100);
-  const [hasMore, setHasMore] = useState<boolean>(true);
-
-  // Intersection Observer 관찰 대상
-  const sentinelRef = useRef<HTMLDivElement | null>(null);
-
-  // 포지션이나 정렬이 바뀌면 서버에 다시 요청하여 데이터를 새로 받아옴
   useEffect(() => {
-    const fetchPlayers = async () => {
-      if (!numericTeamId) return;
-
-      try {
-        const response = await apiClient.get<Player[]>(
-          `/api/team/${numericTeamId}/memberList`,
-          {
-            params: {
-              position: positionFilter === "전체" ? null : positionFilter,
-              sort: sortFilter,
-            },
-            headers: {
-              "X-AUTH-TOKEN": "사용자 인증 토큰",
-            },
-          }
-        );
-
-        // 새로운 데이터 수신 후 무한 스크롤 상태 초기화
-        setAllPlayers(response.data);
-        setItemsToShow(100);
-        setHasMore(response.data.length > 100);
-      } catch (error) {
-        console.error("Failed to fetch players:", error);
-      }
-    };
-
     fetchPlayers();
-  }, [numericTeamId, positionFilter, sortFilter]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [numericTeamId]);
 
-  // itemsToShow가 변경되면, 이미 전체 길이를 초과했는지 확인해 hasMore 업데이트
-  useEffect(() => {
-    if (itemsToShow >= allPlayers.length) {
-      setHasMore(false);
-    } else {
-      setHasMore(true);
+  const fetchPlayers = async () => {
+    if (!numericTeamId) return;
+    setLoading(true);
+
+    const token = getAccessToken();
+    try {
+      if (token?.startsWith("dev-")) {
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        setPlayers(DEV_MOCK_PLAYERS);
+        setLoading(false);
+        return;
+      }
+
+      const response = await apiClient.get<Player[]>(
+        `/api/team/${numericTeamId}/memberList`,
+        { params: { sort: "최신 가입순" }, headers: { "X-AUTH-TOKEN": token } }
+      );
+      setPlayers(response.data);
+    } catch (error) {
+      console.error("Failed to fetch players:", error);
+    } finally {
+      setLoading(false);
     }
-  }, [itemsToShow, allPlayers]);
-
-  // IntersectionObserver로 스크롤 끝에 닿을 때 itemsToShow += 100
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && hasMore) {
-          setItemsToShow((prev) => prev + 100);
-        }
-      },
-      { threshold: 1.0 }
-    );
-
-    if (sentinelRef.current) observer.observe(sentinelRef.current);
-
-    return () => {
-      if (sentinelRef.current) observer.unobserve(sentinelRef.current);
-    };
-  }, [hasMore]);
-
-  // 실제로 화면에 표시할 목록
-  const displayedPlayers = allPlayers.slice(0, itemsToShow);
-
-  // FilterBar에서 포지션 변경 시 호출
-  const handleFilterChange = (value: string) => {
-    setPositionFilter(value);
   };
 
-  /**
-   * 포지션별로 배경색을 지정하는 함수
-   * - ST, CF, LW, RW 등 공격수 계열은 빨강
-   * - CM, CDM, CAM 등 미드필더 계열은 초록
-   * - CB, LB, RB 등 수비수 계열은 파랑
-   * - GK는 노랑
-   * - 그 외는 회색
-   */
+  // Position grouping logic (Standardized)
+  const matchesPositionCategory = (
+    playerPos: string,
+    filterCategory: string | null
+  ) => {
+    if (!filterCategory || filterCategory === "전체") return true;
+
+    const p = playerPos.toUpperCase();
+    switch (filterCategory) {
+      case "공격수":
+        return ["ST", "CF", "LW", "RW", "SS", "FW"].includes(p);
+      case "미드필더":
+        return ["CM", "CAM", "CDM", "LM", "RM", "MF"].includes(p);
+      case "수비수":
+        return ["CB", "LB", "RB", "DF"].includes(p);
+      case "골키퍼":
+        return ["GK"].includes(p);
+      default:
+        return false;
+    }
+  };
+
+  const filteredPlayers = players.filter((p) => {
+    const matchesSearch = p.name
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase());
+    const matchesPosition = matchesPositionCategory(p.position, positionFilter);
+    return matchesSearch && matchesPosition;
+  });
+
+  const getRoleBadge = (role?: string) => {
+    if (role === "MANAGER") return <RoleBadge type="manager">운영진</RoleBadge>;
+    if (role === "SUB_MANAGER") return <RoleBadge type="sub">매니저</RoleBadge>;
+    return null;
+  };
+
   const getColorByPosition = (pos: string): string => {
-    const position = pos.toUpperCase().trim() || "";
-
-    // 공격수 계열
-    if (["ST", "CF", "LW", "RW", "SS", "LF", "RF"].includes(position)) {
-      return "var(--color-sk)"; // 빨강 (공격수)
-    }
-
-    // 미드필더 계열
-    if (["CM", "CAM", "CDM", "LM", "RM", "AM", "DM"].includes(position)) {
-      return "var(--color-mf)"; // 초록 (미드필더)
-    }
-
-    // 수비수 계열
-    if (["CB", "LB", "RB", "LWB", "RWB", "WB", "SW"].includes(position)) {
-      return "var(--color-dp)"; // 파랑 (수비수)
-    }
-
-    // 골키퍼
-    if (position === "GK") {
-      return "var(--color-gk)"; // 노랑 (골키퍼)
-    }
-
-    // 그 외
+    const position = pos.toUpperCase();
+    if (["ST", "CF", "LW", "RW", "SS", "FW"].includes(position))
+      return "var(--color-error)";
+    if (["CM", "CAM", "CDM", "LM", "RM", "MF"].includes(position))
+      return "var(--color-success)";
+    if (["CB", "LB", "RB", "DF"].includes(position)) return "var(--color-info)";
+    if (position === "GK") return "var(--color-warning)";
     return "#95a5a6";
   };
 
   return (
-    <PageContainer>
-      <Header2 text="선수 목록" />
-      <div style={{ padding: "12px 0" }}></div>
+    <PageWrapper>
+      <Header2 text="팀 멤버" />
 
-      {/* 포지션 필터 전용 컴포넌트 */}
-      <FilterBar onFilterChange={handleFilterChange} />
+      <Container>
+        {/* Search */}
+        <SearchSection>
+          <SearchInputWrapper>
+            <HiMagnifyingGlass color="#999" size={20} />
+            <SearchInput
+              placeholder="멤버 이름 검색"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </SearchInputWrapper>
+        </SearchSection>
 
-      <PlayerListContainer>
-        <PlayerCount>총 {allPlayers.length}명</PlayerCount>
-        <HorizontalLine color="#333" />
+        {/* FilterBar */}
+        <FilterBar
+          onFilterChange={(val) =>
+            setPositionFilter(val === "전체" ? null : val)
+          }
+        />
+        <div style={{ height: 16 }} />
 
-        {displayedPlayers.map((player) => (
-          <PlayerItem key={player.id}>
-            <PlayerInfo>
-              <PlayerImage
-                src={player.profileUrl || "https://via.placeholder.com/50"}
-                alt={player.name}
-              />
-              <PlayerName>{player.name}</PlayerName>
-            </PlayerInfo>
-            <PlayerRole roleColor={getColorByPosition(player.position)}>
-              {player.position}
-            </PlayerRole>
-          </PlayerItem>
-        ))}
+        <ListHeader>
+          <MemberCount>총 {filteredPlayers.length}명</MemberCount>
+        </ListHeader>
 
-        {hasMore && <div ref={sentinelRef} style={{ height: "1px" }} />}
-      </PlayerListContainer>
-    </PageContainer>
+        {/* List */}
+        <MemberList>
+          {loading ? (
+            <LoadingState>멤버 정보를 불러오는 중...</LoadingState>
+          ) : filteredPlayers.length > 0 ? (
+            filteredPlayers.map((player) => (
+              <MemberCard key={player.teamMemberId}>
+                <MemberAvatar src={player.profileUrl} />
+                <MemberInfo>
+                  <NameRow>
+                    <Name>{player.name}</Name>
+                    {getRoleBadge(player.role)}
+                  </NameRow>
+                  <MemberMeta>
+                    <PositionBox color={getColorByPosition(player.position)}>
+                      {player.position}
+                    </PositionBox>
+                    {player.joinDate && (
+                      <JoinDate>{player.joinDate} 가입</JoinDate>
+                    )}
+                  </MemberMeta>
+                </MemberInfo>
+              </MemberCard>
+            ))
+          ) : (
+            <EmptyState>
+              <HiUsers size={40} color="#ddd" />
+              <p>검색된 멤버가 없습니다.</p>
+            </EmptyState>
+          )}
+        </MemberList>
+      </Container>
+    </PageWrapper>
   );
 };
 
 export default TeamMemberListPage;
 
-/* ---------------- 스타일 컴포넌트 정의 ---------------- */
-const PageContainer = styled.div`
-  padding: 0px 10px;
+/* ========== Styled Components ========== */
+const PageWrapper = styled.div`
+  min-height: 100vh;
+  background: #f8fafb;
+  display: flex;
+  flex-direction: column;
+  max-width: 600px;
+  margin: 0 auto;
 `;
 
-const PlayerListContainer = styled.div`
-  background-color: #fff;
-  border-radius: 8px;
-  padding: 7px;
+const Container = styled.div`
+  padding: 20px;
+  flex: 1;
 `;
 
-const PlayerCount = styled.div`
-  font-size: 16px;
-  font-weight: bold;
-  margin-bottom: 15px;
-  margin-left: 10px;
+const SearchSection = styled.div`
+  margin-bottom: 20px;
 `;
 
-const PlayerItem = styled.div`
+const SearchInputWrapper = styled.div`
+  background: white;
+  border-radius: 12px;
+  padding: 12px 16px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 10px 0;
-  border-bottom: 1px solid #ddd;
+  gap: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+  border: 1px solid #eee;
+`;
 
-  &:last-child {
-    border-bottom: none;
+const SearchInput = styled.input`
+  border: none;
+  outline: none;
+  font-size: 15px;
+  width: 100%;
+  &::placeholder {
+    color: #ccc;
   }
 `;
 
-const PlayerInfo = styled.div`
+const ListHeader = styled.div`
+  margin-bottom: 12px;
+`;
+
+const MemberCount = styled.span`
+  font-size: 14px;
+  font-weight: 600;
+  color: #555;
+`;
+
+const MemberList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+`;
+
+const MemberCard = styled.div`
+  background: white;
+  padding: 16px;
+  border-radius: 16px;
   display: flex;
   align-items: center;
+  gap: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+  border: 1px solid #f0f0f0;
 `;
 
-const PlayerImage = styled.img`
-  width: 60px;
-  height: 60px;
+const MemberAvatar = styled.div<{ src?: string }>`
+  width: 50px;
+  height: 50px;
   border-radius: 50%;
-  margin-right: 20px;
+  background-color: #f0f0f0;
+  background-image: url(${(props) => props.src});
+  background-size: cover;
+  background-position: center;
+  flex-shrink: 0;
 `;
 
-const PlayerName = styled.div`
-  font-size: 16px;
-  font-weight: bold;
+const MemberInfo = styled.div`
+  flex: 1;
 `;
 
-const PlayerRole = styled.div<{ roleColor?: string }>`
-  width: 66px;
-  height: 25px;
+const NameRow = styled.div`
   display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+`;
+
+const Name = styled.span`
+  font-size: 16px;
+  font-family: "Pretendard-Bold";
+  color: var(--color-dark2);
+`;
+
+const RoleBadge = styled.span<{ type: "manager" | "sub" }>`
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: ${(props) => (props.type === "manager" ? "#fff0f0" : "#f0f7ff")};
+  color: ${(props) =>
+    props.type === "manager" ? "var(--color-error)" : "var(--color-info)"};
+  font-weight: 600;
+`;
+
+const MemberMeta = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+`;
+
+const PositionBox = styled.span<{ color: string }>`
+  font-size: 12px;
+  font-family: "Pretendard-Bold";
+  color: ${(props) => props.color};
+  background-color: ${(props) => props.color}15;
+  padding: 2px 8px;
+  border-radius: 6px;
+`;
+
+const JoinDate = styled.span`
+  font-size: 12px;
+  color: #aaa;
+`;
+
+const LoadingState = styled.div`
+  text-align: center;
+  padding: 40px;
+  color: #999;
+  font-size: 14px;
+`;
+
+const EmptyState = styled.div`
+  display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
-  border-radius: 15px;
-  color: #fff;
-  background-color: ${({ roleColor }) => roleColor || "#00b894"};
-  margin-left: 10px;
-  text-align: center;
+  padding: 60px 0;
+  gap: 12px;
+
+  p {
+    color: #bbb;
+    font-size: 14px;
+  }
 `;

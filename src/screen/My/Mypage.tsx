@@ -1,354 +1,761 @@
 import React, { useState, useEffect } from "react";
-import GlobalStyles from "../../components/Styled/GlobalStyled";
-import Header1 from "../../components/Header/Header1/Header1";
-import styled from "styled-components";
-import MiniButton from "../../components/Button/MiniButton";
+import styled, { keyframes } from "styled-components";
+import { useNavigate } from "react-router-dom";
 import {
-  FaCalendarAlt,
-  FaClipboardCheck,
-  FaEdit,
-  FaBell,
-} from "react-icons/fa";
-import { useNavigate } from "react-router-dom"; // React Router 사용
-import apiClient from "../../api/apiClient"; // apiClient 임포트
-import { getAccessToken } from "../../utils/authUtils";
-import axios, { AxiosResponse } from "axios";
-import { setAccessToken, setRefreshToken } from "../../utils/authUtils";
+  HiCalendarDays,
+  HiClipboardDocumentCheck,
+  HiBell,
+  HiChevronRight,
+  HiCog6Tooth,
+  HiShieldCheck,
+  HiArrowRightOnRectangle,
+  HiUserMinus,
+  HiPencilSquare,
+  HiSparkles,
+} from "react-icons/hi2";
+import apiClient from "../../api/apiClient";
+
+interface TeamItem {
+  position: string;
+  teamId: number;
+  teamColor: string;
+  teamImageUrl: string;
+  teamName: string;
+  role?: string;
+}
+
+interface ProfileData {
+  name: string;
+  email: string;
+  imageUrl: string;
+}
 
 const MyPage: React.FC = () => {
-  const [teamList, setTeamList] = useState<
-    Array<{
-      position: string;
-      teamId: number;
-      teamColor: string;
-      teamImageUrl: string;
-      teamName: string;
-    }>
-  >([]);
-  const [profile, setProfile] = useState<{
-    name: string;
-    email: string;
-    imageUrl: string;
-  } | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-
+  const [teamList, setTeamList] = useState<TeamItem[]>([]);
+  const [profile, setProfile] = useState<ProfileData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const profileData = async () => {
+    const fetchData = async () => {
+      setIsLoading(true);
       try {
-        const accessToken = getAccessToken();
-        const headers = {
-          Authorization: `Bearer ${accessToken}`,
-        };
+        const [profileRes, teamRes] = await Promise.all([
+          apiClient.get("api/member/getUser"),
+          apiClient.get("api/myPage/teams"),
+        ]);
 
-        const response = await apiClient.get("api/member/getUser");
-        console.log(response.data);
         setProfile({
-          name: response.data.name,
-          email: response.data.email,
-          imageUrl: response.data.profileUrl,
+          name: profileRes.data.name,
+          email: profileRes.data.email,
+          imageUrl: profileRes.data.profileUrl,
         });
-        console.log("profile", profile);
+        setTeamList(Array.isArray(teamRes.data) ? teamRes.data : []);
       } catch (err) {
-        console.error(err);
-        setError("데이터를 가져오는 중 에러가 발생했습니다.");
-      }
-    };
-    const teamData = async () => {
-      try {
-        const response = await apiClient.get("api/myPage/teams");
-        console.log(response.data);
-        setTeamList(response.data);
-        console.log("Team", teamList);
-      } catch (err) {
-        console.error(err);
-        setError("데이터를 가져오는 중 에러가 발생했습니다.");
+        console.error("데이터 로드 실패:", err);
+      } finally {
+        setIsLoading(false);
       }
     };
 
-    profileData();
-    teamData();
+    fetchData();
   }, []);
 
-  const handleEditClick = (index: number) => {
-    navigate(`/team-edit/${teamList[index].teamId}`, {
-      state: {
-        teamId: teamList[index].teamId,
-        teamColor: teamList[index].teamColor,
-        position: teamList[index].position,
-      },
+  const handleEditClick = (
+    teamId: number,
+    teamColor: string,
+    position: string
+  ) => {
+    navigate(`/team-edit/${teamId}`, {
+      state: { teamId, teamColor, position },
     });
   };
 
+  const getPositionColor = (position: string): string => {
+    switch (position) {
+      case "FW":
+      case "LW":
+      case "RW":
+        return "var(--color-sk)";
+      case "DF":
+      case "CB":
+        return "var(--color-dp)";
+      case "MF":
+        return "var(--color-mf)";
+      case "GK":
+        return "var(--color-gk)";
+      default:
+        return "var(--color-main)";
+    }
+  };
+
   return (
-    <>
-      <GlobalStyles />
-      <Header1 text="마이페이지" />
-      <Container>
-        <Profile>
-          <ProfileImage
-            src={profile?.imageUrl || "https://example.com/profile-image.jpg"}
-            alt="프로필 이미지"
-            className="shadow-df"
-          />
-          <ProfileName>{profile?.name || "이름 없음"}</ProfileName>
-          <ProfileEmail>{profile?.email || "이메일 없음"}</ProfileEmail>
-          <ProfileButton onClick={() => navigate("edit")} className="shadow-df">
-            프로필 설정
-          </ProfileButton>
-        </Profile>
-
-        <TeamContainer className="border-df">
-          <SectionTitle>가입 중인 팀</SectionTitle>
-          {teamList.length !== 0 ? (
-            teamList.map((el, index) => (
-              <JoinTeamList key={index}>
-                <TeamDiv>
-                  <ColorLine color={el.teamColor} />
-                  <TeamProfileImg src={el.teamImageUrl} />
-                  <TeamNameText onClick={() => navigate("/myteam")}>
-                    {el.teamName}
-                  </TeamNameText>
-                </TeamDiv>
-                <PositionWrapper>
-                  <PositionText position={el.position}>
-                    {el.position}
-                  </PositionText>
-                </PositionWrapper>
-                <MiniButton onClick={() => handleEditClick(index)}>
-                  <FaEdit style={{ marginRight: "5px" }} />
-                </MiniButton>
-              </JoinTeamList>
-            ))
+    <PageWrapper>
+      {/* 프로필 헤더 섹션 - 축구장 스타일 */}
+      <ProfileHeader>
+        <HeaderBackground />
+        <FieldLines />
+        <ProfileContent>
+          {isLoading ? (
+            <ProfileSkeleton>
+              <SkeletonAvatar />
+              <SkeletonName />
+              <SkeletonEmail />
+            </ProfileSkeleton>
           ) : (
-            <JoinTeamList>가입 중인 팀이 없어요</JoinTeamList>
+            <>
+              <AvatarWrapper>
+                <Avatar
+                  src={profile?.imageUrl || "/default-avatar.png"}
+                  alt={profile?.name || "프로필"}
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    if (!target.dataset.fallback) {
+                      target.dataset.fallback = "true";
+                      target.src =
+                        "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Ccircle fill='%23e8e8e8' cx='50' cy='50' r='50'/%3E%3Ccircle fill='%23ccc' cx='50' cy='40' r='20'/%3E%3Cpath fill='%23ccc' d='M20 85c0-16.6 13.4-30 30-30s30 13.4 30 30'/%3E%3C/svg%3E";
+                    }
+                  }}
+                />
+                <OnlineBadge />
+              </AvatarWrapper>
+              <ProfileInfo>
+                <ProfileName>{profile?.name || "사용자"}</ProfileName>
+                <ProfileEmail>{profile?.email || "이메일 없음"}</ProfileEmail>
+              </ProfileInfo>
+              <EditProfileButton onClick={() => navigate("edit")}>
+                <HiCog6Tooth size={18} />
+                프로필 설정
+              </EditProfileButton>
+            </>
           )}
-        </TeamContainer>
-        <MenuList>
-          <MenuItem>
-            <FaCalendarAlt size={24} />
-            <MenuText onClick={() => navigate("/my/calendar")}>
-              내 경기 일정 보기
-            </MenuText>
-          </MenuItem>
-          <MenuItem>
-            <FaClipboardCheck size={24} />
-            <MenuText onClick={() => navigate("/my/joinstatus")}>
-              가입 승인 현황 보기
-            </MenuText>
-          </MenuItem>
-          <MenuItem>
-            <FaBell size={24} />
-            <MenuText onClick={() => navigate("/my/alarm")}>
-              알림 설정하기
-            </MenuText>
-          </MenuItem>
-        </MenuList>
+        </ProfileContent>
+      </ProfileHeader>
 
-        {/* <Divider />
+      <ContentContainer>
+        {/* 팀 섹션 */}
+        <Section>
+          <SectionHeader>
+            <SectionTitle>
+              <HiSparkles />
+              가입 중인 팀
+            </SectionTitle>
+            <TeamCount>{teamList.length}개</TeamCount>
+          </SectionHeader>
 
-          <FooterList>
-            <FooterTitle>고객센터</FooterTitle>
-            <FooterItem>공지사항</FooterItem>
-            <FooterItem>자주 묻는 질문</FooterItem>
-            <FooterItem>문의하기</FooterItem>
-          </FooterList> */}
+          <TeamListContainer>
+            {isLoading ? (
+              <>
+                {[1, 2].map((i) => (
+                  <TeamCardSkeleton key={i} />
+                ))}
+              </>
+            ) : teamList.length === 0 ? (
+              <EmptyTeamState>
+                <EmptyIcon>⚽</EmptyIcon>
+                <EmptyText>아직 가입한 팀이 없어요</EmptyText>
+                <JoinTeamButton onClick={() => navigate("/team/list")}>
+                  팀 찾아보기
+                </JoinTeamButton>
+              </EmptyTeamState>
+            ) : (
+              teamList.map((team) => (
+                <TeamCard key={team.teamId}>
+                  <TeamColorBar color={team.teamColor || "#ccc"} />
+                  <TeamCardContent>
+                    <TeamLogo
+                      src={team.teamImageUrl || "/default-team.png"}
+                      alt={team.teamName}
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        if (!target.dataset.fallback) {
+                          target.dataset.fallback = "true";
+                          target.src =
+                            "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Crect fill='%23e8e8e8' width='48' height='48' rx='12'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' fill='%23999' font-size='10'%3ETEAM%3C/text%3E%3C/svg%3E";
+                        }
+                      }}
+                    />
+                    <TeamInfo onClick={() => navigate("/myteam")}>
+                      <TeamName>{team.teamName}</TeamName>
+                      <PositionBadge color={getPositionColor(team.position)}>
+                        {team.position}
+                      </PositionBadge>
+                    </TeamInfo>
+                    <EditTeamButton
+                      onClick={() =>
+                        handleEditClick(
+                          team.teamId,
+                          team.teamColor,
+                          team.position
+                        )
+                      }
+                    >
+                      <HiPencilSquare size={18} />
+                    </EditTeamButton>
+                  </TeamCardContent>
+                </TeamCard>
+              ))
+            )}
+          </TeamListContainer>
+        </Section>
 
-        <Divider />
+        {/* 퀵 메뉴 */}
+        <Section>
+          <SectionTitle>빠른 메뉴</SectionTitle>
+          <MenuGrid>
+            <MenuCard onClick={() => navigate("/my/calendar")}>
+              <MenuIconWrapper color="var(--color-info)">
+                <HiCalendarDays size={24} />
+              </MenuIconWrapper>
+              <MenuLabel>경기 일정</MenuLabel>
+            </MenuCard>
+            <MenuCard onClick={() => navigate("/my/joinstatus")}>
+              <MenuIconWrapper color="var(--color-success)">
+                <HiClipboardDocumentCheck size={24} />
+              </MenuIconWrapper>
+              <MenuLabel>가입 현황</MenuLabel>
+            </MenuCard>
+            <MenuCard onClick={() => navigate("/my/alarm")}>
+              <MenuIconWrapper color="var(--color-warning)">
+                <HiBell size={24} />
+              </MenuIconWrapper>
+              <MenuLabel>알림 설정</MenuLabel>
+            </MenuCard>
+          </MenuGrid>
+        </Section>
 
-        <FooterList>
-          <FooterTitle>보안</FooterTitle>
-          <FooterItem onClick={() => navigate("/my/change-pw")}>
-            비밀번호 변경하기
-          </FooterItem>
-          <FooterItem onClick={() => navigate("/login")}>로그아웃</FooterItem>
-          <FooterItem onClick={() => navigate("/my/unsub")}>
-            서비스 탈퇴하기
-          </FooterItem>
-        </FooterList>
-      </Container>
-    </>
+        {/* 계정 및 보안 */}
+        <Section>
+          <SectionTitle>계정 및 보안</SectionTitle>
+          <SettingsList>
+            <SettingsItem onClick={() => navigate("/my/change-pw")}>
+              <SettingsItemLeft>
+                <SettingsIcon>
+                  <HiShieldCheck size={20} />
+                </SettingsIcon>
+                <SettingsLabel>비밀번호 변경</SettingsLabel>
+              </SettingsItemLeft>
+              <HiChevronRight size={20} color="#999" />
+            </SettingsItem>
+            <SettingsItem onClick={() => navigate("/login")}>
+              <SettingsItemLeft>
+                <SettingsIcon>
+                  <HiArrowRightOnRectangle size={20} />
+                </SettingsIcon>
+                <SettingsLabel>로그아웃</SettingsLabel>
+              </SettingsItemLeft>
+              <HiChevronRight size={20} color="#999" />
+            </SettingsItem>
+            <SettingsItem onClick={() => navigate("/my/unsub")} danger>
+              <SettingsItemLeft>
+                <SettingsIcon danger>
+                  <HiUserMinus size={20} />
+                </SettingsIcon>
+                <SettingsLabel danger>서비스 탈퇴</SettingsLabel>
+              </SettingsItemLeft>
+              <HiChevronRight size={20} color="#ff6b6b" />
+            </SettingsItem>
+          </SettingsList>
+        </Section>
+
+        <AppVersion>요기조기 v1.0.0</AppVersion>
+      </ContentContainer>
+    </PageWrapper>
   );
 };
 
 export default MyPage;
 
-// 스타일 컴포넌트 정의
-
-const Container = styled.div`
-  padding: 20px;
+/* ========== Animations ========== */
+const fadeInUp = keyframes`
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 `;
 
-const Profile = styled.div`
+const shimmer = keyframes`
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+`;
+
+const pulse = keyframes`
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+`;
+
+/* ========== Styled Components ========== */
+
+const PageWrapper = styled.div`
+  min-height: 100vh;
+  background: #f5f7fa;
+  padding-bottom: 100px;
+`;
+
+const ProfileHeader = styled.div`
+  position: relative;
+  padding: 28px 20px 24px;
+  overflow: hidden;
+  margin-bottom: 8px;
+`;
+
+const HeaderBackground = styled.div`
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, #2d8a5e 0%, #1e6b47 50%, #2d8a5e 100%);
+
+  /* 축구장 잔디 패턴 (가로) */
+  background-image: linear-gradient(
+      90deg,
+      #2d8a5e 0%,
+      #1e6b47 50%,
+      #2d8a5e 100%
+    ),
+    repeating-linear-gradient(
+      0deg,
+      transparent 0px,
+      transparent 20px,
+      rgba(255, 255, 255, 0.02) 20px,
+      rgba(255, 255, 255, 0.02) 40px
+    );
+
+  /* 센터 라인 (세로) */
+  &::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    width: 2px;
+    background: rgba(255, 255, 255, 0.25);
+    transform: translateX(-50%);
+  }
+
+  /* 센터 서클 */
+  &::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 80px;
+    height: 80px;
+    border: 2px solid rgba(255, 255, 255, 0.25);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+  }
+`;
+
+/* 페널티 박스 라인 (좌우) */
+const FieldLines = styled.div`
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+
+  /* 왼쪽 페널티 박스 */
+  &::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 50%;
+    width: 40px;
+    height: 80px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-left: none;
+    border-radius: 0 8px 8px 0;
+    transform: translateY(-50%);
+  }
+
+  /* 오른쪽 페널티 박스 */
+  &::after {
+    content: "";
+    position: absolute;
+    right: 0;
+    top: 50%;
+    width: 40px;
+    height: 80px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-right: none;
+    border-radius: 8px 0 0 8px;
+    transform: translateY(-50%);
+  }
+`;
+
+const ProfileContent = styled.div`
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-bottom: 20px;
+  text-align: center;
 `;
 
-const ProfileImage = styled.img`
-  width: 116px;
-  height: 116px;
+const AvatarWrapper = styled.div`
+  position: relative;
+  margin-bottom: 16px;
+`;
+
+const Avatar = styled.img`
+  width: 90px;
+  height: 90px;
   border-radius: 50%;
-  background-color: #f0f0f0;
+  border: 4px solid rgba(255, 255, 255, 0.3);
+  object-fit: cover;
+  background: #e8e8e8;
+`;
+
+const OnlineBadge = styled.div`
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  width: 18px;
+  height: 18px;
+  background: var(--color-sub);
+  border: 3px solid white;
+  border-radius: 50%;
+`;
+
+const ProfileInfo = styled.div`
+  margin-bottom: 16px;
+`;
+
+const ProfileName = styled.h1`
+  color: white;
+  font-size: 22px;
+  font-family: "Pretendard-Bold";
+  margin-bottom: 4px;
+`;
+
+const ProfileEmail = styled.p`
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 14px;
+`;
+
+const EditProfileButton = styled.button`
   display: flex;
   align-items: center;
-  justify-content: center;
-  object-fit: cover;
-  border: 1px solid #ddd;
-  margin-bottom: 20px;
-`;
-
-const ProfileName = styled.div`
-  font-size: 20px;
-  font-family: "Pretendard-Bold";
-  margin-bottom: 5px;
-`;
-
-const ProfileEmail = styled.div`
-  font-size: 14px;
-  font-family: "Pretendard-Regular";
-  color: var(--color-dark1);
-  margin-bottom: 10px;
-`;
-
-const ProfileButton = styled.button`
-  background-color: var(--color-main);
-  border: 1px solid var(--color-dark1);
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: 20px;
-  padding: 5px 10px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-family: "Pretendard-Medium";
   cursor: pointer;
-  font-size: 14px;
-  font-family: "Pretendard-Regular";
-  color: var(--color-light1);
-  transition: background-color 0.3s ease;
+  transition: all 0.2s ease;
 
   &:hover {
-    background-color: var(--color-dark1);
+    background: rgba(255, 255, 255, 0.3);
+  }
+`;
+
+/* Skeleton Loading */
+const ProfileSkeleton = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+`;
+
+const SkeletonAvatar = styled.div`
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  animation: ${pulse} 1.5s infinite;
+  margin-bottom: 16px;
+`;
+
+const SkeletonName = styled.div`
+  width: 100px;
+  height: 22px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.2);
+  animation: ${pulse} 1.5s infinite;
+  margin-bottom: 8px;
+`;
+
+const SkeletonEmail = styled.div`
+  width: 150px;
+  height: 14px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.15);
+  animation: ${pulse} 1.5s infinite;
+`;
+
+const ContentContainer = styled.div`
+  padding: 20px;
+  margin-top: -20px;
+  position: relative;
+  z-index: 2;
+`;
+
+const Section = styled.section`
+  margin-bottom: 24px;
+  animation: ${fadeInUp} 0.4s ease;
+`;
+
+const SectionHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+
+  /* SectionHeader 안의 SectionTitle은 margin 제거 */
+  h2 {
+    margin: 0;
   }
 `;
 
 const SectionTitle = styled.h2`
+  display: flex;
+  align-items: center;
+  gap: 6px;
   font-size: 16px;
   font-family: "Pretendard-Bold";
-  margin-bottom: 20px;
+  color: var(--color-dark2);
+  margin: 0 0 12px 0;
+
+  svg {
+    color: var(--color-main);
+  }
 `;
 
-const JoinTeamList = styled.div`
+const TeamCount = styled.span`
+  font-size: 13px;
+  color: var(--color-dark1);
+  background: #f0f0f0;
+  padding: 4px 10px;
+  border-radius: 12px;
+`;
+
+const TeamListContainer = styled.div`
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8px;
+  flex-direction: column;
+  gap: 12px;
 `;
 
-const TeamContainer = styled.div`
-  background-color: white;
-  border-radius: 8px;
+const TeamCard = styled.div`
+  display: flex;
+  background: white;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  transition: all 0.2s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+  }
+`;
+
+const TeamColorBar = styled.div<{ color: string }>`
+  width: 4px;
+  background: ${(props) => props.color};
+`;
+
+const TeamCardContent = styled.div`
+  flex: 1;
+  display: flex;
+  align-items: center;
   padding: 16px;
-
-  box-shadow: 0 1.5px 1.5px 0 var(--color-shabow);
+  gap: 14px;
 `;
 
-const TeamDiv = styled.div`
-  display: flex;
-  gap: 2vw;
-  align-items: center;
-`;
-
-const ColorLine = styled.div<{ color: string }>`
-  height: 60px;
-  border-left: 5px solid ${({ color }) => color};
-  border-radius: 10px;
-`;
-
-const TeamProfileImg = styled.img`
+const TeamLogo = styled.img`
   width: 48px;
   height: 48px;
-  border-radius: 50%;
-  background-color: #f0f0f0;
+  border-radius: 12px;
+  object-fit: cover;
+  background: #f0f0f0;
+`;
+
+const TeamInfo = styled.div`
+  flex: 1;
+  cursor: pointer;
+`;
+
+const TeamName = styled.h3`
+  font-size: 15px;
+  font-family: "Pretendard-SemiBold";
+  color: var(--color-dark2);
+  margin-bottom: 4px;
+`;
+
+const PositionBadge = styled.span<{ color: string }>`
+  display: inline-block;
+  font-size: 11px;
+  font-family: "Pretendard-Bold";
+  color: ${(props) => props.color};
+  background: ${(props) => props.color}15;
+  padding: 2px 8px;
+  border-radius: 4px;
+`;
+
+const EditTeamButton = styled.button`
+  background: #f5f5f5;
+  border: none;
+  border-radius: 10px;
+  padding: 10px;
+  cursor: pointer;
+  color: var(--color-dark1);
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: var(--color-main);
+    color: white;
+  }
+`;
+
+const TeamCardSkeleton = styled.div`
+  height: 80px;
+  background: white;
+  border-radius: 16px;
+  background: linear-gradient(90deg, #f5f5f5 25%, #eee 50%, #f5f5f5 75%);
+  background-size: 200% 100%;
+  animation: ${shimmer} 1.5s infinite;
+`;
+
+const EmptyTeamState = styled.div`
+  text-align: center;
+  padding: 40px 20px;
+  background: white;
+  border-radius: 16px;
+`;
+
+const EmptyIcon = styled.div`
+  font-size: 40px;
+  margin-bottom: 12px;
+`;
+
+const EmptyText = styled.p`
+  font-size: 14px;
+  color: var(--color-dark1);
+  margin-bottom: 16px;
+`;
+
+const JoinTeamButton = styled.button`
+  background: var(--color-main);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-family: "Pretendard-SemiBold";
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: var(--color-main-darker);
+  }
+`;
+
+/* Quick Menu */
+const MenuGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+`;
+
+const MenuCard = styled.button`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  background: white;
+  border: none;
+  border-radius: 16px;
+  padding: 20px 12px;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  transition: all 0.2s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
+`;
+
+const MenuIconWrapper = styled.div<{ color: string }>`
   display: flex;
   align-items: center;
   justify-content: center;
-  object-fit: cover;
-  border: 1px solid #ddd;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: ${(props) => props.color}15;
+  color: ${(props) => props.color};
 `;
 
-const TeamNameText = styled.div`
-  font-size: 14px;
-`;
-
-const PositionWrapper = styled.div`
-  font-size: 14px;
+const MenuLabel = styled.span`
+  font-size: 13px;
+  font-family: "Pretendard-Medium";
   color: var(--color-dark2);
 `;
 
-const PositionText = styled.span<{ position: string }>`
-  color: ${({ position }) => {
-    switch (position) {
-      case "FW":
-      case "LW":
-      case "RW":
-        return "var(--color-sk)"; // 공격수
-      case "DF":
-      case "CB":
-        return "var(--color-dp)"; // 수비수
-      case "MF":
-        return "var(--color-mf)"; // 미드필더
-      case "GK":
-        return "var(--color-gk)"; // 골키퍼
-      default:
-        return "var(--color-dark2)"; // 기본 색상
-    }
-  }};
-  font-weight: bold;
+/* Settings List */
+const SettingsList = styled.div`
+  background: white;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 `;
 
-const MenuList = styled.div`
-  margin-top: 40px;
-`;
-
-const MenuItem = styled.div`
+const SettingsItem = styled.button<{ danger?: boolean }>`
   display: flex;
   align-items: center;
-  padding: 10px 0px;
-  border-bottom: 1px solid var(--color-light2);
+  justify-content: space-between;
+  width: 100%;
+  background: none;
+  border: none;
+  border-bottom: 1px solid #f5f5f5;
+  padding: 16px;
   cursor: pointer;
+  transition: all 0.2s ease;
 
-  &:first-child {
-    border-top: 1px solid var(--color-light2);
+  &:last-child {
+    border-bottom: none;
   }
-`;
-
-const MenuText = styled.span`
-  margin-left: 10px;
-  font-size: 16px;
-  font-family: "Pretendard-Medium";
-`;
-
-const Divider = styled.div`
-  border-bottom: 1px solid var(--color-light2);
-  margin: 20px 0;
-`;
-
-const FooterList = styled.div`
-  margin-bottom: 20px;
-`;
-
-const FooterItem = styled.div`
-  font-size: 14px;
-  margin-bottom: 4px;
-  cursor: pointer;
-  color: var(--color-dark2);
 
   &:hover {
-    text-decoration: underline;
+    background: ${(props) => (props.danger ? "#fff5f5" : "#f9f9f9")};
   }
 `;
 
-const FooterTitle = styled.div`
+const SettingsItemLeft = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+`;
+
+const SettingsIcon = styled.div<{ danger?: boolean }>`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: ${(props) => (props.danger ? "#ffebeb" : "#f0f9f6")};
+  color: ${(props) => (props.danger ? "#ff6b6b" : "var(--color-main)")};
+`;
+
+const SettingsLabel = styled.span<{ danger?: boolean }>`
+  font-size: 15px;
+  font-family: "Pretendard-Medium";
+  color: ${(props) => (props.danger ? "#ff6b6b" : "var(--color-dark2)")};
+`;
+
+const AppVersion = styled.div`
+  text-align: center;
   font-size: 12px;
-  margin-bottom: 5px;
   color: var(--color-dark1);
+  padding: 20px 0;
 `;

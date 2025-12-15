@@ -1,232 +1,484 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import styled from "styled-components";
-import FilterBar from "../../../components/Filter/FilterBar";
-import HorizontalLine from "../../../components/Styled/HorizontalLine";
+import {
+  HiMagnifyingGlass,
+  HiEllipsisVertical,
+  HiUser,
+  HiShieldCheck,
+  HiShieldExclamation,
+} from "react-icons/hi2";
 import Header2 from "../../../components/Header/Header2/Header2";
+import FilterBar from "../../../components/Filter/FilterBar";
 import apiClient from "../../../api/apiClient";
+import { getAccessToken } from "../../../utils/authUtils";
 
 interface Player {
-  id: number;
+  teamMemberId: number;
   name: string;
-  position: string; // 예: "ST", "CF", "LW", "RW", "GK" 등
-  profileUrl?: string; // 프로필 이미지 URL
-  role?: string; // 다른 필드가 필요하면 추가
+  position: string;
+  profileUrl?: string;
+  role: "MANAGER" | "SUB_MANAGER" | "MEMBER";
 }
 
+const DEV_MOCK_PLAYERS: Player[] = [
+  {
+    teamMemberId: 1,
+    name: "손흥민",
+    position: "ST",
+    role: "MANAGER",
+    profileUrl: "",
+  },
+  {
+    teamMemberId: 2,
+    name: "이강인",
+    position: "MF",
+    role: "MEMBER",
+    profileUrl: "",
+  },
+  {
+    teamMemberId: 3,
+    name: "김민재",
+    position: "CB",
+    role: "SUB_MANAGER",
+    profileUrl: "",
+  },
+  {
+    teamMemberId: 4,
+    name: "황희찬",
+    position: "LW",
+    role: "MEMBER",
+    profileUrl: "",
+  },
+  {
+    teamMemberId: 5,
+    name: "조현우",
+    position: "GK",
+    role: "MEMBER",
+    profileUrl: "",
+  },
+];
+
 const MTeamMemberListPage: React.FC = () => {
-  // URL 파라미터에서 teamId 추출
-  const { teamId } = useParams();
-  const numericTeamId = Number(teamId);
+  const { teamId } = useParams<{ teamId: string }>();
+  const [players, setPlayers] = useState<Player[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [activeMenuId, setActiveMenuId] = useState<number | null>(null);
+  const [positionFilter, setPositionFilter] = useState<string | null>(null);
 
-  // 서버에서 받아온 전체 플레이어 목록
-  const [allPlayers, setAllPlayers] = useState<Player[]>([]);
-
-  // 포지션, 정렬 필터 (백엔드에 전달)
-  const [positionFilter, setPositionFilter] = useState<string>("전체");
-  const [sortFilter, setSortFilter] = useState<string>("최신 가입순");
-
-  // 100명씩 표시하는 무한 스크롤 관련 상태
-  const [itemsToShow, setItemsToShow] = useState<number>(100);
-  const [hasMore, setHasMore] = useState<boolean>(true);
-
-  // Intersection Observer 관찰 대상
-  const sentinelRef = useRef<HTMLDivElement | null>(null);
-
-  // 포지션이나 정렬이 바뀌면 서버에 다시 요청하여 데이터를 새로 받아옴
+  // Close menu when clicking outside
   useEffect(() => {
-    const fetchPlayers = async () => {
-      if (!numericTeamId) return;
+    const closeMenu = () => setActiveMenuId(null);
+    document.addEventListener("click", closeMenu);
+    return () => document.removeEventListener("click", closeMenu);
+  }, []);
 
-      try {
-        const response = await apiClient.get<Player[]>(
-          `/api/team/${numericTeamId}/memberList`,
-          {
-            params: {
-              position: positionFilter === "전체" ? null : positionFilter,
-              sort: sortFilter,
-            },
-            headers: {
-              "X-AUTH-TOKEN": "사용자 인증 토큰",
-            },
-          }
-        );
+  const fetchPlayers = async () => {
+    setLoading(true);
+    const token = getAccessToken();
 
-        // 새로운 데이터 수신 후 무한 스크롤 상태 초기화
-        setAllPlayers(response.data);
-        setItemsToShow(100);
-        setHasMore(response.data.length > 100);
-      } catch (error) {
-        console.error("Failed to fetch players:", error);
-      }
-    };
-
-    fetchPlayers();
-  }, [numericTeamId, positionFilter, sortFilter]);
-
-  // itemsToShow가 변경되면, 이미 전체 길이를 초과했는지 확인해 hasMore 업데이트
-  useEffect(() => {
-    if (itemsToShow >= allPlayers.length) {
-      setHasMore(false);
-    } else {
-      setHasMore(true);
+    if (token?.startsWith("dev-")) {
+      await new Promise((r) => setTimeout(r, 600));
+      setPlayers(DEV_MOCK_PLAYERS);
+      setLoading(false);
+      return;
     }
-  }, [itemsToShow, allPlayers]);
 
-  // IntersectionObserver로 스크롤 끝에 닿을 때 itemsToShow += 100
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && hasMore) {
-          setItemsToShow((prev) => prev + 100);
+    try {
+      const res = await apiClient.get<Player[]>(
+        `/api/team/${teamId}/memberList`,
+        {
+          headers: { "X-AUTH-TOKEN": token },
         }
-      },
-      { threshold: 1.0 }
-    );
-
-    if (sentinelRef.current) observer.observe(sentinelRef.current);
-
-    return () => {
-      if (sentinelRef.current) observer.unobserve(sentinelRef.current);
-    };
-  }, [hasMore]);
-
-  // 실제로 화면에 표시할 목록
-  const displayedPlayers = allPlayers.slice(0, itemsToShow);
-
-  // FilterBar에서 포지션 변경 시 호출
-  const handleFilterChange = (value: string) => {
-    setPositionFilter(value);
+      );
+      setPlayers(res.data);
+    } catch (error) {
+      console.error("Failed to fetch players:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  /**
-   * 포지션별로 배경색을 지정하는 함수
-   * - ST, CF, LW, RW 등 공격수 계열은 빨강
-   * - CM, CDM, CAM 등 미드필더 계열은 초록
-   * - CB, LB, RB 등 수비수 계열은 파랑
-   * - GK는 노랑
-   * - 그 외는 회색
-   */
-  const getColorByPosition = (pos: string): string => {
-    if (pos === null) return "#95a5a6";
-    const position = pos.toUpperCase().trim() || "";
+  useEffect(() => {
+    if (teamId) fetchPlayers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [teamId]);
 
-    // 공격수 계열
-    if (["ST", "CF", "LW", "RW", "SS", "LF", "RF"].includes(position)) {
-      return "var(--color-sk)"; // 빨강 (공격수)
+  const handleRoleChange = async (
+    memberId: number,
+    newRole: "MANAGER" | "SUB_MANAGER" | "MEMBER"
+  ) => {
+    if (!window.confirm("권한을 변경하시겠습니까?")) return;
+
+    const token = getAccessToken();
+    try {
+      if (token?.startsWith("dev-")) {
+        setPlayers((prev) =>
+          prev.map((p) =>
+            p.teamMemberId === memberId ? { ...p, role: newRole } : p
+          )
+        );
+        alert("권한이 변경되었습니다 (Dev Mode)");
+        return;
+      }
+
+      // API mapping based on role
+      if (newRole === "MANAGER") {
+        await apiClient.put(`/api/admin/team/grantManagerRole`, null, {
+          params: { teamMemberId: memberId },
+          headers: { "X-AUTH-TOKEN": token },
+        });
+      } else if (newRole === "SUB_MANAGER") {
+        await apiClient.put(`/api/admin/team/updateSubManagerRole`, null, {
+          params: { teamMemberId: memberId, grant: true },
+          headers: { "X-AUTH-TOKEN": token },
+        });
+      } else {
+        // Demote from Sub Manager
+        await apiClient.put(`/api/admin/team/updateSubManagerRole`, null, {
+          params: { teamMemberId: memberId, grant: false },
+          headers: { "X-AUTH-TOKEN": token },
+        });
+      }
+
+      alert("권한이 변경되었습니다.");
+      fetchPlayers(); // Refresh list
+    } catch (error) {
+      console.error("Role update failed", error);
+      alert("권한 변경 실패");
     }
-
-    // 미드필더 계열
-    if (["CM", "CAM", "CDM", "LM", "RM", "AM", "DM"].includes(position)) {
-      return "var(--color-mf)"; // 초록 (미드필더)
-    }
-
-    // 수비수 계열
-    if (["CB", "LB", "RB", "LWB", "RWB", "WB", "SW"].includes(position)) {
-      return "var(--color-dp)"; // 파랑 (수비수)
-    }
-
-    // 골키퍼
-    if (position === "GK") {
-      return "var(--color-gk)"; // 노랑 (골키퍼)
-    }
-
-    // 그 외
-    return "#95a5a6";
   };
+
+  // Position grouping logic (Standardized to match /team/1/member)
+  const matchesPositionCategory = (
+    playerPos: string,
+    filterCategory: string | null
+  ) => {
+    if (!filterCategory || filterCategory === "전체") return true;
+
+    const p = playerPos.toUpperCase();
+    switch (filterCategory) {
+      case "공격수":
+        return ["ST", "CF", "LW", "RW", "SS", "FW"].includes(p);
+      case "미드필더":
+        return ["CM", "CAM", "CDM", "LM", "RM", "MF"].includes(p);
+      case "수비수":
+        return ["CB", "LB", "RB", "DF"].includes(p);
+      case "골키퍼":
+        return ["GK"].includes(p);
+      default:
+        return false;
+    }
+  };
+
+  const filteredPlayers = players.filter((p) => {
+    const matchesSearch =
+      p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      p.position.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesPosition = matchesPositionCategory(p.position, positionFilter);
+
+    return matchesSearch && matchesPosition;
+  });
 
   return (
-    <PageContainer>
-      <Header2 text="선수 목록" />
-      <div style={{ padding: "12px 0" }}></div>
+    <PageWrapper>
+      <Header2 text="선수 관리" />
 
-      {/* 포지션 필터 전용 컴포넌트 */}
-      <FilterBar onFilterChange={handleFilterChange} />
+      <Container>
+        <SearchSection>
+          <SearchInputWrapper>
+            <HiMagnifyingGlass color="#999" size={20} />
+            <SearchInput
+              placeholder="이름 또는 포지션 검색"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </SearchInputWrapper>
+        </SearchSection>
 
-      <PlayerListContainer>
-        <PlayerCount>총 {allPlayers.length}명</PlayerCount>
-        <HorizontalLine color="#333" />
+        {/* Restore FilterBar */}
+        <FilterBar
+          onFilterChange={(val) =>
+            setPositionFilter(val === "전체" ? null : val)
+          }
+        />
+        <div style={{ height: 16 }} />
 
-        {displayedPlayers.map((player) => (
-          <PlayerItem key={player.id}>
-            <PlayerInfo>
-              <PlayerImage
-                src={player.profileUrl || "https://via.placeholder.com/50"}
-                alt={player.name}
-              />
-              <PlayerName>{player.name}</PlayerName>
-            </PlayerInfo>
-            <PlayerRole roleColor={getColorByPosition(player.position)}>
-              {player.position}
-            </PlayerRole>
-          </PlayerItem>
-        ))}
+        <ListHeader>
+          <MemberCount>총 {filteredPlayers.length}명</MemberCount>
+        </ListHeader>
 
-        {hasMore && <div ref={sentinelRef} style={{ height: "1px" }} />}
-      </PlayerListContainer>
-    </PageContainer>
+        {loading ? (
+          <EmptyState>선수 목록을 불러오는 중...</EmptyState>
+        ) : filteredPlayers.length > 0 ? (
+          <PlayerList>
+            {filteredPlayers.map((player) => (
+              <PlayerCard key={player.teamMemberId}>
+                <UserInfo>
+                  <Avatar src={player.profileUrl || ""} />
+                  <TextInfo>
+                    <NameRow>
+                      <Name>{player.name}</Name>
+                      <RoleBadge role={player.role}>
+                        {getRoleLabel(player.role)}
+                      </RoleBadge>
+                    </NameRow>
+                    <Position>{player.position}</Position>
+                  </TextInfo>
+                </UserInfo>
+
+                <ActionMenuWrapper
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setActiveMenuId(
+                      activeMenuId === player.teamMemberId
+                        ? null
+                        : player.teamMemberId
+                    );
+                  }}
+                >
+                  <MenuButton>
+                    <HiEllipsisVertical size={20} />
+                  </MenuButton>
+                  {activeMenuId === player.teamMemberId && (
+                    <DropdownMenu>
+                      <MenuItem
+                        onClick={() =>
+                          handleRoleChange(player.teamMemberId, "MANAGER")
+                        }
+                      >
+                        <HiShieldCheck /> 매니저 위임
+                      </MenuItem>
+                      <MenuItem
+                        onClick={() =>
+                          handleRoleChange(player.teamMemberId, "SUB_MANAGER")
+                        }
+                      >
+                        <HiShieldExclamation /> 부매니저 임명
+                      </MenuItem>
+                      <MenuItem
+                        onClick={() =>
+                          handleRoleChange(player.teamMemberId, "MEMBER")
+                        }
+                      >
+                        <HiUser /> 일반 멤버로 변경
+                      </MenuItem>
+                    </DropdownMenu>
+                  )}
+                </ActionMenuWrapper>
+              </PlayerCard>
+            ))}
+          </PlayerList>
+        ) : (
+          <EmptyState>검색된 선수가 없습니다.</EmptyState>
+        )}
+      </Container>
+    </PageWrapper>
   );
+};
+
+// Helper
+const getRoleLabel = (role: string) => {
+  if (role === "MANAGER") return "매니저";
+  if (role === "SUB_MANAGER") return "부매니저";
+  return "멤버";
 };
 
 export default MTeamMemberListPage;
 
-/* ---------------- 스타일 컴포넌트 정의 ---------------- */
-const PageContainer = styled.div`
-  padding: 0px 10px;
+// --- Styled Components ---
+
+const PageWrapper = styled.div`
+  min-height: 100vh;
+  background-color: #f8fafb;
+  display: flex;
+  flex-direction: column;
+  max-width: 600px;
+  margin: 0 auto;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
 `;
 
-const PlayerListContainer = styled.div`
-  background-color: #fff;
-  border-radius: 8px;
-  padding: 7px;
+const Container = styled.div`
+  padding: 20px;
+  flex: 1;
 `;
 
-const PlayerCount = styled.div`
-  font-size: 16px;
-  font-weight: bold;
-  margin-bottom: 15px;
-  margin-left: 10px;
+const SearchSection = styled.div`
+  margin-bottom: 24px;
 `;
 
-const PlayerItem = styled.div`
+const SearchInputWrapper = styled.div`
+  background: white;
+  border-radius: 12px;
+  padding: 12px 16px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 10px 0;
-  border-bottom: 1px solid #ddd;
+  gap: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+  border: 1px solid #eee;
+`;
 
-  &:last-child {
-    border-bottom: none;
+const SearchInput = styled.input`
+  border: none;
+  outline: none;
+  font-size: 15px;
+  width: 100%;
+  &::placeholder {
+    color: #ccc;
   }
 `;
 
-const PlayerInfo = styled.div`
+const ListHeader = styled.div`
+  margin-bottom: 12px;
+`;
+
+const MemberCount = styled.span`
+  font-size: 14px;
+  font-weight: 600;
+  color: #555;
+`;
+
+const PlayerList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+`;
+
+const PlayerCard = styled.div`
+  background: white;
+  border-radius: 16px;
+  padding: 16px;
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+  border: 1px solid #f0f0f0;
+  position: relative;
 `;
 
-const PlayerImage = styled.img`
-  width: 60px;
-  height: 60px;
+const UserInfo = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 14px;
+`;
+
+const Avatar = styled.div<{ src: string }>`
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
-  margin-right: 20px;
+  background-color: #eee;
+  background-image: url(${(props) => props.src});
+  background-size: cover;
+  background-position: center;
 `;
 
-const PlayerName = styled.div`
+const TextInfo = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+`;
+
+const NameRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+`;
+
+const Name = styled.span`
   font-size: 16px;
-  font-weight: bold;
+  font-family: "Pretendard-Bold";
+  color: #333;
 `;
 
-const PlayerRole = styled.div<{ roleColor?: string }>`
-  width: 66px;
-  height: 25px;
+const RoleBadge = styled.span<{ role: string }>`
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 600;
+
+  ${(props) =>
+    props.role === "MANAGER" &&
+    `
+    background: #fff3bf; color: #f08c00;
+  `}
+  ${(props) =>
+    props.role === "SUB_MANAGER" &&
+    `
+    background: #e7f5ff; color: #1c7ed6;
+  `}
+  ${(props) =>
+    props.role === "MEMBER" &&
+    `
+    background: #f1f3f5; color: #868e96;
+  `}
+`;
+
+const Position = styled.span`
+  font-size: 13px;
+  color: #888;
+`;
+
+const ActionMenuWrapper = styled.div`
+  position: relative;
+`;
+
+const MenuButton = styled.button`
+  background: none;
+  border: none;
+  padding: 8px;
+  cursor: pointer;
+  color: #aaa;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
-  border-radius: 15px;
-  color: #fff;
-  background-color: ${({ roleColor }) => roleColor || "#00b894"};
-  margin-left: 10px;
+
+  &:hover {
+    color: #333;
+  }
+`;
+
+const DropdownMenu = styled.div`
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border: 1px solid #eee;
+  width: 160px;
+  z-index: 10;
+  overflow: hidden;
+  padding: 4px;
+`;
+
+const MenuItem = styled.button`
+  width: 100%;
+  text-align: left;
+  padding: 10px 12px;
+  background: none;
+  border: none;
+  font-size: 13px;
+  color: #444;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  border-radius: 4px;
+
+  &:hover {
+    background: #f8f9fa;
+  }
+
+  svg {
+    font-size: 16px;
+    color: #888;
+  }
+`;
+
+const EmptyState = styled.div`
   text-align: center;
+  padding: 40px;
+  color: #999;
+  font-size: 14px;
 `;

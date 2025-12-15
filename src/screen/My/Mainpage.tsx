@@ -1,16 +1,51 @@
 import React, { useEffect, useState } from "react";
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
 import Header3 from "../../components/Header/Header3";
 import apiClient from "../../api/apiClient";
-import { FaRegUserCircle, FaHeart, FaRocket } from "react-icons/fa";
-import { IoSettingsSharp } from "react-icons/io5";
+import {
+  HiMapPin,
+  HiUserGroup,
+  HiHeart,
+  HiCog6Tooth,
+  HiMegaphone,
+  HiCalendarDays,
+  HiChevronRight,
+  HiClipboardDocumentList,
+  HiUserCircle,
+} from "react-icons/hi2";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { TeamRole } from "../../stores/userStore";
-import { FaLocationDot } from "react-icons/fa6";
+import { getAccessToken } from "../../utils/authUtils";
 
-// --- 최종 타입 정의 ---
-// GET /api/team/{teamId} 응답 타입
+// --- Dev Mock Data ---
+const DEV_MOCK_TEAM_DETAIL = {
+  activitySchedule: [
+    ["2024-05-20", "19:00", "21:00", "잠실 풋살장"],
+    ["2024-05-27", "19:00", "21:00", "잠실 풋살장"],
+  ],
+  ageRange: "20대",
+  dues: 30000,
+  inviteCode: "dev123",
+  matchLocation: "서울 송파구",
+  memberCount: 24,
+  positionRequired: ["FW", "DF"],
+  region: "서울",
+  teamGender: "남성",
+  teamImageUrl: "",
+  teamLevel: "중급",
+  teamName: "FC 개발자들",
+  team_introduce:
+    "개발자들을 위한 즐거운 풋살 모임입니다. 매주 월요일 저녁 잠실에서 찹니다. 초보자 환영!",
+  town: "잠실동",
+};
+
+const DEV_MOCK_NOTICES = [
+  { id: 1, title: "5월 회비 납부 안내", createAt: "2024-05-01" },
+  { id: 2, title: "이번 주 경기 시간 변경", createAt: "2024-05-15" },
+];
+
+// --- Types ---
 interface TeamDetailResponse {
   activitySchedule: string[][];
   ageRange: string;
@@ -28,14 +63,12 @@ interface TeamDetailResponse {
   town: string;
 }
 
-// GET /api/announcement/member/get-all 응답 타입
 interface AnnouncementListItem {
   id: number;
   title: string;
   createAt: string;
 }
 
-// 누락되었던 GameScheduleItem 타입 정의를 추가합니다.
 interface GameScheduleItem {
   id: number;
   date: string;
@@ -43,7 +76,7 @@ interface GameScheduleItem {
   location: string;
 }
 
-// --- 헬퍼 함수 ---
+// --- Helper Functions ---
 const calculateDday = (dateString: string): string => {
   const today = new Date();
   const targetDate = new Date(dateString);
@@ -64,13 +97,12 @@ const formatDate = (dateString: string): string => {
   return `${String(month).padStart(2, "0")}/${String(day).padStart(
     2,
     "0"
-  )} ${dayOfWeek}요일`;
+  )} ${dayOfWeek}`;
 };
 
-// activitySchedule 데이터를 GameScheduleItem 타입으로 변환
 const parseActivitySchedule = (schedule: string[][]): GameScheduleItem[] => {
   return schedule.map((item, index) => ({
-    id: index, // 고유한 id가 없으므로 배열 인덱스를 사용
+    id: index,
     date: item[0],
     opponent: item[1] || "미정",
     location: item[2] || "미정",
@@ -79,8 +111,6 @@ const parseActivitySchedule = (schedule: string[][]): GameScheduleItem[] => {
 
 const MainPage: React.FC = () => {
   const { teams, isLoading: isAuthLoading } = useAuth();
-
-  // selectedTeam 상태의 타입을 TeamRole로 변경
   const [selectedTeam, setSelectedTeam] = useState<TeamRole | null>(null);
   const [teamData, setTeamData] = useState<TeamDetailResponse | null>(null);
   const [noticeList, setNoticeList] = useState<AnnouncementListItem[]>([]);
@@ -90,38 +120,44 @@ const MainPage: React.FC = () => {
   const [isPageLoading, setIsPageLoading] = useState<boolean>(true);
   const navigate = useNavigate();
 
-  // 로그인된 유저 정보가 로딩되면 첫 팀을 선택합니다.
   useEffect(() => {
     if (!isAuthLoading && teams && teams.length > 0) {
       if (!selectedTeam) {
-        // favoriteTeam 속성 오류를 해결하기 위해 userStore.ts 수정이 필요합니다.
-        // 아래 수정 사항을 먼저 적용해주세요.
         setSelectedTeam(teams.find((team) => team.favoriteTeam) || teams[0]);
       }
     }
   }, [teams, isAuthLoading, selectedTeam]);
 
-  // 선택된 팀이 변경될 때마다 데이터를 다시 불러옵니다.
   useEffect(() => {
     if (!selectedTeam) return;
 
     const fetchPageData = async () => {
       setIsPageLoading(true);
       try {
-        const teamId = selectedTeam.teamId;
+        // 🔧 개발 모드 체크
+        const token = getAccessToken();
+        if (token?.startsWith("dev-")) {
+          console.warn("[DEV MODE] Using mock data for MyTeam page");
+          await new Promise((resolve) => setTimeout(resolve, 500)); // 로딩 시뮬레이션
 
-        // 1. 팀 상세 정보 API 호출 (새로운 명세 적용)
+          setTeamData(DEV_MOCK_TEAM_DETAIL as any);
+          setNoticeList(DEV_MOCK_NOTICES);
+          const parsedGameSchedule = parseActivitySchedule(
+            DEV_MOCK_TEAM_DETAIL.activitySchedule
+          );
+          setGameScheduleList(parsedGameSchedule);
+          setIsPageLoading(false);
+          return;
+        }
+
+        const teamId = selectedTeam.teamId;
         const teamDetailsRes = await apiClient.get<TeamDetailResponse>(
           `/api/team/${teamId}`
         );
-
-        // 2. 공지사항 목록 API 호출 (새로운 명세 적용)
         const noticesRes = await apiClient.get<AnnouncementListItem[]>(
           "/api/announcement/member/get-all",
           { params: { teamId } }
         );
-
-        // 3. 경기 일정 데이터는 팀 상세 정보 응답에서 파싱
         const parsedGameSchedule = parseActivitySchedule(
           teamDetailsRes.data.activitySchedule
         );
@@ -143,7 +179,6 @@ const MainPage: React.FC = () => {
     fetchPageData();
   }, [selectedTeam]);
 
-  // Header3 컴포넌트의 onTeamChange prop에 맞게 함수 시그니처를 수정합니다.
   const handleTeamChange = (teamId: number, teamName: string) => {
     const newSelectedTeam = teams?.find((team) => team.teamId === teamId);
     if (newSelectedTeam) {
@@ -153,32 +188,34 @@ const MainPage: React.FC = () => {
 
   const handleEditClick = (teamId: number) => navigate(`/manager/${teamId}`);
 
-  // 공지사항 상세 페이지로 이동하는 함수
   const navigateToNoticeDetail = (noticeId: number) => {
     navigate(`/team/${selectedTeam?.teamId}/notice/${noticeId}`);
   };
 
   if (isAuthLoading) {
-    return <LoadingContainer>사용자 정보 로딩 중...</LoadingContainer>;
+    return (
+      <LoadingWrapper>
+        <LoadingSpinner />
+        <LoadingText>로딩 중...</LoadingText>
+      </LoadingWrapper>
+    );
   }
 
   const currentTeamInfo = selectedTeam;
 
   return (
-    <>
+    <PageWrapper>
       {teams && teams.length > 0 ? (
         <Header3
           selectedTeam={selectedTeam}
           teams={teams || []}
           onTeamChange={handleTeamChange}
-          // favoriteTeams prop에 맞게 teams 배열을 필터링합니다.
           favoriteTeams={teams
             .filter((t) => t.favoriteTeam)
             .map((t) => t.teamId)}
           onToggleFavorite={() => {}}
         />
       ) : (
-        // 팀이 없을 때의 헤더
         <Header3
           selectedTeam={null}
           teams={[]}
@@ -187,347 +224,635 @@ const MainPage: React.FC = () => {
           onToggleFavorite={() => {}}
         />
       )}
-      {isPageLoading ? (
-        <LoadingContainer>
-          페이지 데이터를 불러오는 중입니다...
-        </LoadingContainer>
-      ) : teamData && currentTeamInfo ? (
-        <Container>
-          <ProfileWrapper>
-            <ProfileImage src={teamData.teamImageUrl} alt="Profile" />
-            <ProfileInfo>
-              <InfoText>
-                <FaLocationDot /> 홈그라운드 {teamData.matchLocation}
-              </InfoText>
-              <InfoText>
-                <FaRegUserCircle /> 연령대 {teamData.ageRange}
-              </InfoText>
-              <InfoText>
-                <FaHeart /> 내 포지션 {currentTeamInfo?.position}
-              </InfoText>
-            </ProfileInfo>
-            <SettingsIcon
-              onClick={() => handleEditClick(currentTeamInfo.teamId)}
-            />
-          </ProfileWrapper>
 
-          <StatsWrapper>
-            <StatBox
+      {isPageLoading ? (
+        <LoadingWrapper>
+          <LoadingSpinner />
+          <LoadingText>팀 정보를 불러오는 중...</LoadingText>
+        </LoadingWrapper>
+      ) : teamData && currentTeamInfo ? (
+        <ContentContainer>
+          {/* 팀 프로필 카드 */}
+          <TeamProfileCard>
+            <TeamProfileHeader>
+              <TeamLogo
+                src={teamData.teamImageUrl || "/default-team.png"}
+                alt={teamData.teamName}
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  if (!target.dataset.fallback) {
+                    target.dataset.fallback = "true";
+                    target.src =
+                      "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Crect fill='%23e8e8e8' width='80' height='80' rx='16'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' fill='%23999' font-size='10'%3ETEAM%3C/text%3E%3C/svg%3E";
+                  }
+                }}
+              />
+              <TeamBasicInfo>
+                <TeamInfoRow>
+                  <InfoIcon>
+                    <HiMapPin size={16} />
+                  </InfoIcon>
+                  <InfoLabel>{teamData.matchLocation || "위치 미정"}</InfoLabel>
+                </TeamInfoRow>
+                <TeamInfoRow>
+                  <InfoIcon>
+                    <HiUserGroup size={16} />
+                  </InfoIcon>
+                  <InfoLabel>
+                    {teamData.ageRange} · {teamData.teamGender}
+                  </InfoLabel>
+                </TeamInfoRow>
+                <TeamInfoRow>
+                  <InfoIcon>
+                    <HiHeart size={16} />
+                  </InfoIcon>
+                  <InfoLabel>
+                    내 포지션:{" "}
+                    <PositionBadge>{currentTeamInfo?.position}</PositionBadge>
+                  </InfoLabel>
+                </TeamInfoRow>
+              </TeamBasicInfo>
+              <SettingsButton
+                onClick={() => handleEditClick(currentTeamInfo.teamId)}
+              >
+                <HiCog6Tooth size={22} />
+              </SettingsButton>
+            </TeamProfileHeader>
+          </TeamProfileCard>
+
+          {/* 빠른 통계 */}
+          <QuickStatsGrid>
+            <StatCard
               onClick={() => navigate(`/team/${currentTeamInfo.teamId}/member`)}
             >
-              <span>선수 수</span>
-              <strong>{teamData.memberCount}</strong>
-              <ArrowSpan>&gt;</ArrowSpan>
-            </StatBox>
-            <StatBox>
-              <span>회비/월</span>
-              <strong>{teamData.dues.toLocaleString()}원</strong>
-            </StatBox>
-          </StatsWrapper>
+              <StatIconWrapper color="var(--color-info)">
+                <HiUserCircle size={24} />
+              </StatIconWrapper>
+              <StatContent>
+                <StatValue>{teamData.memberCount}</StatValue>
+                <StatLabel>선수 수</StatLabel>
+              </StatContent>
+              <HiChevronRight size={20} color="#ccc" />
+            </StatCard>
+            <StatCard>
+              <StatIconWrapper color="var(--color-success)">
+                <HiClipboardDocumentList size={24} />
+              </StatIconWrapper>
+              <StatContent>
+                <StatValue>{teamData.dues.toLocaleString()}원</StatValue>
+                <StatLabel>월 회비</StatLabel>
+              </StatContent>
+            </StatCard>
+          </QuickStatsGrid>
+
+          {/* 팀 소개 */}
           <Section>
             <SectionTitle>팀 소개</SectionTitle>
-            <TeamIntroduce>
+            <IntroduceCard>
               {teamData.team_introduce || "등록된 팀 소개가 없습니다."}
-            </TeamIntroduce>
+            </IntroduceCard>
           </Section>
+
+          {/* 활동 일정 */}
           <Section>
             <SectionTitle>주요 활동 일정</SectionTitle>
-            {/* teamData의 activitySchedule을 사용하도록 수정 */}
-            {teamData &&
-            teamData.activitySchedule &&
-            teamData.activitySchedule.length > 0 ? (
-              <ActivitySchedule>
-                {/* activitySchedule의 첫 번째 요소에서 요일과 시간을 추출하여 표시합니다. */}
-                <DayBadge>{teamData.activitySchedule[0][0]}</DayBadge>
-                <TimeRange>
-                  시작: {teamData.activitySchedule[0][1] || "미정"} - 끝:{" "}
+            {teamData?.activitySchedule?.length > 0 ? (
+              <ActivityCard>
+                <ActivityDay>{teamData.activitySchedule[0][0]}</ActivityDay>
+                <ActivityTime>
+                  {teamData.activitySchedule[0][1] || "미정"} -{" "}
                   {teamData.activitySchedule[0][2] || "미정"}
-                </TimeRange>
-              </ActivitySchedule>
+                </ActivityTime>
+              </ActivityCard>
             ) : (
-              <NoDataText>등록된 활동 일정이 없습니다.</NoDataText>
+              <EmptyCard>등록된 활동 일정이 없습니다.</EmptyCard>
             )}
           </Section>
 
+          {/* 공지사항 */}
           <Section>
             <SectionHeader>
-              <SectionTitle>공지사항</SectionTitle>
-              <MoreLink
+              <SectionTitleWithIcon>
+                <HiMegaphone color="var(--color-error)" />
+                공지사항
+              </SectionTitleWithIcon>
+              <MoreButton
                 onClick={() =>
                   navigate(`/team/${currentTeamInfo.teamId}/notice`)
                 }
               >
-                더보기
-              </MoreLink>
+                더보기 <HiChevronRight size={16} />
+              </MoreButton>
             </SectionHeader>
             <NoticeList>
-              {noticeList && noticeList.length > 0 ? (
-                noticeList.slice(0, 3).map((notice) => (
+              {noticeList?.length > 0 ? (
+                noticeList.slice(0, 3).map((notice, index) => (
                   <NoticeItem
                     key={notice.id}
                     onClick={() => navigateToNoticeDetail(notice.id)}
+                    style={{ animationDelay: `${index * 0.05}s` }}
                   >
-                    <div>
-                      {/* isPinned 필드가 없으므로 로직 삭제 */}
-                      <span>{notice.title}</span>
-                    </div>
-                    <DateText>
-                      {new Date(notice.createAt)
-                        .toISOString()
-                        .split("T")[0]
-                        .replace(/-/g, ". ")}
-                    </DateText>
+                    <NoticeContent>
+                      <NoticeTitle>{notice.title}</NoticeTitle>
+                      <NoticeDate>
+                        {new Date(notice.createAt)
+                          .toISOString()
+                          .split("T")[0]
+                          .replace(/-/g, ". ")}
+                      </NoticeDate>
+                    </NoticeContent>
+                    <HiChevronRight size={18} color="#ccc" />
                   </NoticeItem>
                 ))
               ) : (
-                <NoDataText>등록된 공지사항이 없습니다.</NoDataText>
+                <EmptyCard>등록된 공지사항이 없습니다.</EmptyCard>
               )}
             </NoticeList>
           </Section>
 
+          {/* 경기 일정 */}
           <Section>
             <SectionHeader>
-              <SectionTitle>경기일정</SectionTitle>
-              <MoreLink
+              <SectionTitleWithIcon>
+                <HiCalendarDays color="var(--color-info)" />
+                경기 일정
+              </SectionTitleWithIcon>
+              <MoreButton
                 onClick={() =>
                   navigate(`/team/${currentTeamInfo.teamId}/calendar`, {
                     state: { teamName: teamData.teamName },
                   })
                 }
               >
-                달력보기
-              </MoreLink>
+                달력보기 <HiChevronRight size={16} />
+              </MoreButton>
             </SectionHeader>
             <GameList>
-              {gameScheduleList && gameScheduleList.length > 0 ? (
-                gameScheduleList.map((game) => (
-                  <GameItem key={game.id}>
-                    <GameDateInfo>
-                      <span>{formatDate(game.date)}</span>
-                      <DdayBadge>{calculateDday(game.date)}</DdayBadge>
-                    </GameDateInfo>
-                    <GameOpponent>{game.opponent}</GameOpponent>
-                    <GameLocation>{game.location}</GameLocation>
-                  </GameItem>
+              {gameScheduleList?.length > 0 ? (
+                gameScheduleList.map((game, index) => (
+                  <GameCard
+                    key={game.id}
+                    style={{ animationDelay: `${index * 0.05}s` }}
+                  >
+                    <GameHeader>
+                      <GameDate>{formatDate(game.date)}</GameDate>
+                      <DdayBadge dday={calculateDday(game.date)}>
+                        {calculateDday(game.date)}
+                      </DdayBadge>
+                    </GameHeader>
+                    <GameDetails>
+                      <GameOpponent>vs {game.opponent}</GameOpponent>
+                      <GameLocation>
+                        <HiMapPin size={14} />
+                        {game.location}
+                      </GameLocation>
+                    </GameDetails>
+                  </GameCard>
                 ))
               ) : (
-                <NoDataBox>등록된 경기 일정이 없습니다.</NoDataBox>
+                <EmptyCard>등록된 경기 일정이 없습니다.</EmptyCard>
               )}
             </GameList>
           </Section>
-        </Container>
+        </ContentContainer>
       ) : (
-        <LoadingContainer>
-          소속된 팀이 없거나 데이터를 불러올 수 없습니다.
-        </LoadingContainer>
+        <EmptyTeamWrapper>
+          <EmptyTeamIcon>⚽</EmptyTeamIcon>
+          <EmptyTeamTitle>소속된 팀이 없어요</EmptyTeamTitle>
+          <EmptyTeamDesc>
+            팀에 가입하거나 새로운 팀을 만들어보세요!
+          </EmptyTeamDesc>
+          <JoinTeamButton onClick={() => navigate("/team/list")}>
+            팀 찾아보기
+          </JoinTeamButton>
+        </EmptyTeamWrapper>
       )}
-    </>
+    </PageWrapper>
   );
 };
 
 export default MainPage;
 
-// --- Styled Components (최종 수정) ---
-const LoadingContainer = styled.div`
+/* ========== Animations ========== */
+const fadeInUp = keyframes`
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+`;
+
+const spin = keyframes`
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+`;
+
+/* ========== Styled Components ========== */
+const PageWrapper = styled.div`
+  min-height: 100vh;
+  background: #f5f7fa;
+  padding-bottom: 100px;
+`;
+
+const LoadingWrapper = styled.div`
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
-  height: 50vh;
-  color: #888;
+  height: 60vh;
+  gap: 16px;
 `;
-const Container = styled.div`
-  padding: 16px;
-  background-color: #fff;
+
+const LoadingSpinner = styled.div`
+  width: 40px;
+  height: 40px;
+  border: 3px solid #e8e8e8;
+  border-top-color: var(--color-main);
+  border-radius: 50%;
+  animation: ${spin} 0.8s linear infinite;
 `;
-const ProfileWrapper = styled.div`
+
+const LoadingText = styled.p`
+  color: var(--color-dark1);
+  font-size: 14px;
+`;
+
+const ContentContainer = styled.div`
+  padding: 16px 20px;
+`;
+
+/* Team Profile Card */
+const TeamProfileCard = styled.div`
+  background: white;
+  border-radius: 20px;
+  padding: 20px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  animation: ${fadeInUp} 0.4s ease;
+`;
+
+const TeamProfileHeader = styled.div`
   display: flex;
   align-items: center;
   gap: 16px;
-  margin-bottom: 24px;
 `;
 const ProfileImage = styled.img`
   width: 70px;
-  min-width: 70px;
   height: 70px;
   border-radius: 50%;
   object-fit: cover;
-  border: 1px solid #eee;
+  background: #f0f0f0;
+  flex-shrink: 0;
 `;
-const ProfileInfo = styled.div`
-  flex-grow: 1;
+
+const TeamBasicInfo = styled.div`
+  flex: 1;
   display: flex;
   flex-direction: column;
   gap: 6px;
 `;
-const InfoText = styled.span`
+
+const TeamInfoRow = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
   font-size: 14px;
-  color: #555;
+  color: var(--color-dark2);
 `;
-const SettingsIcon = styled(IoSettingsSharp)`
-  font-size: 24px;
-  color: #888;
-  cursor: pointer;
-`;
-const StatsWrapper = styled.div`
-  display: flex;
-  gap: 12px;
-  margin-bottom: 24px;
-`;
-const StatBox = styled.div`
-  flex: 1;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px;
-  border-radius: 12px;
-  background-color: #f7f7f7;
-  border: 1px solid var(--color-border);
-  box-shadow: 0 1.5px 1.5px 0 var(--color-shabow);
-  font-size: 15px;
-  color: #333;
-  cursor: pointer;
 
-  strong {
-    font-weight: 600;
-    color: var(--color-main);
+const InfoIcon = styled.span`
+  display: flex;
+  align-items: center;
+  color: var(--color-main);
+`;
+
+const InfoLabel = styled.span`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+`;
+
+const PositionBadge = styled.span`
+  background: var(--color-subtle);
+  color: var(--color-main);
+  font-size: 12px;
+  font-family: "Pretendard-Bold";
+  padding: 2px 8px;
+  border-radius: 4px;
+`;
+
+const SettingsButton = styled.button`
+  background: #f5f5f5;
+  border: none;
+  border-radius: 12px;
+  padding: 10px;
+  cursor: pointer;
+  color: var(--color-dark1);
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: var(--color-main);
+    color: white;
   }
 `;
-const ArrowSpan = styled.span`
-  color: #ccc;
-  font-weight: 600;
+
+/* Quick Stats */
+const QuickStatsGrid = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 20px;
 `;
-const Section = styled.div`
-  margin-bottom: 24px;
-`;
-const TeamIntroduce = styled.p`
+
+const StatCard = styled.div`
+  background: white;
+  border-radius: 16px;
   padding: 16px;
-  margin-top: 8px;
-  background-color: #f7f7f7;
-  border-radius: 12px;
-  font-size: 14px;
-  line-height: 1.5;
-  color: #555;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  animation: ${fadeInUp} 0.4s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  }
 `;
+
+const StatIconWrapper = styled.div<{ color: string }>`
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: ${(props) => props.color}15;
+  color: ${(props) => props.color};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+`;
+
+const StatContent = styled.div`
+  flex: 1;
+`;
+
+const StatValue = styled.div`
+  font-size: 18px;
+  font-family: "Pretendard-Bold";
+  color: var(--color-dark2);
+`;
+
+const StatLabel = styled.div`
+  font-size: 12px;
+  color: var(--color-dark1);
+`;
+
+/* Sections */
+const Section = styled.section`
+  margin-bottom: 24px;
+  animation: ${fadeInUp} 0.4s ease;
+`;
+
+const SectionTitle = styled.h2`
+  font-size: 16px;
+  font-family: "Pretendard-Bold";
+  color: var(--color-dark2);
+  margin: 0 0 12px 0;
+`;
+
 const SectionHeader = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 12px;
 `;
-const SectionTitle = styled.h2`
-  font-size: 18px;
-  font-weight: 600;
-  margin: 0;
-`;
-const MoreLink = styled.a`
-  font-size: 14px;
-  color: #888;
-  cursor: pointer;
-`;
-const ActivitySchedule = styled.div`
+
+const SectionTitleWithIcon = styled.h2`
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 16px;
-  margin-top: 8px;
-  background-color: #fff;
-  border-radius: 12px;
-  border: 1px solid var(--color-border);
-  box-shadow: 0 1.5px 1.5px 0 var(--color-shabow);
-  font-size: 15px;
+  gap: 8px;
+  font-size: 16px;
+  font-family: "Pretendard-Bold";
+  color: var(--color-dark2);
+  margin: 0;
 `;
-const DayBadge = styled.span`
-  padding: 4px 10px;
-  background-color: #e9e9e9;
+
+const MoreButton = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  background: none;
+  border: none;
+  font-size: 13px;
+  color: var(--color-dark1);
+  cursor: pointer;
+  padding: 4px;
+`;
+
+const IntroduceCard = styled.div`
+  background: white;
   border-radius: 16px;
-  font-weight: 500;
+  padding: 16px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--color-dark2);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 `;
-const TimeRange = styled.span`
-  color: var(--color-main);
-  font-weight: 600;
-`;
-const NoticeList = styled.ul`
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  background-color: #fff;
-  border-radius: 12px;
-  border: 1px solid var(--color-border);
-  box-shadow: 0 1.5px 1.5px 0 var(--color-shabow);
-`;
-const NoticeItem = styled.li`
+
+const ActivityCard = styled.div`
+  background: white;
+  border-radius: 16px;
+  padding: 16px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+`;
+
+const ActivityDay = styled.span`
+  background: var(--color-main);
+  color: white;
+  font-size: 13px;
+  font-family: "Pretendard-SemiBold";
+  padding: 6px 12px;
+  border-radius: 8px;
+`;
+
+const ActivityTime = styled.span`
+  font-size: 15px;
+  font-family: "Pretendard-SemiBold";
+  color: var(--color-dark2);
+`;
+
+const EmptyCard = styled.div`
+  background: white;
+  border-radius: 16px;
+  padding: 32px 20px;
+  text-align: center;
+  color: var(--color-dark1);
+  font-size: 14px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+`;
+
+/* Notice List */
+const NoticeList = styled.div`
+  background: white;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+`;
+
+const NoticeItem = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
   cursor: pointer;
+  transition: all 0.2s ease;
+  animation: ${fadeInUp} 0.3s ease forwards;
+  opacity: 0;
 
   &:not(:last-child) {
     border-bottom: 1px solid #f5f5f5;
   }
+
+  &:hover {
+    background: #fafafa;
+  }
 `;
-const RocketIcon = styled(FaRocket)`
-  color: var(--color-error);
-  margin-right: 8px;
+
+const NoticeContent = styled.div`
+  flex: 1;
+  min-width: 0;
 `;
-const DateText = styled.span`
-  font-size: 13px;
-  color: #999;
-  white-space: nowrap;
-`;
-const NoDataText = styled.div`
-  text-align: center;
-  padding: 20px;
-  color: #888;
+
+const NoticeTitle = styled.div`
   font-size: 14px;
+  font-family: "Pretendard-Medium";
+  color: var(--color-dark2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 4px;
 `;
+
+const NoticeDate = styled.div`
+  font-size: 12px;
+  color: var(--color-dark1);
+`;
+
+/* Game List */
 const GameList = styled.div`
   display: flex;
   flex-direction: column;
   gap: 12px;
 `;
-const GameItem = styled.div`
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  grid-template-rows: auto auto;
-  gap: 4px 12px;
+
+const GameCard = styled.div`
+  background: white;
+  border-radius: 16px;
   padding: 16px;
-  background-color: #fff;
-  border-radius: 12px;
-  border: 1px solid var(--color-border);
-  box-shadow: 0 1.5px 1.5px 0 var(--color-shabow);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  animation: ${fadeInUp} 0.3s ease forwards;
+  opacity: 0;
 `;
-const NoDataBox = styled(NoDataText)`
-  background-color: #fff;
-  border: 1px solid var(--color-border);
-  box-shadow: 0 1.5px 1.5px 0 var(--color-shabow);
-  border-radius: 12px;
-`;
-const GameDateInfo = styled.div`
-  grid-column: 1 / 2;
+
+const GameHeader = styled.div`
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-weight: 500;
+  justify-content: space-between;
+  margin-bottom: 10px;
 `;
-const DdayBadge = styled.span`
-  padding: 3px 8px;
-  background-color: #ffeeee;
-  color: #ff4d4d;
-  border-radius: 8px;
+
+const GameDate = styled.span`
+  font-size: 15px;
+  font-family: "Pretendard-SemiBold";
+  color: var(--color-dark2);
+`;
+
+const DdayBadge = styled.span<{ dday: string }>`
   font-size: 12px;
-  font-weight: 600;
+  font-family: "Pretendard-Bold";
+  padding: 4px 10px;
+  border-radius: 8px;
+  background: ${(props) =>
+    props.dday === "D-DAY"
+      ? "var(--color-error)"
+      : props.dday.startsWith("D-")
+      ? "#fff0f0"
+      : "#f0f0f0"};
+  color: ${(props) =>
+    props.dday === "D-DAY"
+      ? "white"
+      : props.dday.startsWith("D-")
+      ? "var(--color-error)"
+      : "var(--color-dark1)"};
 `;
+
+const GameDetails = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+`;
+
 const GameOpponent = styled.span`
-  grid-column: 2 / 3;
-  text-align: right;
-  font-weight: 500;
+  font-size: 16px;
+  font-family: "Pretendard-Bold";
+  color: var(--color-dark2);
 `;
+
 const GameLocation = styled.span`
-  grid-column: 1 / 3;
-  color: #777;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  color: var(--color-dark1);
+`;
+
+/* Empty Team State */
+const EmptyTeamWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+`;
+
+const EmptyTeamIcon = styled.div`
+  font-size: 56px;
+  margin-bottom: 16px;
+`;
+
+const EmptyTeamTitle = styled.h2`
+  font-size: 20px;
+  font-family: "Pretendard-Bold";
+  color: var(--color-dark2);
+  margin-bottom: 8px;
+`;
+
+const EmptyTeamDesc = styled.p`
   font-size: 14px;
+  color: var(--color-dark1);
+  margin-bottom: 24px;
+`;
+
+const JoinTeamButton = styled.button`
+  background: var(--color-main);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 12px 24px;
+  font-size: 15px;
+  font-family: "Pretendard-SemiBold";
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: var(--color-main-darker);
+  }
 `;

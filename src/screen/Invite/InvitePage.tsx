@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import styled from "styled-components";
 import GlobalStyles from "../../components/Styled/GlobalStyled";
 import Header2 from "../../components/Header/Header2/Header2";
@@ -15,11 +15,10 @@ const InvitePage = () => {
   const validCodes = ["ABC123", "DEF456", "GHI789"];
   const [state, setState] = useState(0); //0: 초대코드 조회 1: 팀 카드 확인
 
-  const [teamName, setTeamName] = useState(""); // 팀 이름 상태
-  const [teamLocation, setTeamLocation] = useState(""); // 팀 위치 상태
-  const [profileImageUrl, setProfileImageUrl] = useState(""); // 팀 프로필 이미지 상태
+  const [teamName] = useState(""); // 팀 이름 상태
+  const [teamLocation] = useState(""); // 팀 위치 상태
+  const [profileImageUrl] = useState(""); // 팀 프로필 이미지 상태
   const [isLoading, setIsLoading] = useState(false); //서버로 데이터 전송 중인지 아닌지
-  const [signupData, setSignupData] = useState<any>({}); // 데이터 정보
 
   const handleCheckCode = () => {
     if (validCodes.includes(inviteCode.toUpperCase())) {

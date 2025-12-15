@@ -1,66 +1,100 @@
 // src/components/Header/Header2.tsx
 import React from "react";
-import { FaChevronLeft } from "react-icons/fa6";
 import styled from "styled-components";
-import HorizontalLine from "../../Styled/HorizontalLine";
+import { HiChevronLeft } from "react-icons/hi2";
 import { useNavigate } from "react-router-dom";
 
 interface OwnProps {
-  text?: string; // 헤더에 표시될 텍스트 (선택적)
-  line?: boolean; // 수평선을 표시할지 여부 (선택적)
+  text?: string;
+  line?: boolean;
   nav?: any;
+  rightElement?: React.ReactNode; // 우측 추가 요소 (예: 버튼)
 }
 
-// Wrap: 원래 .Header2__wrap
-const Wrap = styled.div`
-  height: 34px;
-  position: relative;
-  margin-top: 10px;
+const HeaderContainer = styled.header<{ line: boolean }>`
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  background-color: white;
+  border-bottom: ${(props) => (props.line ? "1px solid #f0f0f0" : "none")};
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  flex-shrink: 0;
 `;
 
-// Back: 원래 .Header2__back
-const Back = styled.div`
-  position: absolute;
-  font-size: 20px;
-  font-weight: 700;
-  left: 5px;
-  cursor: pointer;
+const LeftSection = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  min-width: 40px;
+`;
 
-  & > * {
-    padding: 5px;
+const BackButton = styled.button`
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  margin-left: -8px; // 정렬 보정
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #333;
+  font-size: 24px;
+  border-radius: 50%;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: #f5f5f5;
   }
 `;
 
-// Text: 원래 .Header2__text
-const Text = styled.div`
-  position: absolute;
-  font-size: 20px;
-  font-weight: 700;
-  padding: 5px;
-  left: 50%;
-  transform: translateX(-50%);
+const TitleSection = styled.div`
+  flex: 1;
+  text-align: center;
+  font-size: 17px;
+  font-family: "Pretendard-Bold";
+  color: #333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
+
+const RightSection = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-width: 40px;
 `;
 
 /**
- * Header2 컴포넌트 - 뒤로가기 버튼 O and 밑줄표기 가능
- * @param {OwnProps} props - 컴포넌트에 전달되는 props
- * @param {string} [props.text] - 헤더에 표시될 텍스트 (선택적)
- * @param {boolean} [props.line=true] - 수평선을 표시할지 여부 (선택적, 기본값 = true)
- * @returns {JSX.Element} Header2 컴포넌트
+ * Header2 (SaaS Style)
+ * - 표준 높이 56px
+ * - Sticky Position
+ * - 우측 요소 확장 가능
  */
-const Header2: React.FC<OwnProps> = ({ text, line = true, nav = -1 }) => {
+const Header2: React.FC<OwnProps> = ({
+  text,
+  line = true,
+  nav = -1,
+  rightElement,
+}) => {
   const navigate = useNavigate();
 
   return (
-    <div>
-      <Wrap>
-        <Back onClick={() => navigate(nav)}>
-          <FaChevronLeft />
-        </Back>
-        <Text>{text}</Text>
-      </Wrap>
-      {line && <HorizontalLine />}
-    </div>
+    <HeaderContainer line={line}>
+      <LeftSection>
+        <BackButton onClick={() => navigate(nav)}>
+          <HiChevronLeft />
+        </BackButton>
+      </LeftSection>
+
+      <TitleSection>{text}</TitleSection>
+
+      <RightSection>{rightElement}</RightSection>
+    </HeaderContainer>
   );
 };
 

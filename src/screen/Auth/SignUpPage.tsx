@@ -1,78 +1,362 @@
 import React, { useState, useRef, useEffect } from "react";
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
 import CheckBox from "../../components/CheckBox/CheckBox";
 import Input from "../../components/Input/Input";
-import MainButton from "../../components/Button/MainButton";
 import ScrollProgress from "../../components/ScrollProgress/ScrollProgress";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { MdClose } from "react-icons/md";
-import { FaCheck } from "react-icons/fa6";
-import {
-  getAccessToken,
-  setAccessToken,
-  setRefreshToken,
-} from "../../utils/authUtils";
+import { HiArrowLeft, HiCheck, HiCheckCircle } from "react-icons/hi2";
 import RadioButton from "../../components/Button/RadioButton";
 import KakaoMapModal from "../../components/Modal/KakaoAddress";
 import apiClient from "../../api/apiClient";
 
-const Container = styled.div`
-  margin: auto;
-  width: 100%; /* 너비를 100%로 설정하여 내부 아이템 정렬 기준 명확화 */
+/* ========== Animations ========== */
+const fadeIn = keyframes`
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 `;
 
+const slideInRight = keyframes`
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+`;
+
+const float = keyframes`
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+`;
+
+const pulse = keyframes`
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+`;
+
+const spin = keyframes`
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+`;
+
+/* ========== Page Wrapper & Background ========== */
+const PageWrapper = styled.div`
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f8faf9 0%, #e8f5e9 100%);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 20px;
+  padding-top: 40px;
+  position: relative;
+  overflow-x: hidden;
+`;
+
+const BackgroundDecoration = styled.div`
+  position: fixed;
+  top: -100px;
+  right: -100px;
+  width: 300px;
+  height: 300px;
+  background: linear-gradient(
+    135deg,
+    var(--color-subtle) 0%,
+    var(--color-sub) 100%
+  );
+  border-radius: 50%;
+  opacity: 0.3;
+  filter: blur(60px);
+  pointer-events: none;
+`;
+
+const BackgroundCircle = styled.div`
+  position: fixed;
+  bottom: -150px;
+  left: -150px;
+  width: 400px;
+  height: 400px;
+  background: linear-gradient(
+    135deg,
+    var(--color-main) 0%,
+    var(--color-main-darker) 100%
+  );
+  border-radius: 50%;
+  opacity: 0.1;
+  filter: blur(80px);
+  pointer-events: none;
+`;
+
+const ContentWrapper = styled.div`
+  width: 100%;
+  max-width: 480px;
+  position: relative;
+  z-index: 1;
+`;
+
+/* ========== Header ========== */
+const Header = styled.div`
+  display: flex;
+  align-items: center;
+  margin-bottom: 24px;
+  animation: ${fadeIn} 0.5s ease;
+`;
+
+const BackButton = styled(Link)`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: white;
+  color: var(--color-dark2);
+  text-decoration: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  transition: all 0.2s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+`;
+
+const HeaderInfo = styled.div`
+  flex: 1;
+  text-align: center;
+  margin-right: 44px;
+`;
+
+const StepIndicator = styled.span`
+  font-size: 13px;
+  font-family: "Pretendard-SemiBold";
+  color: var(--color-main);
+`;
+
+/* ========== Progress Bar ========== */
+const ProgressContainer = styled.div`
+  margin-bottom: 28px;
+  animation: ${fadeIn} 0.5s ease 0.1s backwards;
+`;
+
+/* ========== Card ========== */
+const SignupCard = styled.div`
+  background: white;
+  border-radius: 24px;
+  padding: 32px 28px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+  animation: ${fadeIn} 0.5s ease 0.2s backwards;
+`;
+
+const StepContent = styled.div`
+  animation: ${slideInRight} 0.4s ease;
+`;
+
+/* ========== Typography ========== */
 const Title = styled.h2`
-  padding: 10px 0;
+  font-size: 24px;
+  font-family: "Pretendard-Bold";
+  color: var(--color-dark2);
+  margin-bottom: 8px;
 `;
 
 const SubTitle = styled.p`
-  color: black;
-  margin-top: 8px;
+  color: var(--color-dark1);
   font-size: 14px;
+  line-height: 1.6;
+  margin-bottom: 28px;
 `;
 
-const InputTitle = styled.p`
-  color: black;
-  margin-top: 10px;
-  margin-left: 3px;
-`;
-
-const ButtonWrapper = styled.div`
-  display: flex;
+const InputLabel = styled.label`
+  display: block;
+  font-size: 13px;
+  font-family: "Pretendard-SemiBold";
+  color: var(--color-dark2);
+  margin-bottom: 8px;
   margin-top: 20px;
 `;
 
+/* ========== Messages ========== */
+const ErrorMessage = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #fff5f5;
+  color: var(--color-error);
+  font-size: 13px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  margin-top: 8px;
+
+  &::before {
+    content: "⚠️";
+    font-size: 14px;
+  }
+`;
+
+const SuccessMessage = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #f0fdf4;
+  color: #16a34a;
+  font-size: 13px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  margin-top: 8px;
+
+  &::before {
+    content: "✓";
+    font-size: 14px;
+  }
+`;
+
+/* ========== Buttons ========== */
+const PrimaryButton = styled.button<{ disabled?: boolean }>`
+  width: 100%;
+  padding: 16px;
+  background: ${(props) =>
+    props.disabled
+      ? "#e5e5e5"
+      : "linear-gradient(135deg, var(--color-main) 0%, var(--color-main-darker) 100%)"};
+  color: ${(props) => (props.disabled ? "#999" : "white")};
+  border: none;
+  border-radius: 14px;
+  font-size: 16px;
+  font-family: "Pretendard-Bold";
+  cursor: ${(props) => (props.disabled ? "not-allowed" : "pointer")};
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 52px;
+  margin-top: 24px;
+
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(14, 98, 68, 0.3);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
+  }
+`;
+
+const SecondaryButton = styled.button<{ disabled?: boolean }>`
+  padding: 12px 20px;
+  background: ${(props) => (props.disabled ? "#f5f5f5" : "white")};
+  color: ${(props) => (props.disabled ? "#999" : "var(--color-main)")};
+  border: 2px solid
+    ${(props) => (props.disabled ? "#e5e5e5" : "var(--color-main)")};
+  border-radius: 12px;
+  font-size: 14px;
+  font-family: "Pretendard-SemiBold";
+  cursor: ${(props) => (props.disabled ? "not-allowed" : "pointer")};
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+
+  &:hover:not(:disabled) {
+    background: var(--color-subtle);
+  }
+`;
+
+const LoadingSpinner = styled.div`
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: ${spin} 0.8s linear infinite;
+`;
+
+/* ========== Input Row ========== */
+const InputRow = styled.div`
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+`;
+
+const InputFlex = styled.div`
+  flex: 1;
+`;
+
+/* ========== Address ========== */
 const SelectedAddress = styled.div`
-  margin: 10px 0;
+  margin: 12px 0;
+  padding: 12px 16px;
+  background: #f8f9fa;
+  border-radius: 10px;
   font-size: 14px;
   color: #333;
+  border: 1px solid #e8e8e8;
 `;
 
-const ErrorMessage = styled.p`
-  color: var(--color-error);
-  font-size: 12px;
-  margin-top: 2px;
+/* ========== Spacer ========== */
+const Spacer = styled.div<{ size?: number }>`
+  height: ${(props) => props.size || 20}px;
 `;
 
-const SuccessMessage = styled.p`
-  color: green;
-  font-size: 12px;
-  margin-top: 2px;
-`;
-
-const ProgressBar = styled.div`
-  margin-bottom: 20px;
-`;
-
+/* ========== Success Page ========== */
 const SuccessContainer = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
+  padding: 40px 20px;
+  animation: ${fadeIn} 0.6s ease;
 `;
 
-const SuccessTitle = styled.div`
-  font-size: 22px;
-  font-weight: 500;
+const SuccessIcon = styled.div`
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(
+    135deg,
+    var(--color-main) 0%,
+    var(--color-main-darker) 100%
+  );
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 40px;
+  margin-bottom: 24px;
+  animation: ${float} 3s ease-in-out infinite;
+  box-shadow: 0 10px 30px rgba(14, 98, 68, 0.3);
+`;
+
+const SuccessTitle = styled.h2`
+  font-size: 24px;
+  font-family: "Pretendard-Bold";
+  color: var(--color-dark2);
+  margin-bottom: 8px;
+  text-align: center;
+`;
+
+const SuccessSubtitle = styled.p`
+  font-size: 14px;
+  color: var(--color-dark1);
+  text-align: center;
+  margin-bottom: 32px;
+`;
+
+/* ========== Terms Checkbox Wrapper ========== */
+const TermsWrapper = styled.div`
+  margin-top: 16px;
 `;
 
 // Step 1: 휴대폰 인증 컴포넌트
@@ -81,30 +365,52 @@ const PhoneVerification: React.FC<{
   phone: string;
   setPhone: (value: string) => void;
 }> = ({ onNext, phone, setPhone }) => {
-  const [realVerificationCode, setRealVerificationCode] = useState("");
   const [verificationCode, setVerificationCode] = useState("");
   const [isVerified, setIsVerified] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [isSending, setIsSending] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
 
   const handleSMS = async (phone: string) => {
+    setIsSending(true);
     try {
-      const phoneNum = phone;
-      const response = await apiClient.post("/api/sign/send-sms", phoneNum);
-      setRealVerificationCode(response.data.certificationNum);
-    } catch (error) {
-      console.error(error);
+      const response = await apiClient.post("/api/sign/send-sms", null, {
+        params: { phoneNum: phone },
+      });
+      if (response.data) {
+        setSuccess("인증번호가 발송되었습니다.");
+        setError(null);
+      }
+    } catch (error: any) {
+      console.error("SMS 발송 오류:", error);
+      setError("인증번호 발송에 실패했습니다. 다시 시도해주세요.");
+      setSuccess(null);
+    } finally {
+      setIsSending(false);
     }
   };
 
-  const handleVerify = () => {
-    if (verificationCode === realVerificationCode) {
-      setIsVerified(true);
-      setError(null);
-      setSuccess("인증이 완료되었습니다.");
-    } else {
-      setError("인증번호가 일치하지 않습니다.");
+  const handleVerify = async () => {
+    setIsVerifying(true);
+    try {
+      const response = await apiClient.post("/api/sign/verify", null, {
+        params: { certificationNumber: verificationCode },
+      });
+      if (response.data.success) {
+        setIsVerified(true);
+        setError(null);
+        setSuccess("인증이 완료되었습니다.");
+      } else {
+        setError(response.data.msg || "인증에 실패했습니다.");
+        setSuccess(null);
+      }
+    } catch (error: any) {
+      console.error("인증 확인 오류:", error);
+      setError(error.response?.data?.msg || "인증번호가 일치하지 않습니다.");
       setSuccess(null);
+    } finally {
+      setIsVerifying(false);
     }
   };
 
@@ -170,52 +476,69 @@ const PhoneVerification: React.FC<{
   };
 
   return (
-    <Container>
+    <StepContent>
       <Title>휴대폰 인증</Title>
       <SubTitle>
         회원가입을 위해 휴대폰 번호 인증을 해주세요
         <br />
         번호는 어디에도 공개되지 않고 안전하게 보관돼요
       </SubTitle>
-      <Input
-        type="text"
-        height={50}
-        placeholder="휴대폰 번호를 입력하세요"
-        value={phone}
-        onChange={(e) => setPhone(formatPhoneNumber(e.target.value))}
-        disabled={isVerified}
-      />
-      <MainButton
-        height={50}
-        onClick={() => handleSMS(phone)}
-        disabled={isVerified}
-      >
-        인증번호 받기
-      </MainButton>
-      <div style={{ margin: "90px" }}></div>
-      <SubTitle>
+
+      <InputLabel>휴대폰 번호</InputLabel>
+      <InputRow>
+        <InputFlex>
+          <Input
+            type="text"
+            height={50}
+            placeholder="010-0000-0000"
+            value={phone}
+            onChange={(e) => setPhone(formatPhoneNumber(e.target.value))}
+            disabled={isVerified}
+          />
+        </InputFlex>
+        <SecondaryButton
+          onClick={() => handleSMS(phone)}
+          disabled={isVerified || isSending || phone.length < 12}
+        >
+          {isSending ? "발송중..." : "인증번호 받기"}
+        </SecondaryButton>
+      </InputRow>
+
+      <Spacer size={32} />
+
+      <InputLabel>인증번호</InputLabel>
+      <SubTitle style={{ marginBottom: 12 }}>
         휴대폰 번호로 인증문자를 발송해드렸어요
         <br />
         3분 이내로 인증번호를 입력해주세요
       </SubTitle>
-      <Input
-        height={50}
-        type="text"
-        placeholder="인증번호를 입력하세요"
-        value={verificationCode}
-        onChange={(e) => setVerificationCode(e.target.value)}
-        disabled={isVerified}
-      />
+      <InputRow>
+        <InputFlex>
+          <Input
+            height={50}
+            type="text"
+            placeholder="인증번호 6자리"
+            value={verificationCode}
+            onChange={(e) => setVerificationCode(e.target.value)}
+            disabled={isVerified}
+            hasSuccess={isVerified}
+          />
+        </InputFlex>
+        <SecondaryButton
+          onClick={handleVerify}
+          disabled={isVerified || isVerifying || verificationCode.length < 4}
+        >
+          {isVerifying ? "확인중..." : isVerified ? "인증완료" : "인증하기"}
+        </SecondaryButton>
+      </InputRow>
+
       {error && <ErrorMessage>{error}</ErrorMessage>}
       {success && <SuccessMessage>{success}</SuccessMessage>}
-      <MainButton height={50} onClick={handleVerify} disabled={isVerified}>
-        인증하기
-      </MainButton>
-      <div style={{ margin: "20px" }}></div>
-      <MainButton height={50} onClick={handleNext} disabled={!isVerified}>
+
+      <PrimaryButton onClick={handleNext} disabled={!isVerified}>
         다음
-      </MainButton>
-    </Container>
+      </PrimaryButton>
+    </StepContent>
   );
 };
 
@@ -223,9 +546,6 @@ const PhoneVerification: React.FC<{
 const TermsAgreement: React.FC<{
   onNext: (data: any) => void;
 }> = ({ onNext }) => {
-  // API 필드에 맞게 동의항목을 수정
-  // 필수: 서비스 이용자 동의(consentServiceUser), 개인정보 수집/이용 동의(consentPersonalInfo), 3자 제공 동의(consentToThirdPartyOffers)
-  // 선택: 메일 수신 동의(consentToReceivingMail)
   const content: [string, string][] = [
     ["(필수) 서비스 이용자 동의", "내용1"],
     ["(필수) 개인정보 수집/이용 동의", "내용2"],
@@ -262,25 +582,26 @@ const TermsAgreement: React.FC<{
   };
 
   return (
-    <Container>
+    <StepContent>
       <Title>약관 동의</Title>
       <SubTitle>
         서비스 이용에 필요한 필수 약관과 선택 약관에 동의해주세요
       </SubTitle>
-      <div style={{ padding: "20px" }}></div>
-      <CheckBox
-        content={content}
-        checkedState={checkedState}
-        isToggle={true}
-        onCheckboxClick={handleCheckboxClick}
-        onAllClick={handleAllClick}
-      />
-      <ButtonWrapper>
-        <MainButton disabled={!isNextButtonEnabled} onClick={handleSubmit}>
-          다음
-        </MainButton>
-      </ButtonWrapper>
-    </Container>
+
+      <TermsWrapper>
+        <CheckBox
+          content={content}
+          checkedState={checkedState}
+          isToggle={true}
+          onCheckboxClick={handleCheckboxClick}
+          onAllClick={handleAllClick}
+        />
+      </TermsWrapper>
+
+      <PrimaryButton disabled={!isNextButtonEnabled} onClick={handleSubmit}>
+        다음
+      </PrimaryButton>
+    </StepContent>
   );
 };
 
@@ -304,9 +625,11 @@ const PersonalInfo: React.FC<PersonalInfoProps> = ({
   const [confirmPasswordError, setConfirmPasswordError] = useState<
     string | null
   >(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [generalError, setGeneralError] = useState<string | null>(null);
   const [emailChecked, setEmailChecked] = useState(false);
   const [success, setSuccess] = useState<string | null>(null);
+  const [isChecking, setIsChecking] = useState(false);
 
   const emailInputRef = useRef<HTMLInputElement>(null);
   const passwordInputRef = useRef<HTMLInputElement>(null);
@@ -314,7 +637,6 @@ const PersonalInfo: React.FC<PersonalInfoProps> = ({
 
   useEffect(() => {
     if (isSocialLogin) {
-      // 소셜 로그인 사용자는 이메일 중복 체크 필요 없음
       setEmailChecked(true);
     }
   }, [isSocialLogin]);
@@ -364,6 +686,7 @@ const PersonalInfo: React.FC<PersonalInfoProps> = ({
       setSuccess(null);
       return;
     }
+    setIsChecking(true);
     try {
       const response = await apiClient.get(`api/sign/checkEmail/${email}`);
       if (response.data.code) {
@@ -371,7 +694,7 @@ const PersonalInfo: React.FC<PersonalInfoProps> = ({
         setEmailChecked(false);
         setSuccess(null);
       } else {
-        const pattern = /^[A-Za-z0-9_\.\-]+@[A-Za-z0-9\-]+\.[A-za-z0-9\-]+/;
+        const pattern = /^[A-Za-z0-9_.-]+@[A-Za-z0-9-]+\.[A-za-z0-9-]+/;
         if (pattern.test(email) === true) {
           setEmailError(null);
           setEmailChecked(true);
@@ -387,6 +710,8 @@ const PersonalInfo: React.FC<PersonalInfoProps> = ({
       setEmailError("사용할 수 없는 이메일입니다.");
       setEmailChecked(false);
       setSuccess(null);
+    } finally {
+      setIsChecking(false);
     }
   };
 
@@ -402,18 +727,18 @@ const PersonalInfo: React.FC<PersonalInfoProps> = ({
   };
 
   return (
-    <Container>
+    <StepContent>
       <Title>개인정보 입력</Title>
       <SubTitle>서비스 이용에 필요한 정보를 입력해주세요</SubTitle>
-      {generalError && <ErrorMessage>{generalError}</ErrorMessage>}
-      <InputTitle>이메일</InputTitle>
-      <div style={{ display: "flex", gap: "2px", alignItems: "center" }}>
-        <div style={{ flexGrow: "1" }}>
+
+      <InputLabel>이메일</InputLabel>
+      <InputRow>
+        <InputFlex>
           <Input
             ref={emailInputRef}
             type="email"
-            height={45}
-            placeholder="이메일"
+            height={50}
+            placeholder="example@email.com"
             value={email}
             onChange={(e) => {
               setEmail(e.target.value);
@@ -421,52 +746,50 @@ const PersonalInfo: React.FC<PersonalInfoProps> = ({
               setSuccess(null);
             }}
             disabled={isSocialLogin}
+            hasError={!!emailError}
+            hasSuccess={emailChecked}
           />
-        </div>
-        <div style={{ right: "0" }}>
-          {!isSocialLogin && (
-            <MainButton
-              width={100}
-              height={45}
-              fontSize={15}
-              onClick={handleEmailCheck}
-            >
-              중복 확인
-            </MainButton>
-          )}
-        </div>
-      </div>
+        </InputFlex>
+        {!isSocialLogin && (
+          <SecondaryButton onClick={handleEmailCheck} disabled={isChecking}>
+            {isChecking ? "확인중..." : "중복 확인"}
+          </SecondaryButton>
+        )}
+      </InputRow>
       {emailError && <ErrorMessage>{emailError}</ErrorMessage>}
       {success && <SuccessMessage>{success}</SuccessMessage>}
-      <InputTitle>비밀번호</InputTitle>
+
+      <InputLabel>비밀번호</InputLabel>
       <Input
         ref={passwordInputRef}
-        type={"password"}
-        height={45}
-        placeholder="비밀번호"
+        type="password"
+        height={50}
+        placeholder="영문, 숫자, 특수문자 포함 8-16자"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
         disabled={isSocialLogin}
+        hasError={!!passwordError}
       />
       {passwordError && <ErrorMessage>{passwordError}</ErrorMessage>}
-      <InputTitle>비밀번호 확인</InputTitle>
+
+      <InputLabel>비밀번호 확인</InputLabel>
       <Input
         ref={confirmPasswordInputRef}
         type="password"
-        height={45}
-        placeholder="비밀번호 확인"
+        height={50}
+        placeholder="비밀번호를 다시 입력해주세요"
         value={confirmPassword}
         onChange={(e) => setConfirmPassword(e.target.value)}
         disabled={isSocialLogin}
+        hasError={!!confirmPasswordError}
+        hasSuccess={confirmPassword.length > 0 && password === confirmPassword}
       />
       {confirmPasswordError && (
         <ErrorMessage>{confirmPasswordError}</ErrorMessage>
       )}
-      <div style={{ margin: "20px" }}></div>
-      <MainButton height={50} onClick={handleSubmit}>
-        다음
-      </MainButton>
-    </Container>
+
+      <PrimaryButton onClick={handleSubmit}>다음</PrimaryButton>
+    </StepContent>
   );
 };
 
@@ -504,7 +827,6 @@ const PersonalInfo2: React.FC<PersonalInfo2Props> = ({
   const validateFields = () => {
     let isValid = true;
 
-    // 소셜로그인 회원은 name 없이 진행할 것이므로, 소셜 로그인 아닐 때만 name 체크
     if (!isSocialLogin) {
       if (!name) {
         setNameError("이름을 입력해주세요.");
@@ -532,7 +854,7 @@ const PersonalInfo2: React.FC<PersonalInfo2Props> = ({
     }
 
     if (!gender) {
-      setGeneralError("모든 필수 항목을 입력해주세요.");
+      setGeneralError("성별을 선택해주세요.");
       isValid = false;
     } else {
       setGeneralError(null);
@@ -547,7 +869,6 @@ const PersonalInfo2: React.FC<PersonalInfo2Props> = ({
       const address = selectedAddress;
       const addressDetail = detailAddress;
 
-      // 소셜로그인 회원은 name 없이 진행
       if (isSocialLogin) {
         onNext({
           gender,
@@ -572,70 +893,72 @@ const PersonalInfo2: React.FC<PersonalInfo2Props> = ({
   };
 
   return (
-    <Container>
+    <StepContent>
       <Title>개인정보 입력</Title>
       <SubTitle>서비스 이용에 필요한 정보를 입력해주세요</SubTitle>
+
       {generalError && <ErrorMessage>{generalError}</ErrorMessage>}
+
       {!isSocialLogin && (
         <>
-          <InputTitle>이름</InputTitle>
+          <InputLabel>이름</InputLabel>
           <Input
             ref={nameInputRef}
             type="text"
-            height={45}
-            placeholder="이름"
+            height={50}
+            placeholder="이름을 입력해주세요"
             value={name}
             onChange={(e) => setName(e.target.value)}
+            hasError={!!nameError}
           />
           {nameError && <ErrorMessage>{nameError}</ErrorMessage>}
         </>
       )}
-      <InputTitle>생년월일 (6자리)</InputTitle>
+
+      <InputLabel>생년월일 (6자리)</InputLabel>
       <Input
         ref={birthInputRef}
         type="text"
-        height={45}
-        placeholder="YYMMDD"
+        height={50}
+        placeholder="YYMMDD (예: 950101)"
         value={birth}
         maxLength={6}
         onChange={(e) => setBirth(e.target.value.replace(/\D/g, ""))}
+        hasError={!!birthError}
       />
       {birthError && <ErrorMessage>{birthError}</ErrorMessage>}
-      <InputTitle>성별</InputTitle>
+
+      <InputLabel>성별</InputLabel>
       <RadioButton
         items={["남성", "여성"]}
         selectedItem={gender}
         onChange={(value) => setGender(value)}
       />
-      <InputTitle>주소</InputTitle>
-      <MainButton
-        width={100}
-        height={40}
-        fontSize={15}
-        onClick={() => setShowMapModal(true)}
-      >
-        주소 찾기
-      </MainButton>
+
+      <InputLabel>주소</InputLabel>
+      <SecondaryButton onClick={() => setShowMapModal(true)}>
+        🔍 주소 찾기
+      </SecondaryButton>
       {addressError && <ErrorMessage>{addressError}</ErrorMessage>}
-      <SelectedAddress>{selectedAddress}</SelectedAddress>
+      {selectedAddress && <SelectedAddress>{selectedAddress}</SelectedAddress>}
       {showMapModal && (
         <KakaoMapModal
           onClose={() => setShowMapModal(false)}
           onAddressSelect={handleAddressSelect}
         />
       )}
+
+      <InputLabel>상세 주소 (선택)</InputLabel>
       <Input
         type="text"
-        height={45}
-        placeholder="상세 주소를 입력하세요 (선택)"
+        height={50}
+        placeholder="상세 주소를 입력하세요"
         value={detailAddress}
         onChange={(e) => setDetailAddress(e.target.value)}
       />
-      <div style={{ margin: "20px" }}></div>
-      <MainButton height={50} onClick={handleSubmit}>
-        다음
-      </MainButton>
-    </Container>
+
+      <PrimaryButton onClick={handleSubmit}>다음</PrimaryButton>
+    </StepContent>
   );
 };
 
@@ -650,7 +973,7 @@ const SubPersonalInfo: React.FC<{
 
   const handleSubmit = () => {
     if (!experience) {
-      setGeneralError("모든 필수 항목을 선택해주세요.");
+      setGeneralError("선수 경험을 선택해주세요.");
       return;
     }
     if (experience === "있다" && !level) {
@@ -668,11 +991,13 @@ const SubPersonalInfo: React.FC<{
   };
 
   return (
-    <Container>
+    <StepContent>
       <Title>추가정보 입력</Title>
-      <SubTitle>서비스 이용에 필요한 추가 정보를 입력해주세요</SubTitle>
+      <SubTitle>더 나은 서비스 제공을 위해 추가 정보를 입력해주세요</SubTitle>
+
       {generalError && <ErrorMessage>{generalError}</ErrorMessage>}
-      <InputTitle>선수 경험</InputTitle>
+
+      <InputLabel>선수 경험</InputLabel>
       <RadioButton
         fontSize={14}
         items={["있다", "없다"]}
@@ -682,9 +1007,10 @@ const SubPersonalInfo: React.FC<{
           setLevel(null);
         }}
       />
+
       {experience === "있다" && (
         <>
-          <InputTitle>선수 경력</InputTitle>
+          <InputLabel>선수 경력</InputLabel>
           <RadioButton
             fontSize={13}
             items={["초등학교 선출", "중학교 선출", "고등학교 선출"]}
@@ -693,9 +1019,10 @@ const SubPersonalInfo: React.FC<{
           />
         </>
       )}
+
       {experience === "없다" && (
         <>
-          <InputTitle>레벨</InputTitle>
+          <InputLabel>레벨</InputLabel>
           <RadioButton
             fontSize={14}
             items={["상", "중", "하"]}
@@ -705,11 +1032,8 @@ const SubPersonalInfo: React.FC<{
         </>
       )}
 
-      <div style={{ margin: "20px" }}></div>
-      <MainButton height={50} onClick={handleSubmit}>
-        다음
-      </MainButton>
-    </Container>
+      <PrimaryButton onClick={handleSubmit}>가입 완료</PrimaryButton>
+    </StepContent>
   );
 };
 
@@ -722,19 +1046,20 @@ const SuccessSignUpInfo: React.FC = () => {
   };
 
   return (
-    <Container>
-      <SuccessContainer>
-        <div style={{ margin: "50px" }}></div>
-        <SuccessTitle>회원가입이 완료됐어요!</SuccessTitle>
-        <SubTitle>이제 원하는 팀에 가입할 수 있어요</SubTitle>
-        <div style={{ margin: "40px" }}></div>
-        <FaCheck size={50} color="var(--color-main)" />
-        <div style={{ margin: "40px" }}></div>
-        <MainButton height={50} width={270} onClick={handleSubmit}>
-          로그인 하러가기
-        </MainButton>
-      </SuccessContainer>
-    </Container>
+    <SuccessContainer>
+      <SuccessIcon>
+        <HiCheckCircle size={48} />
+      </SuccessIcon>
+      <SuccessTitle>회원가입이 완료됐어요! 🎉</SuccessTitle>
+      <SuccessSubtitle>
+        이제 원하는 팀에 가입하고
+        <br />
+        함께 축구를 즐길 수 있어요
+      </SuccessSubtitle>
+      <PrimaryButton onClick={handleSubmit} style={{ width: "100%" }}>
+        로그인 하러가기
+      </PrimaryButton>
+    </SuccessContainer>
   );
 };
 
@@ -749,14 +1074,14 @@ const SignupPage: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
+  const totalSteps = isSocialLogin ? 3 : 6;
+  const currentStep = isSocialLogin ? step - 3 : step;
+
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const socialData = params.get("socialData");
 
     if (socialData) {
-      // 소셜로그인으로 넘어온 데이터라고 가정
-      // 전화번호 인증, 약관 동의, 이메일/비밀번호 생략
-      // 바로 개인정보2 단계로 이동 (이때 이름 제외)
       setIsSocialLogin(true);
       setStep(4);
     }
@@ -767,44 +1092,23 @@ const SignupPage: React.FC = () => {
     setSignupData(updatedData);
 
     if (step === 5) {
-      // 마지막 단계에서 서버로 데이터를 전송
       setIsLoading(true);
       try {
         const dataToSend = { ...updatedData };
-        const accessToken = getAccessToken();
-        const headers = {
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
-        };
         if (isSocialLogin) {
-          // 소셜 로그인 회원 추가정보 입력 시 name 제외
           const { name, ...dataWithoutName } = dataToSend;
-          // const {
-          //   address,
-          //   addressDetail,
-          //   birthDate,
-          //   gender,
-          //   hasExperience,
-          //   level,
-          // } = dataWithoutName;
-          // PUT 요청 사용
           const response = await apiClient.put(
             "/auth/add-info",
             dataWithoutName
           );
 
           if (response.status === 200 || response.status === 201) {
-            // const { token, refreshToken } = response.data;
-            // console.log(response.data);
-            // setAccessToken(token);
-            // setRefreshToken(refreshToken);
             alert("회원가입에 성공했습니다. 로그인 해주세요.");
             setStep(step + 1);
           } else {
             alert("회원가입에 실패했습니다. 다시 시도해주세요.");
           }
         } else {
-          // 일반 회원가입
           const response = await apiClient.post("api/sign/sign-up", null, {
             params: dataToSend,
           });
@@ -833,51 +1137,84 @@ const SignupPage: React.FC = () => {
   }, [step]);
 
   return (
-    <div style={{ padding: "20px" }}>
-      <Link to="/login">
-        <div style={{ padding: "10px 0" }}>
-          <MdClose color="black" size={30} />
-        </div>
-      </Link>
-      <ProgressBar>
-        <ScrollProgress
-          targetWidth={
-            isSocialLogin ? ((step - 3) * 100) / 3 : (step * 100) / 6
-          }
-        />
-      </ProgressBar>
-      <div style={{ padding: "5px" }}>
-        {!isSocialLogin && step === 1 && (
-          <PhoneVerification
-            onNext={handleNextStep}
-            phone={phone}
-            setPhone={setPhone}
-          />
+    <PageWrapper>
+      <BackgroundDecoration />
+      <BackgroundCircle />
+
+      <ContentWrapper>
+        {/* 헤더 */}
+        <Header>
+          <BackButton to="/login">
+            <HiArrowLeft size={22} />
+          </BackButton>
+          <HeaderInfo>
+            <StepIndicator>
+              {step <= 5 ? `${currentStep} / ${totalSteps}` : "완료"}
+            </StepIndicator>
+          </HeaderInfo>
+        </Header>
+
+        {/* 진행률 */}
+        {step <= 5 && (
+          <ProgressContainer>
+            <ScrollProgress
+              targetWidth={
+                isSocialLogin ? ((step - 3) * 100) / 3 : (step * 100) / 6
+              }
+            />
+          </ProgressContainer>
         )}
-        {!isSocialLogin && step === 2 && (
-          <TermsAgreement onNext={handleNextStep} />
-        )}
-        {!isSocialLogin && step === 3 && (
-          <PersonalInfo
-            onNext={handleNextStep}
-            signupData={signupData}
-            isSocialLogin={isSocialLogin}
-          />
-        )}
-        {step === 4 && (
-          <PersonalInfo2
-            onNext={handleNextStep}
-            signupData={signupData}
-            isSocialLogin={isSocialLogin}
-          />
-        )}
-        {step === 5 && (
-          <SubPersonalInfo onNext={handleNextStep} signupData={signupData} />
-        )}
-        {step === 6 && <SuccessSignUpInfo />}
-        {isLoading && <p>회원가입 중입니다. 잠시만 기다려주세요...</p>}
-      </div>
-    </div>
+
+        {/* 카드 */}
+        <SignupCard>
+          {!isSocialLogin && step === 1 && (
+            <PhoneVerification
+              onNext={handleNextStep}
+              phone={phone}
+              setPhone={setPhone}
+            />
+          )}
+          {!isSocialLogin && step === 2 && (
+            <TermsAgreement onNext={handleNextStep} />
+          )}
+          {!isSocialLogin && step === 3 && (
+            <PersonalInfo
+              onNext={handleNextStep}
+              signupData={signupData}
+              isSocialLogin={isSocialLogin}
+            />
+          )}
+          {step === 4 && (
+            <PersonalInfo2
+              onNext={handleNextStep}
+              signupData={signupData}
+              isSocialLogin={isSocialLogin}
+            />
+          )}
+          {step === 5 && (
+            <SubPersonalInfo onNext={handleNextStep} signupData={signupData} />
+          )}
+          {step === 6 && <SuccessSignUpInfo />}
+
+          {isLoading && (
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 12,
+                marginTop: 20,
+              }}
+            >
+              <LoadingSpinner />
+              <span style={{ color: "var(--color-dark1)", fontSize: 14 }}>
+                회원가입 중입니다...
+              </span>
+            </div>
+          )}
+        </SignupCard>
+      </ContentWrapper>
+    </PageWrapper>
   );
 };
 

@@ -1,9 +1,8 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import "./index.css";
-import App from "./App";
 import reportWebVitals from "./reportWebVitals";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import LoginPage from "./screen/Auth/LoginPage";
 import FindPasswordPage from "./screen/Auth/FindPasswordPage";
 import FindPasswordPhonePage from "./screen/Auth/FindPasswordPhonePage";
@@ -14,7 +13,6 @@ import JoinApprovalStatus from "./screen/My/JoinApprovalSataus";
 import { createGlobalStyle } from "styled-components";
 import TeamMemberListPage from "./screen/Team/TeamMemberListPage";
 import SignUpPage from "./screen/Auth/SignUpPage";
-import IntroPage from "./screen/IntroPage";
 import InvitePage from "./screen/Invite/InvitePage";
 import KakaoRedirectHandler from "./screen/Auth/KakaoRedirectHandler";
 import GoogleRedirectHandler from "./screen/Auth/GoogleRedirectHandler";
@@ -42,6 +40,7 @@ import BottomNavBar from "./components/Nevigation/BottomNavBar";
 import ProtectedRoute from "./components/ProtectedRoute";
 import TeamCalendarPage from "./screen/Team/TeamCalendarPage";
 import PersonalCalendarPage from "./screen/My/PersonalCalendarPage";
+import AlarmPage from "./screen/My/AlarmPage";
 
 const GlobalStyle = createGlobalStyle`
   body, #root, .app-container {
@@ -62,7 +61,7 @@ root.render(
       {/* <App /> */}
       <GlobalStyle />
       <Routes>
-        <Route path="/" element={<IntroPage />} />
+        <Route path="/" element={<Navigate to="/login" replace />} />
 
         {/* 로그인 페이지 */}
         <Route path="/signup" element={<SignUpPage />} />
@@ -174,6 +173,15 @@ root.render(
           element={
             <ProtectedRoute>
               <ProfileEditPage />
+            </ProtectedRoute>
+          }
+        />
+        {/* 알림 센터 */}
+        <Route
+          path="/my/alarm"
+          element={
+            <ProtectedRoute>
+              <AlarmPage />
             </ProtectedRoute>
           }
         />

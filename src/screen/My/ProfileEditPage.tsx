@@ -1,13 +1,14 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import GlobalStyles from "../../components/Styled/GlobalStyled";
+import Header1 from "../../components/Header/Header1/Header1";
 import styled from "styled-components";
 import apiClient from "../../api/apiClient";
 import MainButton from "../../components/Button/MainButton";
 import Input from "../../components/Input/Input";
 import RadioButton from "../../components/Button/RadioButton";
 import KakaoMapModal from "../../components/Modal/KakaoAddress";
-import Header2 from "../../components/Header/Header2/Header2";
 const ProfileEditPage: React.FC = () => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [profileData, setProfileData] = useState({
     birthDate: "",
     email: "",
@@ -23,17 +24,7 @@ const ProfileEditPage: React.FC = () => {
     imageUrl: string;
   } | null>(null);
   const [showMapModal, setShowMapModal] = useState(false);
-  const [profileImage, setProfileImage] = useState<string | null>(null);
-  const [experience, setExperience] = useState<string | null>(null);
-  const [experienceLevel, setExperienceLevel] = useState<string | null>(null);
-  const [level, setLevel] = useState<string | null>(null);
-  const [gender, setGender] = useState<string | null>(null);
-  const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { id, value } = e.target;
-    setProfileData((prev) => ({ ...prev, [id]: value }));
-  };
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
   const handleSubmit = async () => {
     try {
       // JSON 데이터 변환
@@ -58,17 +49,7 @@ const ProfileEditPage: React.FC = () => {
     setSelectedAddress(address);
     setShowMapModal(false);
   };
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setProfileImageFile(file);
-      const reader = new FileReader();
-      reader.onload = () => {
-        setProfileImage(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
+
   useEffect(() => {
     const fetchProfile = async () => {
       try {
@@ -89,30 +70,13 @@ const ProfileEditPage: React.FC = () => {
   return (
     <>
       <GlobalStyles />
-      <Header2 text="프로필 설정하기" />
+      <Header1 text="프로필 설정하기" />
       <Container>
         <Profile>
           <ProfileImage
-            src={
-              profile?.imageUrl ||
-              profileImage ||
-              "https://example.com/profile-image.jpg"
-            }
+            src={profile?.imageUrl || "https://example.com/profile-image.jpg"}
             alt="프로필 이미지"
             className="shadow-df"
-          />
-          <ProfileButton
-            className="shadow-df"
-            onClick={() => fileInputRef.current?.click()}
-          >
-            프로필 사진 변경하기
-          </ProfileButton>
-          <input
-            type="file"
-            ref={fileInputRef}
-            style={{ display: "none" }}
-            accept="image/*"
-            onChange={handleImageUpload}
           />
           <ProfileName>{profile?.name || "이름 없음"}</ProfileName>
           <ProfileEmail>{profile?.email || "이메일 없음"}</ProfileEmail>
@@ -129,7 +93,7 @@ const ProfileEditPage: React.FC = () => {
             />
             <MainButton width={100}>인증</MainButton>
           </FlexBox>
-          <SubTitle>생년월일 6자리</SubTitle>
+          <SubTitle>생년월일 8자리</SubTitle>
           <Input
             height={55}
             type="text"
@@ -141,8 +105,8 @@ const ProfileEditPage: React.FC = () => {
           <RadioButton
             fontSize={14}
             items={["남성", "여성"]}
-            selectedItem={gender}
-            onChange={(value) => setGender(value)}
+            // selectedItem={gender}
+            // onChange={(value) => setGender(value)}
           />
           <SubTitle>주소</SubTitle>
           <FlexBox>
@@ -168,23 +132,23 @@ const ProfileEditPage: React.FC = () => {
           <RadioButton
             fontSize={14}
             items={["있다", "없다"]}
-            selectedItem={experience}
-            onChange={(value) => setExperience(value)}
+            // selectedItem={gender}
+            // onChange={(value) => setGender(value)}
           />
 
           <SubTitle>마지막 선수 경력</SubTitle>
           <RadioButton
             fontSize={14}
             items={["중학교 선출", "고등학교 선출", "대학교 선출"]}
-            selectedItem={experienceLevel}
-            onChange={(value) => setExperienceLevel(value)}
+            // selectedItem={gender}
+            // onChange={(value) => setGender(value)}
           />
           <SubTitle>실력</SubTitle>
           <RadioButton
             fontSize={14}
             items={["상", "중", "하"]}
-            selectedItem={level}
-            onChange={(value) => setLevel(value)}
+            // selectedItem={teamLevel}
+            // onChange={(value) => setTeamLevel(value)}
           />
         </SubContainer>
       </Container>
@@ -208,32 +172,10 @@ const Profile = styled.div`
 `;
 
 const ProfileImage = styled.img`
-  height: 116px;
+  width: 20vw;
+  height: 20vw;
   border-radius: 50%;
-  background-color: #f0f0f0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  object-fit: cover;
-  border: 1px solid #ddd;
   margin-bottom: 10px;
-`;
-
-const ProfileButton = styled.button`
-  background-color: var(--color-dark1);
-  border: 1px solid var(--color-dark1);
-  margin-bottom: 20px;
-  border-radius: 20px;
-  padding: 5px 10px;
-  cursor: pointer;
-  font-size: 14px;
-  font-family: "Pretendard-Regular";
-  color: var(--color-light1);
-  transition: background-color 0.3s ease;
-
-  &:hover {
-    background-color: var(--color-dark1);
-  }
 `;
 
 const ProfileName = styled.div`
@@ -245,14 +187,10 @@ const ProfileName = styled.div`
 const ProfileEmail = styled.div`
   font-size: 14px;
   font-family: "Pretendard-Regular";
-  color: var(--color-dark1);
+  color: #777;
   margin-bottom: 10px;
 `;
 
-const Divider = styled.div`
-  border-bottom: 1px solid var(--color-light2);
-  margin: 20px 0;
-`;
 const SubTitle = styled.p`
   color: black;
   margin-top: 8px;
