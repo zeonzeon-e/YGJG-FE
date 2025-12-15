@@ -1,84 +1,54 @@
 import React, { useState, useEffect } from "react";
-import GlobalStyles from "../../components/Styled/GlobalStyled";
 import styled from "styled-components";
-import { useNavigate } from "react-router-dom"; // React Router 사용
-import apiClient from "../../api/apiClient"; // apiClient 임포트
+import { useNavigate, useParams } from "react-router-dom";
+import {
+  HiChevronLeft,
+  HiCheckCircle,
+  HiUserCircle,
+  HiListBullet,
+} from "react-icons/hi2";
+import apiClient from "../../api/apiClient";
 import MainButton from "../../components/Button/MainButton";
 import Modal2 from "../../components/Modal/Modal2";
-import Header2 from "../../components/Header/Header2/Header2";
+
+// --- Types ---
+type Profile = {
+  address: string;
+  gender: string;
+  hasExperience: boolean;
+  joinReason: string;
+  level: string;
+  name: string;
+  position: string;
+};
+
+// --- Mock Data ---
+const MOCK_PROFILE: Profile = {
+  address: "서울시 송파구",
+  gender: "남성",
+  hasExperience: true,
+  joinReason: "",
+  level: "아마추어 중급",
+  name: "김철수",
+  position: "",
+};
 
 const TeamJoinPage: React.FC = () => {
-  type Profile = {
-    address: string;
-    gender: string;
-    hasExperience: boolean;
-    joinReason: string;
-    level: string;
-    name: string;
-    position: string;
-    //age: number;
-  };
+  const navigate = useNavigate();
+  const { teamId } = useParams<{ teamId: string }>();
 
-  const [profile, setProfile] = useState<Profile>({
-    address: "",
-    gender: "",
-    hasExperience: false,
-    joinReason: "",
-    level: "",
-    name: "",
-    position: "",
-    // age: 0,
-  });
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [content, setContent] = useState<string>("");
   const [position, setPosition] = useState<string>("");
-  const [teamId] = useState<string>("13");
   const [completeOpen, setCompleteOpen] = useState(false);
   const [complete, setComplete] = useState(false);
-  const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setContent(e.target.value);
-    setProfile((prev) => ({
-      ...prev,
-      joinReason: e.target.value,
-    }));
-  };
-  const navigate = useNavigate();
-
-  const doApprove = async () => {
-    setCompleteOpen(false);
-    const requestDto = {
-      address: profile.address,
-      gender: profile.gender,
-      hasExperience: profile.hasExperience,
-      joinReason: profile.joinReason,
-      level: profile.level,
-      name: profile.name,
-      position: profile.position,
-      // age: 0,
-    };
-    try {
-      const response = await apiClient.post(
-        `api/joinTeam/${teamId}`,
-        requestDto,
-        {
-          headers: { "Content-Type": "application/json" },
-        }
-      );
-
-      if (response.status === 200) {
-        setComplete(true);
-        //alert("팀 가입 신청이 성공적으로 등록되었습니다.");
-      }
-    } catch (error) {
-      console.error("가입 신청 중 오류 발생:", error);
-      alert("팀 가입 신청에 실패했습니다.");
-    }
-  };
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const profileData = async () => {
+    const fetchProfile = async () => {
+      setLoading(true);
       try {
         const response = await apiClient.get("api/member/getUser");
-        console.log(response.data);
         setProfile({
           address: response.data.address,
           gender: response.data.gender,
@@ -87,221 +57,523 @@ const TeamJoinPage: React.FC = () => {
           level: response.data.level,
           name: response.data.name,
           position: response.data.position,
-          //  age: calculateAge(response.data.birthDate),
         });
-        setPosition(response.data.position);
+        setPosition(response.data.position || "");
       } catch (err) {
-        console.error(err);
+        console.warn("Failed to fetch user, utilizing mock data for dev.");
+        setProfile(MOCK_PROFILE);
+      } finally {
+        setLoading(false);
       }
     };
-
-    profileData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    fetchProfile();
   }, []);
+
+  const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setContent(e.target.value);
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setPosition(e.target.value);
-    setProfile((prev) => ({
-      ...prev,
-      position: e.target.value,
-    }));
   };
-  const handleSubmit = async () => {
-    if (!content || !position) {
-      alert("포지션을 선택해주세요");
+
+  const handleSubmit = () => {
+    if (!content.trim() || !position) {
+      alert("포지션을 선택하고 가입 인사를 입력해주세요.");
       return;
     }
-
     setCompleteOpen(true);
   };
-  return (
-    <>
-      {complete === false && (
-        <>
-          <GlobalStyles />
-          <Header2 text="팀 가입신청서" />
-          <Container>
-            <NoticeDiv>
-              <NoticeTitle>팀에게 회원님의 정보를 제공해요</NoticeTitle>
-              <NoticeDesc>
-                해당 정보는 가입할 때 작성해주신 정보에요.
-              </NoticeDesc>
-              <NoticeDesc>
-                변경을 원하신다면, 마이페이지 &gt; 개인 정보 수정에서 변경할 수
-                있어요
-              </NoticeDesc>
-            </NoticeDiv>
 
-            <InforContainer className="border-df">
-              <SectionTitle>인적 정보</SectionTitle>
-              <SectionDiv>이름 : {profile?.name}</SectionDiv>
-              <SectionDiv>성별 : {profile?.gender}</SectionDiv>
-              {/* <SectionDiv>나이 : 만 {profile?.age}세</SectionDiv> */}
-              <SectionDiv>주소 : {profile?.address}</SectionDiv>
-            </InforContainer>
-            {profile?.hasExperience !== undefined && (
-              <>
-                <InforContainer className="border-df">
-                  <SectionTitle>추가 정보</SectionTitle>
-                  <SectionDiv>
-                    선수 경험 :{" "}
-                    {profile?.hasExperience === true ? "있음" : "없음"}
-                  </SectionDiv>
-                  <SectionDiv>수준 : {profile?.level}</SectionDiv>
-                </InforContainer>
-              </>
-            )}
-            <InforContainer className="border-df">
-              <SectionTitle>팀 내 희망 포지션</SectionTitle>
-              <SectionDiv>
-                <SyledSelect value={position} onChange={handleChange}>
-                  <option value="">포지션</option>
-                  <option value="ST">공격수</option>
-                  <option value="WD">수비수</option>
-                  <option value="MF">미드필더</option>
-                  <option value="GK">골키퍼</option>
-                </SyledSelect>
-              </SectionDiv>
-            </InforContainer>
-            <Textarea
-              className="border-df shadow-df"
+  const doApprove = async () => {
+    setCompleteOpen(false);
+
+    if (!profile || !teamId) return;
+
+    const requestDto = {
+      address: profile.address,
+      gender: profile.gender,
+      hasExperience: profile.hasExperience,
+      joinReason: content,
+      level: profile.level,
+      name: profile.name,
+      position: position,
+    };
+
+    try {
+      const response = await apiClient.post(
+        `api/joinTeam/${teamId}`,
+        requestDto,
+        { headers: { "Content-Type": "application/json" } }
+      );
+      if (response.status === 200) {
+        setComplete(true);
+      }
+    } catch (error) {
+      console.error("Failed to join team:", error);
+      alert("가입 신청 중 오류가 발생했습니다. 다시 시도해주세요.");
+    }
+  };
+
+  if (loading) {
+    return (
+      <LoadingWrapper>
+        <Spinner />
+      </LoadingWrapper>
+    );
+  }
+
+  // --- Complete State UI ---
+  if (complete) {
+    return (
+      <CompletionPage>
+        <SuccessContent>
+          <SuccessIcon>
+            <HiCheckCircle size={64} />
+          </SuccessIcon>
+          <SuccessTitle>가입 신청 완료!</SuccessTitle>
+          <SuccessText>
+            팀 운영진에게 가입 신청서를 보냈습니다.
+            <br />
+            결과는 <strong>마이페이지 &gt; 가입 현황</strong>에서
+            <br />
+            확인하실 수 있습니다.
+          </SuccessText>
+        </SuccessContent>
+        <ActionButtons>
+          <PrimaryButton onClick={() => navigate("/my/joinstatus")}>
+            신청 현황 확인하기
+          </PrimaryButton>
+          <SecondaryButton onClick={() => navigate("/team/list")}>
+            다른 팀 더 둘러보기
+          </SecondaryButton>
+        </ActionButtons>
+      </CompletionPage>
+    );
+  }
+
+  return (
+    <PageWrapper>
+      <NavHeader>
+        <NavButton onClick={() => navigate(-1)}>
+          <HiChevronLeft size={24} />
+        </NavButton>
+        <NavTitle>가입 신청하기</NavTitle>
+        <div style={{ width: 40 }} /> {/* Spacer */}
+      </NavHeader>
+
+      <ContentScroll>
+        <HeaderSection>
+          <HeaderTitle>
+            팀원들에게 보여질
+            <br />
+            <Highlight>나의 정보</Highlight>를 확인해주세요
+          </HeaderTitle>
+          <HeaderDesc>
+            프로필 정보는 마이페이지에서 언제든지 수정할 수 있습니다.
+          </HeaderDesc>
+        </HeaderSection>
+
+        <FormSection>
+          {/**************** User Info Card ****************/}
+          <Card>
+            <CardHeader>
+              <CardIcon>
+                <HiUserCircle />
+              </CardIcon>
+              <CardTitle>기본 프로필</CardTitle>
+            </CardHeader>
+            <InfoGrid>
+              <InfoRow>
+                <Label>이름</Label>
+                <Value>{profile?.name}</Value>
+              </InfoRow>
+              <InfoRow>
+                <Label>성별</Label>
+                <Value>{profile?.gender}</Value>
+              </InfoRow>
+              <InfoRow>
+                <Label>거주지</Label>
+                <Value>{profile?.address}</Value>
+              </InfoRow>
+            </InfoGrid>
+          </Card>
+
+          {/**************** Ability Info Card ****************/}
+          {profile?.hasExperience !== undefined && (
+            <Card>
+              <CardHeader>
+                <CardIcon color="var(--color-success)">
+                  <HiListBullet />
+                </CardIcon>
+                <CardTitle>실력 및 경험</CardTitle>
+              </CardHeader>
+              <InfoGrid>
+                <InfoRow>
+                  <Label>선수 경험</Label>
+                  <Value>{profile?.hasExperience ? "있음" : "없음"}</Value>
+                </InfoRow>
+                <InfoRow>
+                  <Label>실력 수준</Label>
+                  <Value>{profile?.level}</Value>
+                </InfoRow>
+              </InfoGrid>
+            </Card>
+          )}
+
+          {/**************** Position & Message Form ****************/}
+          <SectionDivider />
+
+          <FormGroup>
+            <FormLabel>
+              희망 포지션 <Required>*</Required>
+            </FormLabel>
+            <StyledSelect value={position} onChange={handleChange}>
+              <option value="">포지션을 선택해주세요</option>
+              <option value="FW">공격수 (FW)</option>
+              <option value="MF">미드필더 (MF)</option>
+              <option value="DF">수비수 (DF)</option>
+              <option value="GK">골키퍼 (GK)</option>
+            </StyledSelect>
+          </FormGroup>
+
+          <FormGroup>
+            <FormLabel>
+              가입 인사 <Required>*</Required>
+            </FormLabel>
+            <StyledTextarea
               value={content}
               onChange={handleContentChange}
-              placeholder="내용을 입력해주세요"
-            ></Textarea>
-            <MainButton onClick={handleSubmit}>팀 가입하기</MainButton>
-            {/* 승인 확인 모달 */}
-            <Modal2
-              isOpen={completeOpen}
-              onClose={() => setCompleteOpen(false)}
-              title="팀에 가입신청서를 보내시겠습니까?"
-              children="가입신청서를 보내면 회수할 수 없어요"
-              confirmText="보낼래요"
-              cancelText="안보낼래요"
-              onConfirm={doApprove}
+              placeholder="간단한 자기소개와 가입 동기를 입력해주세요. (예: 매주 꾸준히 참석 가능한 풋살 러버입니다!)"
             />
-          </Container>
-        </>
-      )}
-      {complete === true && (
-        <>
-          <GlobalStyles />
-          <Container>
-            <NoticeDiv>
-              <ComTitle>팀에 가입신청서를 보냈어요!</ComTitle>
-              <ComDesc>마이페이지 &gt; 가입 대기 현황</ComDesc>
-              <ComDesc>에서 상태를 확인할 수 있어요</ComDesc>
-            </NoticeDiv>
-            <MainButton onClick={() => navigate("/my/joinstatus")}>
-              마이페이지에서 확인하기
-            </MainButton>
-            <MainButton onClick={() => navigate("/team/list")}>
-              다른 팀 둘러보기
-            </MainButton>
-          </Container>
-        </>
-      )}
-    </>
+          </FormGroup>
+        </FormSection>
+      </ContentScroll>
+
+      <BottomAction>
+        <MainButton onClick={handleSubmit}>가입 신청서 보내기</MainButton>
+      </BottomAction>
+
+      {/* Confirmation Modal */}
+      <Modal2
+        isOpen={completeOpen}
+        onClose={() => setCompleteOpen(false)}
+        title="가입 신청을 완료할까요?"
+        children="신청서는 팀 운영진에게 전달되며, 승인 완료 시 활동을 시작할 수 있습니다."
+        confirmText="신청하기"
+        cancelText="취소"
+        onConfirm={doApprove}
+      />
+    </PageWrapper>
   );
 };
 
 export default TeamJoinPage;
 
-// 스타일 컴포넌트 정의
+// --- Styled Components ---
 
-const Container = styled.div`
-  padding: 20px;
-`;
-
-const NoticeDiv = styled.div`
+const PageWrapper = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 5px;
-  border-radius: 8px;
-  margin: 20px 0px;
-`;
-const NoticeTitle = styled.div`
-  font-size: 20px;
-  font-weight: bold;
-`;
-const NoticeDesc = styled.div`
-  font-size: 14px;
-  color: grey;
+  height: 100vh;
+  background-color: #f8fafb;
 `;
 
-const SectionTitle = styled.h2`
+const NavHeader = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: white;
+  border-bottom: 1px solid #f1f3f5;
+`;
+
+const NavButton = styled.button`
+  background: none;
+  border: none;
+  padding: 8px;
+  cursor: pointer;
+  color: #333;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+`;
+
+const NavTitle = styled.h1`
   font-size: 16px;
-  font-family: "Pretendard-Bold";
-  margin-bottom: 20px;
+  font-weight: 700;
+  color: #333;
 `;
 
-const SectionDiv = styled.div`
+const ContentScroll = styled.div`
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: 120px;
+`;
+
+const HeaderSection = styled.div`
+  padding: 24px 20px;
+  background: white;
+  margin-bottom: 12px;
+`;
+
+const HeaderTitle = styled.h2`
+  font-size: 22px;
+  color: #212529;
+  line-height: 1.4;
+  margin-bottom: 8px;
+  font-weight: 700;
+`;
+
+const Highlight = styled.span`
+  color: var(--color-main);
+`;
+
+const HeaderDesc = styled.p`
+  font-size: 14px;
+  color: #868e96;
+  line-height: 1.5;
+`;
+
+const FormSection = styled.div`
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+`;
+
+const Card = styled.div`
+  background: white;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+`;
+
+const CardHeader = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f1f3f5;
+`;
+
+const CardIcon = styled.div<{ color?: string }>`
+  font-size: 20px;
+  color: ${(props) => props.color || "var(--color-main)"};
+  display: flex;
+  align-items: center;
+`;
+
+const CardTitle = styled.h3`
+  font-size: 15px;
+  font-weight: 700;
+  color: #333;
+`;
+
+const InfoGrid = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+`;
+
+const InfoRow = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 8px;
 `;
 
-const InforContainer = styled.div`
-  background-color: #f0f0f0;
-  border-radius: 8px;
-  padding: 16px;
-  margin-bottom: 10px;
-  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+const Label = styled.span`
+  font-size: 14px;
+  color: #868e96;
 `;
 
-const SyledSelect = styled.select`
-  appearance: none;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-
-  width: 200px;
-  padding: 10px 12px;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  background-color: white;
+const Value = styled.span`
+  font-size: 14px;
   color: #333;
-  font-size: 16px;
+  font-weight: 500;
+`;
 
-  background-image: url("data:image/svg+xml;utf8,<svg fill='%23333' height='20' viewBox='0 0 24 24' width='20' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>");
+const SectionDivider = styled.div`
+  height: 1px;
+  background: #e9ecef;
+  margin: 8px 0;
+`;
+
+const FormGroup = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+`;
+
+const FormLabel = styled.label`
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+`;
+
+const Required = styled.span`
+  color: var(--color-error);
+  margin-left: 2px;
+`;
+
+const StyledSelect = styled.select`
+  width: 100%;
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid #dee2e6;
+  background-color: white;
+  font-size: 15px;
+  color: #333;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23333%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
   background-repeat: no-repeat;
-  background-position: right 10px center;
-  background-size: 16px;
-
-  cursor: pointer;
+  background-position: right 16px top 50%;
+  background-size: 10px auto;
+  box-sizing: border-box;
+  font-family: inherit;
 
   &:focus {
     outline: none;
     border-color: var(--color-main);
-  }
-
-  option {
-    padding: 10px;
-  }
-
-  @media (max-width: 480px) {
-    width: 100%;
-    font-size: 14px;
+    box-shadow: 0 0 0 2px rgba(45, 138, 94, 0.1);
   }
 `;
 
-const Textarea = styled.textarea`
-  padding: 8px;
-  border-radius: 8px;
-  border: 1px solid #ccc;
-  font-size: 14px;
-  height: 200px;
+const StyledTextarea = styled.textarea`
+  width: 100%;
+  height: 150px;
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid #dee2e6;
+  background-color: white;
+  font-size: 15px;
+  line-height: 1.5;
   resize: none;
-  width: 97%;
+  color: #333;
+  box-sizing: border-box;
+  font-family: inherit;
+
+  &:focus {
+    outline: none;
+    border-color: var(--color-main);
+    box-shadow: 0 0 0 2px rgba(45, 138, 94, 0.1);
+  }
+
+  &::placeholder {
+    color: #adb5bd;
+    font-family: inherit;
+  }
 `;
 
-const ComTitle = styled.div`
-  font-size: 24px;
-  font-weight: bold;
-  margin: 40px auto;
-`;
-
-const ComDesc = styled.div`
-  font-size: 20px;
+const BottomAction = styled.div`
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: white;
+  padding: 16px 20px 30px;
+  border-top: 1px solid #f1f3f5;
+  z-index: 1001;
+  max-width: 600px;
   margin: 0 auto;
+`;
+
+const LoadingWrapper = styled.div`
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: white;
+`;
+
+const Spinner = styled.div`
+  width: 32px;
+  height: 32px;
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid var(--color-main);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+
+  @keyframes spin {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+`;
+
+// Completion Page Styles
+const CompletionPage = styled.div`
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: white;
+  padding: 20px;
+`;
+
+const SuccessContent = styled.div`
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  margin-bottom: 60px;
+`;
+
+const SuccessIcon = styled.div`
+  color: var(--color-main);
+  margin-bottom: 24px;
+`;
+
+const SuccessTitle = styled.h2`
+  font-size: 24px;
+  font-weight: 800;
+  color: #212529;
+  margin-bottom: 12px;
+`;
+
+const SuccessText = styled.p`
+  font-size: 16px;
+  color: #868e96;
+  line-height: 1.6;
+
+  strong {
+    color: #333;
+    font-weight: 600;
+  }
+`;
+
+const ActionButtons = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 40px;
+`;
+
+const PrimaryButton = styled.button`
+  width: 100%;
+  padding: 16px;
+  background: var(--color-main);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+`;
+
+const SecondaryButton = styled.button`
+  width: 100%;
+  padding: 16px;
+  background: #f1f3f5;
+  color: #495057;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
 `;
