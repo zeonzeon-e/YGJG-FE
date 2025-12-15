@@ -206,11 +206,18 @@ const MyPage: React.FC = () => {
                         }
                       }}
                     />
-                    <TeamInfo onClick={() => navigate("/myteam")}>
+                    <TeamInfo
+                      onClick={() =>
+                        navigate("/myteam", { state: { teamId: team.teamId } })
+                      }
+                    >
                       <TeamName>{team.teamName}</TeamName>
-                      <PositionBadge color={getPositionColor(team.position)}>
-                        {team.position}
-                      </PositionBadge>
+                      <BadgeContainer>
+                        <PositionBadge color={getPositionColor(team.position)}>
+                          {team.position}
+                        </PositionBadge>
+                        {team.role && <RoleBadge>{team.role}</RoleBadge>}
+                      </BadgeContainer>
                     </TeamInfo>
                     <EditTeamButton
                       onClick={() =>
@@ -634,6 +641,22 @@ const PositionBadge = styled.span<{ color: string }>`
   font-family: "Pretendard-Bold";
   color: ${(props) => props.color};
   background: ${(props) => props.color}15;
+  padding: 2px 8px;
+  border-radius: 4px;
+`;
+
+const BadgeContainer = styled.div`
+  display: flex;
+  gap: 4px;
+  align-items: center;
+`;
+
+const RoleBadge = styled.span`
+  display: inline-block;
+  font-size: 11px;
+  font-family: "Pretendard-Bold";
+  color: #666;
+  background: #f0f0f0;
   padding: 2px 8px;
   border-radius: 4px;
 `;

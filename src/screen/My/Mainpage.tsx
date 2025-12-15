@@ -13,7 +13,7 @@ import {
   HiClipboardDocumentList,
   HiUserCircle,
 } from "react-icons/hi2";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { TeamRole } from "../../stores/userStore";
 import { getAccessToken } from "../../utils/authUtils";
@@ -119,14 +119,26 @@ const MainPage: React.FC = () => {
   );
   const [isPageLoading, setIsPageLoading] = useState<boolean>(true);
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     if (!isAuthLoading && teams && teams.length > 0) {
       if (!selectedTeam) {
-        setSelectedTeam(teams.find((team) => team.favoriteTeam) || teams[0]);
+        // 1. Navigation State로 전달된 teamId 확인
+        const stateTeamId = location.state?.teamId;
+        const targetTeam = stateTeamId
+          ? teams.find((t) => t.teamId === stateTeamId)
+          : null;
+
+        // 2. 전달된 팀이 있으면 선택, 없으면 즐겨찾기/첫번째 팀 선택
+        if (targetTeam) {
+          setSelectedTeam(targetTeam);
+        } else {
+          setSelectedTeam(teams.find((team) => team.favoriteTeam) || teams[0]);
+        }
       }
     }
-  }, [teams, isAuthLoading, selectedTeam]);
+  }, [teams, isAuthLoading, selectedTeam, location.state]);
 
   useEffect(() => {
     if (!selectedTeam) return;
