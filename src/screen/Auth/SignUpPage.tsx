@@ -547,10 +547,22 @@ const TermsAgreement: React.FC<{
   onNext: (data: any) => void;
 }> = ({ onNext }) => {
   const content: [string, string][] = [
-    ["(필수) 서비스 이용자 동의", "내용1"],
-    ["(필수) 개인정보 수집/이용 동의", "내용2"],
-    ["(필수) 제 3자 제공 동의", "내용3"],
-    ["(선택) 메일 수신 동의", "내용4"],
+    [
+      "(필수) 서비스 이용자 동의",
+      "제1조 (목적)\n본 약관은 요기조기(이하 '회사')가 제공하는 서비스의 이용조건 및 절차, 회사와 회원의 권리, 의무 및 책임사항 등을 규정함을 목적으로 합니다.\n\n제2조 (용어의 정의)\n1. '서비스'란 회사가 제공하는 모든 서비스를 의미합니다.\n2. '회원'이란 회사와 서비스 이용계약을 체결하고 이용자 아이디(ID)를 부여받은 자를 말합니다.\n\n제3조 (약관의 효력 및 변경)\n회사는 본 약관의 내용을 회원이 쉽게 확인할 수 있도록 서비스 화면에 게시합니다.\n\n(상세 내용은 홈페이지 참조)",
+    ],
+    [
+      "(필수) 개인정보 수집/이용 동의",
+      "1. 수집하는 개인정보 항목\n- 필수항목: 이메일, 비밀번호, 이름, 생년월일, 성별, 휴대폰 번호\n- 선택항목: 프로필 이미지, 팀 정보\n\n2. 수집 및 이용 목적\n- 회원 가입 및 관리\n- 서비스 제공 및 운영\n- 고객 상담 및 불만 처리\n\n3. 보유 및 이용 기간\n- 회원 탈퇴 시까지 보유합니다. 단, 관계 법령에 따라 일정 기간 보관이 필요한 경우 해당 기간 동안 보관합니다.",
+    ],
+    [
+      "(필수) 제 3자 제공 동의",
+      "회사는 회원의 개인정보를 원칙적으로 외부에 제공하지 않습니다. 다만, 아래의 경우에는 예외로 합니다.\n\n1. 이용자들이 사전에 동의한 경우\n2. 법령의 규정에 의거하거나, 수사 목적으로 법령에 정해진 절차와 방법에 따라 수사기관의 요구가 있는 경우",
+    ],
+    [
+      "(선택) 메일 수신 동의",
+      "회사는 서비스 운영과 관련된 중요한 정보, 이벤트, 프로모션 등을 이메일로 전송할 수 있습니다.\n\n동의를 거부하시더라도 기본 서비스 이용에는 제한이 없으나, 이벤트 참여 및 혜택 제공에 제한이 있을 수 있습니다.",
+    ],
   ];
 
   const requiredIndexes = [0, 1, 2];
@@ -621,10 +633,13 @@ const PersonalInfo: React.FC<PersonalInfoProps> = ({
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [emailError, setEmailError] = useState<string | null>(null);
-  const [passwordError, setPasswordError] = useState<string | null>(null);
-  const [confirmPasswordError, setConfirmPasswordError] = useState<
-    string | null
-  >(null);
+
+  // Validation States
+  const [isValidLength, setIsValidLength] = useState(false);
+  const [hasNumber, setHasNumber] = useState(false);
+  const [hasSpecial, setHasSpecial] = useState(false);
+  const [isMatch, setIsMatch] = useState(false);
+
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [generalError, setGeneralError] = useState<string | null>(null);
   const [emailChecked, setEmailChecked] = useState(false);
@@ -632,14 +647,27 @@ const PersonalInfo: React.FC<PersonalInfoProps> = ({
   const [isChecking, setIsChecking] = useState(false);
 
   const emailInputRef = useRef<HTMLInputElement>(null);
-  const passwordInputRef = useRef<HTMLInputElement>(null);
-  const confirmPasswordInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (isSocialLogin) {
       setEmailChecked(true);
     }
   }, [isSocialLogin]);
+
+  // Real-time validation
+  useEffect(() => {
+    if (!isSocialLogin) {
+      setIsValidLength(password.length >= 8 && password.length <= 15);
+      setHasNumber(/\d/.test(password));
+      setHasSpecial(/[!@#$%^&*()_+]/.test(password));
+    }
+  }, [password, isSocialLogin]);
+
+  useEffect(() => {
+    if (!isSocialLogin) {
+      setIsMatch(password !== "" && password === confirmPassword);
+    }
+  }, [password, confirmPassword, isSocialLogin]);
 
   const validateFields = () => {
     let isValid = true;
@@ -657,24 +685,16 @@ const PersonalInfo: React.FC<PersonalInfoProps> = ({
       isValid = false;
     }
 
-    const passwordRegex =
-      /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,16}$/;
-    if (!isSocialLogin && !passwordRegex.test(password)) {
-      setPasswordError(
-        "비밀번호는 영문, 숫자, 특수문자를 포함한 8-16자로 입력해주세요."
-      );
-      passwordInputRef.current?.focus();
-      isValid = false;
-    } else {
-      setPasswordError(null);
-    }
-
-    if (!isSocialLogin && password !== confirmPassword) {
-      setConfirmPasswordError("비밀번호가 일치하지 않습니다.");
-      confirmPasswordInputRef.current?.focus();
-      isValid = false;
-    } else {
-      setConfirmPasswordError(null);
+    if (!isSocialLogin) {
+      const passwordRegex =
+        /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,16}$/;
+      if (!passwordRegex.test(password)) {
+        // Error is handled visually by the rules, but we block submit here
+        isValid = false;
+      }
+      if (password !== confirmPassword) {
+        isValid = false;
+      }
     }
 
     return isValid;
@@ -760,32 +780,55 @@ const PersonalInfo: React.FC<PersonalInfoProps> = ({
       {success && <SuccessMessage>{success}</SuccessMessage>}
 
       <InputLabel>비밀번호</InputLabel>
-      <Input
-        ref={passwordInputRef}
-        type="password"
-        height={50}
-        placeholder="영문, 숫자, 특수문자 포함 8-16자"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        disabled={isSocialLogin}
-        hasError={!!passwordError}
-      />
-      {passwordError && <ErrorMessage>{passwordError}</ErrorMessage>}
+      <CustomInputWrapper>
+        <CustomInput
+          type="password"
+          placeholder="영문, 숫자, 특수문자 포함 8-16자"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          disabled={isSocialLogin}
+        />
+      </CustomInputWrapper>
+
+      {/* Validation Criteria - shown only if not social login and typing started */}
+      {!isSocialLogin && (
+        <ValidationRules>
+          <RuleItem valid={isValidLength}>
+            {isValidLength ? (
+              <HiCheckCircle />
+            ) : (
+              <HiCheckCircle color="#adb5bd" />
+            )}{" "}
+            8~15자
+          </RuleItem>
+          <RuleItem valid={hasNumber}>
+            {hasNumber ? <HiCheckCircle /> : <HiCheckCircle color="#adb5bd" />}{" "}
+            숫자 포함
+          </RuleItem>
+          <RuleItem valid={hasSpecial}>
+            {hasSpecial ? <HiCheckCircle /> : <HiCheckCircle color="#adb5bd" />}{" "}
+            특수문자 포함
+          </RuleItem>
+        </ValidationRules>
+      )}
 
       <InputLabel>비밀번호 확인</InputLabel>
-      <Input
-        ref={confirmPasswordInputRef}
-        type="password"
-        height={50}
-        placeholder="비밀번호를 다시 입력해주세요"
-        value={confirmPassword}
-        onChange={(e) => setConfirmPassword(e.target.value)}
-        disabled={isSocialLogin}
-        hasError={!!confirmPasswordError}
-        hasSuccess={confirmPassword.length > 0 && password === confirmPassword}
-      />
-      {confirmPasswordError && (
-        <ErrorMessage>{confirmPasswordError}</ErrorMessage>
+      <CustomInputWrapper className={isMatch && password ? "valid" : ""}>
+        <CustomInput
+          type="password"
+          placeholder="비밀번호를 다시 입력해주세요"
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
+          disabled={isSocialLogin}
+        />
+        {isMatch && password && (
+          <ValidIcon>
+            <HiCheckCircle />
+          </ValidIcon>
+        )}
+      </CustomInputWrapper>
+      {!isMatch && confirmPassword && (
+        <ErrorMessage>비밀번호가 일치하지 않습니다.</ErrorMessage>
       )}
 
       <PrimaryButton onClick={handleSubmit}>다음</PrimaryButton>
@@ -1145,25 +1188,19 @@ const SignupPage: React.FC = () => {
         {/* 헤더 */}
         <Header>
           <BackButton to="/login">
-            <HiArrowLeft size={22} />
+            <HiArrowLeft size={20} />
           </BackButton>
           <HeaderInfo>
             <StepIndicator>
-              {step <= 5 ? `${currentStep} / ${totalSteps}` : "완료"}
+              Step {step} of {totalSteps}
             </StepIndicator>
           </HeaderInfo>
         </Header>
 
         {/* 진행률 */}
-        {step <= 5 && (
-          <ProgressContainer>
-            <ScrollProgress
-              targetWidth={
-                isSocialLogin ? ((step - 3) * 100) / 3 : (step * 100) / 6
-              }
-            />
-          </ProgressContainer>
-        )}
+        <ProgressContainer>
+          <ScrollProgress targetWidth={(step / totalSteps) * 100} />
+        </ProgressContainer>
 
         {/* 카드 */}
         <SignupCard>
@@ -1219,3 +1256,72 @@ const SignupPage: React.FC = () => {
 };
 
 export default SignupPage;
+
+/* Styled Components for Custom Password Input */
+const CustomInputWrapper = styled.div`
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid #e9ecef;
+  padding: 0 12px;
+  height: 50px;
+  transition: all 0.2s;
+
+  &:focus-within {
+    border-color: #00b894;
+    box-shadow: 0 0 0 3px rgba(0, 184, 148, 0.1);
+  }
+
+  &.valid {
+    border-color: #00b894;
+    background-color: #f0fdf4;
+  }
+`;
+
+const CustomInputIcon = styled.div`
+  color: #adb5bd;
+  font-size: 20px;
+  margin-right: 10px;
+  display: flex;
+  align-items: center;
+`;
+
+const CustomInput = styled.input`
+  flex: 1;
+  border: none;
+  background: none;
+  font-size: 15px;
+  height: 100%;
+  outline: none;
+
+  &::placeholder {
+    color: #ced4da;
+  }
+`;
+
+const ValidIcon = styled.div`
+  color: #00b894;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+`;
+
+const ValidationRules = styled.div`
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+  padding-left: 4px;
+`;
+
+const RuleItem = styled.div<{ valid: boolean }>`
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: ${(props) => (props.valid ? "#00b894" : "#adb5bd")};
+  font-weight: ${(props) => (props.valid ? "600" : "400")};
+  transition: color 0.2s;
+`;
