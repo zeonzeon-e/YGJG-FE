@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import styled, { keyframes } from "styled-components";
+import styled, { keyframes, css } from "styled-components";
 import {
   FaFilter,
   FaSearch,
@@ -107,30 +107,79 @@ const TeamSelectListPage: React.FC = () => {
     }
   };
 
+  // Level Mapping
+  const levelMapping: { [key: string]: string[] } = {
+    초급: ["하", "중하"],
+    중급: ["중", "중상"],
+    고급: ["상"],
+  };
+  const levelItems = ["하", "중하", "중", "중상", "상"];
+
   /**
-   * "적용하기" 버튼 클릭 시, 서버로 필터값을 전달하여 필터링된 팀 목록 요청
+   * "적용하기" 버튼 클릭 혹은 퀵필터 변경 시 호출
+   * (server로 필터값 전달하여 리스트 갱신)
    */
-  const handleApplyFilter = async () => {
-    if (!getAccessToken()) {
-      setLoginModalOpen(true);
-      return;
+  const executeFilter = async (
+    sGender: boolean[],
+    sLevel: boolean[],
+    sRegion: boolean[],
+    sAge: boolean[],
+    sDays: boolean[]
+  ) => {
+    // 1. 상세 필터 상태 업데이트 (퀵필터에서 호출했을 때를 위해)
+    setSelectedGender(sGender);
+    setSelectedLevel(sLevel);
+    setSelectedRegion(sRegion);
+    setSelectedAge(sAge);
+    setSelectedDays(sDays);
+
+    // 2. 퀵필터 UI 상태 동기화 (역방향)
+    const newQuick = { gender: "", level: "" };
+
+    // 성별
+    const trueGenderCount = sGender.filter((b) => b).length;
+    if (trueGenderCount === 1) {
+      if (sGender[0]) newQuick.gender = "여성";
+      else if (sGender[1]) newQuick.gender = "남성";
+      else if (sGender[2]) newQuick.gender = "혼성";
     }
 
+    // 레벨
+    // 초급(하,중하), 중급(중,중상), 고급(상) 판별
+    const selectedLevelNames = levelItems.filter((_, i) => sLevel[i]);
+    const isBeginner =
+      selectedLevelNames.length === 2 &&
+      selectedLevelNames.includes("하") &&
+      selectedLevelNames.includes("중하");
+    const isIntermediate =
+      selectedLevelNames.length === 2 &&
+      selectedLevelNames.includes("중") &&
+      selectedLevelNames.includes("중상");
+    const isAdvanced =
+      selectedLevelNames.length === 1 && selectedLevelNames.includes("상");
+
+    if (isBeginner) newQuick.level = "초급";
+    else if (isIntermediate) newQuick.level = "중급";
+    else if (isAdvanced) newQuick.level = "고급";
+
+    setQuickFilters(newQuick);
+
+    // 3. API 호출
     setIsLoading(true);
     try {
-      const regionValues = selectedRegion
+      const regionValues = sRegion
         .map((selected, idx) =>
           selected ? ["내 위치 중심", "내 활동 지역 중심", "찾기"][idx] : null
         )
         .filter(Boolean) as string[];
 
-      const genderValues = selectedGender
+      const genderValues = sGender
         .map((selected, idx) =>
           selected ? ["여성", "남성", "혼성"][idx] : null
         )
         .filter(Boolean) as string[];
 
-      const ageValues = selectedAge
+      const ageValues = sAge
         .map((selected, idx) =>
           selected
             ? ["10대", "20대", "30대", "40대", "50대", "60대"][idx]
@@ -138,16 +187,14 @@ const TeamSelectListPage: React.FC = () => {
         )
         .filter(Boolean) as string[];
 
-      const daysValues = selectedDays
+      const daysValues = sDays
         .map((selected, idx) =>
           selected ? ["월", "화", "수", "목", "금", "토", "일"][idx] : null
         )
         .filter(Boolean) as string[];
 
-      const levelValues = selectedLevel
-        .map((selected, idx) =>
-          selected ? ["하", "중하", "중", "중상", "상"][idx] : null
-        )
+      const levelValues = sLevel
+        .map((selected, idx) => (selected ? levelItems[idx] : null))
         .filter(Boolean) as string[];
 
       const response = await apiClient.get("/api/search/join-team", {
@@ -164,13 +211,27 @@ const TeamSelectListPage: React.FC = () => {
       setTeams(data);
       setDisplayedTeams(data);
       setSearchKeyword("");
-      setFilterOpen(false);
     } catch (error) {
       console.error("필터 적용 중 오류:", error);
-      setLoginModalOpen(true);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleApplyFilter = () => {
+    // 현재 상세필터 상태로 실행 및 모달 닫기
+    if (!getAccessToken()) {
+      setLoginModalOpen(true);
+      return;
+    }
+    executeFilter(
+      selectedGender,
+      selectedLevel,
+      selectedRegion,
+      selectedAge,
+      selectedDays
+    );
+    setFilterOpen(false);
   };
 
   /**
@@ -202,23 +263,129 @@ const TeamSelectListPage: React.FC = () => {
   };
 
   /**
-   * 빠른 필터 적용
+   * 빠른 필터 적용 (클릭 시 바로 API 호출)
    */
   const handleQuickFilter = (type: "gender" | "level", value: string) => {
-    const newFilters = { ...quickFilters };
-    newFilters[type] = newFilters[type] === value ? "" : value;
-    setQuickFilters(newFilters);
+    if (!getAccessToken()) {
+      setLoginModalOpen(true);
+      return;
+    }
 
-    // 로컬 필터 적용
-    let filtered = [...teams];
-    if (newFilters.gender) {
-      filtered = filtered.filter((t) => t.teamGender === newFilters.gender);
+    const isSame = quickFilters[type] === value;
+    const nextValue = isSame ? "" : value;
+
+    // 상세필터 상태 계산
+    let nextGender = [...selectedGender];
+    let nextLevel = [...selectedLevel];
+
+    if (type === "gender") {
+      // value: "남성" | "여성" | "혼성"
+      // idx: 여성(0), 남성(1), 혼성(2)
+      if (isSame) {
+        // 해제 -> 모두 false? or current state?
+        // 퀵필터 해제 시 해당 상세필터도 초기화
+        nextGender = [false, false, false];
+      } else {
+        nextGender = [false, false, false]; // Reset others
+        if (value === "여성") nextGender[0] = true;
+        else if (value === "남성") nextGender[1] = true;
+        else if (value === "혼성") nextGender[2] = true;
+      }
+    } else if (type === "level") {
+      // value: "초급" | "중급" | "고급"
+      if (isSame) {
+        nextLevel = Array(5).fill(false);
+      } else {
+        nextLevel = Array(5).fill(false);
+        const targets = levelMapping[value] || [];
+        // items: ["하", "중하", "중", "중상", "상"]
+        targets.forEach((t) => {
+          const idx = levelItems.indexOf(t);
+          if (idx !== -1) nextLevel[idx] = true;
+        });
+      }
     }
-    if (newFilters.level) {
-      filtered = filtered.filter((t) => t.skillLevel === newFilters.level);
-    }
-    setDisplayedTeams(filtered);
+
+    executeFilter(
+      nextGender,
+      nextLevel,
+      selectedRegion,
+      selectedAge,
+      selectedDays
+    );
   };
+
+  /**
+   * 활성화된 필터 목록 생성
+   */
+  const getActiveFilters = () => {
+    const filters: { type: string; label: string; index: number }[] = [];
+
+    selectedRegion.forEach((isOn, idx) => {
+      if (isOn)
+        filters.push({
+          type: "region",
+          label: ["내 위치", "활동 지역", "찾기"][idx],
+          index: idx,
+        });
+    });
+    selectedGender.forEach((isOn, idx) => {
+      if (isOn)
+        filters.push({
+          type: "gender",
+          label: ["여성", "남성", "혼성"][idx],
+          index: idx,
+        });
+    });
+    selectedAge.forEach((isOn, idx) => {
+      if (isOn)
+        filters.push({
+          type: "age",
+          label: ["10대", "20대", "30대", "40대", "50대", "60대"][idx],
+          index: idx,
+        });
+    });
+    selectedDays.forEach((isOn, idx) => {
+      if (isOn)
+        filters.push({
+          type: "days",
+          label: ["월", "화", "수", "목", "금", "토", "일"][idx],
+          index: idx,
+        });
+    });
+    selectedLevel.forEach((isOn, idx) => {
+      if (isOn)
+        filters.push({ type: "level", label: levelItems[idx], index: idx });
+    });
+
+    return filters;
+  };
+
+  const removeFilter = (filter: { type: string; index: number }) => {
+    let nextLevels = {
+      gender: [...selectedGender],
+      level: [...selectedLevel],
+      region: [...selectedRegion],
+      age: [...selectedAge],
+      days: [...selectedDays],
+    };
+
+    if (filter.type === "gender") nextLevels.gender[filter.index] = false;
+    else if (filter.type === "level") nextLevels.level[filter.index] = false;
+    else if (filter.type === "region") nextLevels.region[filter.index] = false;
+    else if (filter.type === "age") nextLevels.age[filter.index] = false;
+    else if (filter.type === "days") nextLevels.days[filter.index] = false;
+
+    executeFilter(
+      nextLevels.gender,
+      nextLevels.level,
+      nextLevels.region,
+      nextLevels.age,
+      nextLevels.days
+    );
+  };
+
+  const activeFilters = getActiveFilters();
 
   /**
    * 초대코드로 팀 가입하기
@@ -304,35 +471,32 @@ const TeamSelectListPage: React.FC = () => {
           <SearchButton onClick={handleSearch}>검색</SearchButton>
         </SearchSection>
 
-        {/* 빠른 필터 칩 */}
+        {/* Active Filter Cloud Section */}
         <QuickFilterSection>
           <FilterChipsWrapper>
+            {/* Filter Toggle Button */}
             <FilterChip
-              isActive={filterOpen}
+              isActive={filterOpen || activeFilters.length > 0}
               onClick={() => setFilterOpen(true)}
+              style={{ paddingRight: 14 }} // Adjust padding since no 'x'
             >
               <FaFilter size={12} />
               필터
+              {activeFilters.length > 0 && (
+                <FilterCount>{activeFilters.length}</FilterCount>
+              )}
             </FilterChip>
-            <FilterDivider />
-            {["남성", "여성", "혼성"].map((gender) => (
-              <FilterChip
-                key={gender}
-                isActive={quickFilters.gender === gender}
-                onClick={() => handleQuickFilter("gender", gender)}
+
+            {activeFilters.length > 0 && <FilterDivider />}
+
+            {/* Render Active Filters */}
+            {activeFilters.map((filter, i) => (
+              <ActiveFilterChip
+                key={`${filter.type}-${filter.index}`}
+                onClick={() => removeFilter(filter)}
               >
-                {gender}
-              </FilterChip>
-            ))}
-            <FilterDivider />
-            {["초급", "중급", "고급"].map((level) => (
-              <FilterChip
-                key={level}
-                isActive={quickFilters.level === level}
-                onClick={() => handleQuickFilter("level", level)}
-              >
-                {level}
-              </FilterChip>
+                {filter.label} ✕
+              </ActiveFilterChip>
             ))}
           </FilterChipsWrapper>
         </QuickFilterSection>
@@ -460,84 +624,126 @@ const TeamSelectListPage: React.FC = () => {
 
             <FilterContent>
               <FilterSection>
-                <SectionTitle>지역</SectionTitle>
-                <CheckButton
-                  items={["내 위치 중심", "내 활동 지역 중심", "찾기"]}
-                  selectedStates={selectedRegion}
-                  onItemClick={(idx) =>
-                    setSelectedRegion((prev) =>
-                      prev.map((selected, i) =>
-                        i === idx ? !selected : selected
-                      )
+                <SectionHeader>
+                  <SectionTitle>지역</SectionTitle>
+                  <SectionDesc>어디서 활동하는 팀을 찾으시나요?</SectionDesc>
+                </SectionHeader>
+                <ChipGroup>
+                  {["내 위치 중심", "내 활동 지역 중심", "찾기"].map(
+                    (label, idx) => (
+                      <Chip
+                        key={label}
+                        selected={selectedRegion[idx]}
+                        onClick={() =>
+                          setSelectedRegion((prev) =>
+                            prev.map((v, i) => (i === idx ? !v : v))
+                          )
+                        }
+                      >
+                        {label}
+                      </Chip>
                     )
-                  }
-                />
+                  )}
+                </ChipGroup>
               </FilterSection>
 
               <FilterSection>
-                <SectionTitle>성별</SectionTitle>
-                <CheckButton
-                  items={["여성", "남성", "혼성"]}
-                  selectedStates={selectedGender}
-                  onItemClick={(idx) =>
-                    setSelectedGender((prev) =>
-                      prev.map((selected, i) =>
-                        i === idx ? !selected : selected
-                      )
-                    )
-                  }
-                />
+                <SectionHeader>
+                  <SectionTitle>성별</SectionTitle>
+                  <SectionDesc>원하는 성별 구성을 선택해주세요</SectionDesc>
+                </SectionHeader>
+                <ChipGroup>
+                  {["여성", "남성", "혼성"].map((label, idx) => (
+                    <Chip
+                      key={label}
+                      selected={selectedGender[idx]}
+                      onClick={() =>
+                        setSelectedGender((prev) =>
+                          prev.map((v, i) => (i === idx ? !v : v))
+                        )
+                      }
+                    >
+                      {label}
+                    </Chip>
+                  ))}
+                </ChipGroup>
               </FilterSection>
 
               <FilterSection>
-                <SectionTitle>연령별</SectionTitle>
-                <CheckButton
-                  items={["10대", "20대", "30대", "40대", "50대", "60대"]}
-                  selectedStates={selectedAge}
-                  onItemClick={(idx) =>
-                    setSelectedAge((prev) =>
-                      prev.map((selected, i) =>
-                        i === idx ? !selected : selected
-                      )
+                <SectionHeader>
+                  <SectionTitle>연령대</SectionTitle>
+                  <SectionDesc>주로 활동하는 나이대를 선택해주세요</SectionDesc>
+                </SectionHeader>
+                <ChipGroup>
+                  {["10대", "20대", "30대", "40대", "50대", "60대"].map(
+                    (label, idx) => (
+                      <Chip
+                        key={label}
+                        selected={selectedAge[idx]}
+                        onClick={() =>
+                          setSelectedAge((prev) =>
+                            prev.map((v, i) => (i === idx ? !v : v))
+                          )
+                        }
+                      >
+                        {label}
+                      </Chip>
                     )
-                  }
-                />
+                  )}
+                </ChipGroup>
               </FilterSection>
 
               <FilterSection>
-                <SectionTitle>요일</SectionTitle>
-                <CheckButton
-                  items={["월", "화", "수", "목", "금", "토", "일"]}
-                  selectedStates={selectedDays}
-                  onItemClick={(idx) =>
-                    setSelectedDays((prev) =>
-                      prev.map((selected, i) =>
-                        i === idx ? !selected : selected
-                      )
+                <SectionHeader>
+                  <SectionTitle>요일</SectionTitle>
+                  <SectionDesc>활동 가능한 요일을 선택해주세요</SectionDesc>
+                </SectionHeader>
+                <ChipGroup>
+                  {["월", "화", "수", "목", "금", "토", "일"].map(
+                    (label, idx) => (
+                      <Chip
+                        key={label}
+                        selected={selectedDays[idx]}
+                        onClick={() =>
+                          setSelectedDays((prev) =>
+                            prev.map((v, i) => (i === idx ? !v : v))
+                          )
+                        }
+                        circle
+                      >
+                        {label}
+                      </Chip>
                     )
-                  }
-                />
+                  )}
+                </ChipGroup>
               </FilterSection>
 
               <FilterSection>
-                <SectionTitle>실력</SectionTitle>
-                <CheckButton
-                  items={["하", "중하", "중", "중상", "상"]}
-                  selectedStates={selectedLevel}
-                  onItemClick={(idx) =>
-                    setSelectedLevel((prev) =>
-                      prev.map((selected, i) =>
-                        i === idx ? !selected : selected
-                      )
-                    )
-                  }
-                />
+                <SectionHeader>
+                  <SectionTitle>실력</SectionTitle>
+                  <SectionDesc>팀의 실력 수준을 선택해주세요</SectionDesc>
+                </SectionHeader>
+                <ChipGroup>
+                  {["하", "중하", "중", "중상", "상"].map((label, idx) => (
+                    <Chip
+                      key={label}
+                      selected={selectedLevel[idx]}
+                      onClick={() =>
+                        setSelectedLevel((prev) =>
+                          prev.map((v, i) => (i === idx ? !v : v))
+                        )
+                      }
+                    >
+                      {label}
+                    </Chip>
+                  ))}
+                </ChipGroup>
               </FilterSection>
             </FilterContent>
 
             <FilterFooter>
-              <MainButton onClick={handleApplyFilter} height={50}>
-                적용하기
+              <MainButton onClick={handleApplyFilter} height={56} fontSize={16}>
+                필터 적용하기
               </MainButton>
             </FilterFooter>
           </FilterPanel>
@@ -805,45 +1011,80 @@ const QuickFilterSection = styled.div`
   }
 `;
 
-const FilterChipsWrapper = styled.div`
-  display: flex;
-  gap: 8px;
-  padding: 4px 0;
+const FilterCount = styled.span`
+  background: var(--color-main);
+  color: white;
+  font-size: 10px;
+  font-weight: bold;
+  padding: 2px 6px;
+  border-radius: 10px;
+  margin-left: 4px;
 `;
 
-const FilterChip = styled.button<{ isActive?: boolean }>`
+const ActiveFilterChip = styled.button`
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 20px;
+  border: 1px solid var(--color-main);
+  background: rgba(14, 98, 68, 0.08); /* Light green tint */
+  color: var(--color-main);
+  font-size: 13px;
+  font-family: "Pretendard-Medium";
+  cursor: pointer;
   display: flex;
   align-items: center;
   gap: 6px;
-  background: ${(props) => (props.isActive ? "var(--color-main)" : "white")};
-  color: ${(props) => (props.isActive ? "white" : "var(--color-dark2)")};
-  border: 1px solid
-    ${(props) => (props.isActive ? "var(--color-main)" : "#eee")};
-  border-radius: 20px;
-  padding: 8px 14px;
-  font-size: 13px;
   white-space: nowrap;
-  cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.2s;
 
   &:hover {
-    border-color: var(--color-main);
+    background: rgba(14, 98, 68, 0.15);
+  }
+`;
+
+const FilterChipsWrapper = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 4px;
+`;
+
+const FilterChip = styled.button<{ isActive?: boolean }>`
+  height: 32px;
+  padding: 0 14px;
+  border-radius: 20px;
+  border: 1px solid ${(p) => (p.isActive ? "var(--color-main)" : "#e0e0e0")};
+  background: ${(p) => (p.isActive ? "rgba(14, 98, 68, 0.08)" : "white")};
+  color: ${(p) => (p.isActive ? "var(--color-main)" : "#666")};
+  font-size: 13px;
+  font-family: "Pretendard-Medium";
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  transition: all 0.2s;
+
+  &:hover {
+    background: ${(p) => (p.isActive ? "rgba(14, 98, 68, 0.12)" : "#f5f5f5")};
   }
 `;
 
 const FilterDivider = styled.div`
   width: 1px;
-  height: 24px;
+  height: 16px;
   background: #eee;
   margin: 0 4px;
-  align-self: center;
 `;
 
 const ResultsHeader = styled.div`
-  margin-bottom: 12px;
+  margin-bottom: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 `;
 
-const ResultsCount = styled.span`
+const ResultsCount = styled.div`
   font-size: 14px;
   color: var(--color-dark1);
 `;
@@ -851,37 +1092,38 @@ const ResultsCount = styled.span`
 const TeamCardList = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
 `;
 
 const TeamCard = styled.div`
   background: white;
-  border-radius: 16px;
-  padding: 18px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
   cursor: pointer;
-  transition: all 0.3s ease;
-  animation: ${fadeInUp} 0.4s ease forwards;
-  opacity: 0;
+  animation: ${fadeInUp} 0.5s ease backwards;
 
   &:hover {
     transform: translateY(-4px);
-    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
   }
 `;
 
 const TeamCardInner = styled.div`
+  padding: 20px;
   display: flex;
   gap: 16px;
 `;
 
 const TeamLogo = styled.img`
-  width: 72px;
-  height: 72px;
+  width: 60px;
+  height: 60px;
   border-radius: 16px;
-  object-fit: cover;
   background: #f0f0f0;
+  object-fit: cover;
   flex-shrink: 0;
+  border: 1px solid #f0f0f0;
 `;
 
 const TeamInfoSection = styled.div`
@@ -892,7 +1134,7 @@ const TeamInfoSection = styled.div`
 const TeamName = styled.h3`
   font-size: 17px;
   font-family: "Pretendard-Bold";
-  color: var(--color-dark2);
+  color: #333;
   margin-bottom: 8px;
   white-space: nowrap;
   overflow: hidden;
@@ -910,148 +1152,168 @@ const MetaItem = styled.div`
   align-items: center;
   gap: 6px;
   font-size: 13px;
-  color: var(--color-dark1);
+  color: #666;
 
   svg {
-    color: var(--color-main);
-    flex-shrink: 0;
+    color: #999;
   }
 `;
 
 const TeamBadges = styled.div`
+  padding: 0 20px 20px;
   display: flex;
   gap: 8px;
-  margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px solid #f0f0f0;
 `;
 
-const Badge = styled.span<{ variant?: string }>`
-  display: inline-flex;
-  align-items: center;
+const Badge = styled.span<{ variant: "level" | "members" }>`
   padding: 4px 10px;
-  border-radius: 6px;
-  font-size: 12px;
-  font-family: "Pretendard-Medium";
+  border-radius: 8px;
+  font-size: 11px;
+  font-family: "Pretendard-SemiBold";
 
-  ${(props) =>
-    props.variant === "level" &&
-    `
-    background: var(--color-subtle);
-    color: var(--color-main);
-  `}
+  ${(p) =>
+    p.variant === "level" &&
+    css`
+      background: rgba(14, 98, 68, 0.08);
+      color: var(--color-main);
+    `}
 
-  ${(props) =>
-    props.variant === "members" &&
-    `
-    background: #f0f0f0;
-    color: var(--color-dark2);
-  `}
+  ${(p) =>
+    p.variant === "members" &&
+    css`
+      background: #f5f5f5;
+      color: #666;
+    `}
 `;
 
 const ViewDetailButton = styled.div`
-  margin-top: 12px;
-  text-align: right;
+  border-top: 1px solid #f5f5f5;
+  padding: 12px;
+  text-align: center;
   font-size: 13px;
   color: var(--color-main);
   font-family: "Pretendard-SemiBold";
+  background: #fafafa;
+  transition: all 0.2s;
+
+  ${TeamCard}:hover & {
+    background: var(--color-main);
+    color: white;
+  }
 `;
 
 /* ========== Loading Skeleton ========== */
 const SkeletonCard = styled.div`
   background: white;
-  border-radius: 16px;
-  padding: 18px;
+  border-radius: 20px;
+  padding: 20px;
   display: flex;
   gap: 16px;
+  height: 120px;
 `;
 
 const SkeletonImage = styled.div`
-  width: 72px;
-  height: 72px;
+  width: 60px;
+  height: 60px;
   border-radius: 16px;
-  background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%);
-  background-size: 200% 100%;
-  animation: ${shimmer} 1.5s infinite;
+  background: #f0f0f0;
+  animation: ${shimmer} 1.5s infinite linear;
+  background: linear-gradient(to right, #f0f0f0 4%, #f7f7f7 25%, #f0f0f0 36%);
+  background-size: 1000px 100%;
 `;
 
 const SkeletonContent = styled.div`
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 `;
 
 const SkeletonTitle = styled.div`
   width: 60%;
   height: 20px;
-  border-radius: 4px;
-  background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%);
-  background-size: 200% 100%;
-  animation: ${shimmer} 1.5s infinite;
+  background: #f0f0f0;
+  border-radius: 6px;
+  animation: ${shimmer} 1.5s infinite linear;
+  background: linear-gradient(to right, #f0f0f0 4%, #f7f7f7 25%, #f0f0f0 36%);
+  background-size: 1000px 100%;
 `;
 
 const SkeletonText = styled.div<{ short?: boolean }>`
-  width: ${(props) => (props.short ? "40%" : "80%")};
+  width: ${(p) => (p.short ? "40%" : "80%")};
   height: 14px;
+  background: #f0f0f0;
   border-radius: 4px;
-  background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%);
-  background-size: 200% 100%;
-  animation: ${shimmer} 1.5s infinite;
+  animation: ${shimmer} 1.5s infinite linear;
+  background: linear-gradient(to right, #f0f0f0 4%, #f7f7f7 25%, #f0f0f0 36%);
+  background-size: 1000px 100%;
 `;
 
 /* ========== Empty State ========== */
 const EmptyState = styled.div`
   text-align: center;
   padding: 60px 20px;
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
 `;
 
 const EmptyIcon = styled.div`
   font-size: 48px;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
+  opacity: 0.5;
 `;
 
 const EmptyTitle = styled.h3`
   font-size: 18px;
-  font-family: "Pretendard-SemiBold";
-  color: var(--color-dark2);
+  font-family: "Pretendard-Bold";
+  color: #333;
   margin-bottom: 8px;
 `;
 
 const EmptyDesc = styled.p`
   font-size: 14px;
-  color: var(--color-dark1);
+  color: #888;
 `;
 
 /* ========== Filter Panel ========== */
 const FilterOverlay = styled.div`
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: flex-end;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
   z-index: 1000;
+  display: flex;
+  align-items: flex-end; /* Mobile bottom sheet */
+  @media (min-width: 600px) {
+    align-items: center;
+    justify-content: center;
+  }
 `;
 
 const FilterPanel = styled.div`
+  width: 100%;
+  max-width: 600px;
+  max-height: 85vh;
   background: white;
   border-radius: 24px 24px 0 0;
-  width: 100%;
-  max-height: 85vh;
-  overflow: hidden;
   display: flex;
   flex-direction: column;
-  animation: ${slideUp} 0.3s ease;
+  animation: ${slideUp} 0.3s ease-out;
+  overflow: hidden;
+
+  @media (min-width: 600px) {
+    width: 480px;
+    border-radius: 24px;
+    max-height: 80vh;
+    animation: ${fadeInUp} 0.3s ease-out;
+  }
 `;
 
 const FilterHeader = styled.div`
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
   padding: 20px 24px;
   border-bottom: 1px solid #f0f0f0;
 `;
@@ -1064,32 +1326,79 @@ const FilterTitle = styled.h2`
 const CloseButton = styled.button`
   background: none;
   border: none;
-  font-size: 28px;
-  color: var(--color-dark1);
+  font-size: 24px;
+  color: #999;
   cursor: pointer;
-  padding: 0;
+  padding: 4px;
   line-height: 1;
 `;
 
 const FilterContent = styled.div`
-  flex: 1;
+  padding: 24px;
   overflow-y: auto;
-  padding: 20px 24px;
-`;
-
-const FilterSection = styled.div`
-  margin-bottom: 24px;
-`;
-
-const SectionTitle = styled.h3`
-  font-size: 15px;
-  font-family: "Pretendard-SemiBold";
-  color: var(--color-dark2);
-  margin-bottom: 12px;
+  flex: 1;
 `;
 
 const FilterFooter = styled.div`
-  padding: 16px 24px;
+  padding: 20px 24px;
   border-top: 1px solid #f0f0f0;
-  padding-bottom: calc(16px + env(safe-area-inset-bottom));
+  background: white;
+  padding-bottom: max(20px, env(safe-area-inset-bottom));
+`;
+
+const FilterSection = styled.div`
+  margin-bottom: 32px;
+  &:last-child {
+    margin-bottom: 0;
+  }
+`;
+
+const SectionHeader = styled.div`
+  margin-bottom: 12px;
+`;
+
+const SectionTitle = styled.h3`
+  font-size: 16px;
+  font-family: "Pretendard-Bold";
+  color: #333;
+  margin-bottom: 4px;
+`;
+
+const SectionDesc = styled.p`
+  font-size: 13px;
+  color: #888;
+`;
+
+const ChipGroup = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+`;
+
+const Chip = styled.button<{ selected: boolean; circle?: boolean }>`
+  padding: ${(p) => (p.circle ? "0" : "8px 16px")};
+  width: ${(p) => (p.circle ? "40px" : "auto")};
+  height: ${(p) => (p.circle ? "40px" : "36px")};
+  border-radius: ${(p) => (p.circle ? "50%" : "20px")};
+  border: 1px solid ${(p) => (p.selected ? "var(--color-main)" : "#e0e0e0")};
+  background: ${(p) => (p.selected ? "var(--color-main)" : "white")};
+  color: ${(p) => (p.selected ? "white" : "#555")};
+  font-size: 14px;
+  font-family: ${(p) =>
+    p.selected ? "Pretendard-SemiBold" : "Pretendard-Regular"};
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: ${(p) => (p.selected ? "0 4px 10px rgba(14,98,68,0.2)" : "none")};
+
+  &:hover {
+    border-color: var(--color-main);
+    background: ${(p) => (p.selected ? "var(--color-main-darker)" : "#f8f9fa")};
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
 `;
