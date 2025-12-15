@@ -46,6 +46,12 @@ const StyledButton = styled.button<MainButtonProps>`
     `};
 
   margin: 5px 0px 5px 0px;
+
+  @media (max-width: 768px) {
+    padding: ${(props) =>
+      props.height ? `${props.height / 12}px 0` : "12px 0"};
+    font-size: ${(props) => (props.fontSize ? `${props.fontSize}px` : "16px")};
+  }
 `;
 
 /**

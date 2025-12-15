@@ -10,6 +10,8 @@ html {
   min-width: 100vw;
   min-height: 100vh;
   font-family: "Pretendard-Regular";
+  touch-action: manipulation;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* 라이브러리 시작 */
