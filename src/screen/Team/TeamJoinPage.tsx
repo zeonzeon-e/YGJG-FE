@@ -1,15 +1,17 @@
-import React, { useState, useEffect } from "react";
-import styled from "styled-components";
+import React, { useState, useEffect, useRef } from "react";
+import styled, { keyframes } from "styled-components";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   HiChevronLeft,
   HiCheckCircle,
   HiUserCircle,
   HiListBullet,
+  HiChevronDown,
 } from "react-icons/hi2";
 import apiClient from "../../api/apiClient";
 import MainButton from "../../components/Button/MainButton";
 import Modal2 from "../../components/Modal/Modal2";
+import AlertModal from "../../components/Modal/AlertModal";
 
 // --- Types ---
 type Profile = {
@@ -33,6 +35,13 @@ const MOCK_PROFILE: Profile = {
   position: "",
 };
 
+const POSITIONS = [
+  { value: "FW", label: "공격수 (FW)" },
+  { value: "MF", label: "미드필더 (MF)" },
+  { value: "DF", label: "수비수 (DF)" },
+  { value: "GK", label: "골키퍼 (GK)" },
+];
+
 const TeamJoinPage: React.FC = () => {
   const navigate = useNavigate();
   const { teamId } = useParams<{ teamId: string }>();
@@ -43,6 +52,15 @@ const TeamJoinPage: React.FC = () => {
   const [completeOpen, setCompleteOpen] = useState(false);
   const [complete, setComplete] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  // Custom Dropdown State
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Alert Modal State
+  const [alertOpen, setAlertOpen] = useState(false);
+  const [alertMessage, setAlertMessage] = useState("");
+  const [alertTitle, setAlertTitle] = useState("");
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -69,17 +87,40 @@ const TeamJoinPage: React.FC = () => {
     fetchProfile();
   }, []);
 
+  // Handle click outside for dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setContent(e.target.value);
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setPosition(e.target.value);
+  const handlePositionSelect = (value: string) => {
+    setPosition(value);
+    setIsDropdownOpen(false);
+  };
+
+  const showAlert = (title: string, message: string) => {
+    setAlertTitle(title);
+    setAlertMessage(message);
+    setAlertOpen(true);
   };
 
   const handleSubmit = () => {
     if (!content.trim() || !position) {
-      alert("포지션을 선택하고 가입 인사를 입력해주세요.");
+      showAlert("입력 확인", "포지션을 선택하고\n가입 인사를 입력해주세요.");
       return;
     }
     setCompleteOpen(true);
@@ -111,7 +152,10 @@ const TeamJoinPage: React.FC = () => {
       }
     } catch (error) {
       console.error("Failed to join team:", error);
-      alert("가입 신청 중 오류가 발생했습니다. 다시 시도해주세요.");
+      showAlert(
+        "오류",
+        "가입 신청 중 오류가 발생했습니다.\n다시 시도해주세요."
+      );
     }
   };
 
@@ -224,17 +268,48 @@ const TeamJoinPage: React.FC = () => {
           {/**************** Position & Message Form ****************/}
           <SectionDivider />
 
-          <FormGroup>
+          <FormGroup style={{ position: "relative", zIndex: 10 }}>
             <FormLabel>
               희망 포지션 <Required>*</Required>
             </FormLabel>
-            <StyledSelect value={position} onChange={handleChange}>
-              <option value="">포지션을 선택해주세요</option>
-              <option value="FW">공격수 (FW)</option>
-              <option value="MF">미드필더 (MF)</option>
-              <option value="DF">수비수 (DF)</option>
-              <option value="GK">골키퍼 (GK)</option>
-            </StyledSelect>
+
+            {/* Custom Dropdown */}
+            <DropdownContainer ref={dropdownRef}>
+              <DropdownTrigger
+                isOpen={isDropdownOpen}
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                isSelected={!!position}
+              >
+                <span>
+                  {position
+                    ? POSITIONS.find((p) => p.value === position)?.label
+                    : "포지션을 선택해주세요"}
+                </span>
+                <HiChevronDown
+                  size={20}
+                  style={{
+                    transform: isDropdownOpen
+                      ? "rotate(180deg)"
+                      : "rotate(0deg)",
+                    transition: "transform 0.2s",
+                  }}
+                />
+              </DropdownTrigger>
+
+              {isDropdownOpen && (
+                <DropdownMenu>
+                  {POSITIONS.map((opt) => (
+                    <DropdownItem
+                      key={opt.value}
+                      isActive={position === opt.value}
+                      onClick={() => handlePositionSelect(opt.value)}
+                    >
+                      {opt.label}
+                    </DropdownItem>
+                  ))}
+                </DropdownMenu>
+              )}
+            </DropdownContainer>
           </FormGroup>
 
           <FormGroup>
@@ -263,6 +338,16 @@ const TeamJoinPage: React.FC = () => {
         confirmText="신청하기"
         cancelText="취소"
         onConfirm={doApprove}
+      />
+
+      {/* Alert Modal */}
+      <AlertModal
+        isOpen={alertOpen}
+        onClose={() => setAlertOpen(false)}
+        title={alertTitle}
+        message={alertMessage}
+        type="alert"
+        variant="danger"
       />
     </PageWrapper>
   );
@@ -417,26 +502,68 @@ const Required = styled.span`
   margin-left: 2px;
 `;
 
-const StyledSelect = styled.select`
+// Dropdown Styles
+const DropdownContainer = styled.div`
+  position: relative;
+  width: 100%;
+`;
+
+const DropdownTrigger = styled.div<{ isOpen: boolean; isSelected: boolean }>`
   width: 100%;
   padding: 14px;
   border-radius: 12px;
-  border: 1px solid #dee2e6;
+  border: 1px solid
+    ${(props) => (props.isOpen ? "var(--color-main)" : "#dee2e6")};
   background-color: white;
   font-size: 15px;
-  color: #333;
-  appearance: none;
-  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23333%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
-  background-repeat: no-repeat;
-  background-position: right 16px top 50%;
-  background-size: 10px auto;
+  color: ${(props) =>
+    props.isSelected ? "#333" : "#adb5bd"}; /* Changed color for placeholder */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
   box-sizing: border-box;
-  font-family: inherit;
+  box-shadow: ${(props) =>
+    props.isOpen ? "0 0 0 2px rgba(45, 138, 94, 0.1)" : "none"};
+  transition: all 0.2s;
 
-  &:focus {
-    outline: none;
-    border-color: var(--color-main);
-    box-shadow: 0 0 0 2px rgba(45, 138, 94, 0.1);
+  &:hover {
+    border-color: ${(props) =>
+      props.isOpen ? "var(--color-main)" : "#adb5bd"};
+  }
+`;
+
+const fadeIn = keyframes`
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+`;
+
+const DropdownMenu = styled.div`
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #f1f3f5;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  z-index: 100;
+  padding: 6px;
+  animation: ${fadeIn} 0.2s ease-out;
+`;
+
+const DropdownItem = styled.div<{ isActive: boolean }>`
+  padding: 12px 14px;
+  font-size: 15px;
+  color: ${(props) => (props.isActive ? "var(--color-main)" : "#333")};
+  background: ${(props) => (props.isActive ? "#f8f9fa" : "white")};
+  font-weight: ${(props) => (props.isActive ? "600" : "400")};
+  border-radius: 8px;
+  cursor: pointer;
+
+  &:hover {
+    background: #f1f3f5;
   }
 `;
 
