@@ -1,19 +1,25 @@
-import React, { useEffect, useState } from "react";
-import styled from "styled-components";
+import React, { useEffect, useMemo, useState } from "react";
+import styled, { keyframes } from "styled-components";
+import { useNavigate, useParams } from "react-router-dom";
+import { FaLocationDot } from "react-icons/fa6";
+import {
+  HiCalendarDays,
+  HiCurrencyDollar,
+  HiTicket,
+  HiUserGroup,
+} from "react-icons/hi2";
+
 import Header2 from "../../components/Header/Header2/Header2";
 import apiClient from "../../api/apiClient";
-import { FaLocationDot, FaPeopleGroup } from "react-icons/fa6";
-import { useNavigate } from "react-router-dom";
-import MainButton from "../../components/Button/MainButton";
 
 interface TeamData {
-  activitySchedule: string[];
-  //activityTime: number[];
+  activitySchedule: string[] | string | null;
+  // activityTime: number[];
   ageRange: string;
   dues: string;
   invitedCode: string;
   matchLocation: string;
-  positionRequired: string[];
+  positionRequired: string[] | string | null;
   region: string;
   teamGender: string;
   teamImageUrl: string;
@@ -25,228 +31,625 @@ interface TeamData {
 }
 
 const TeamInfoPage: React.FC = () => {
-  const [teamData, setTeamData] = useState<TeamData>();
-  const [teamId] = useState<string>("14");
-
+  const { teamId } = useParams<{ teamId: string }>();
+  const resolvedTeamId = teamId ?? "13";
   const navigate = useNavigate();
+
+  const [teamData, setTeamData] = useState<TeamData | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [hasError, setHasError] = useState<boolean>(false);
 
   useEffect(() => {
     const fetchTeamData = async () => {
+      setIsLoading(true);
+      setHasError(false);
+
       try {
-        const response = await apiClient.get(`api/team/${teamId}`);
+        const response = await apiClient.get(`/api/team/${resolvedTeamId}`);
         setTeamData(response.data);
       } catch (err) {
         console.error("Error fetching team data:", err);
+        setHasError(true);
+        setTeamData(null);
+      } finally {
+        setIsLoading(false);
       }
     };
 
     fetchTeamData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [resolvedTeamId]);
+
+  const dayLabels = ["월", "화", "수", "목", "금", "토", "일"];
+
+  const scheduleList = useMemo<string[]>(() => {
+    if (!teamData) return [];
+    const schedule = teamData.activitySchedule;
+
+    if (Array.isArray(schedule)) {
+      return schedule.filter(
+        (item: string) => !!item && item.length > 0
+      );
+    }
+
+    if (typeof schedule === "string") {
+      return schedule
+        .split("|")
+        .map((item: string) => item.trim())
+        .filter((item: string) => item.length > 0);
+    }
+
+    return [];
+  }, [teamData]);
+
+  const positionList = useMemo<string[]>(() => {
+    if (!teamData) return [];
+    const positions = teamData.positionRequired;
+
+    if (Array.isArray(positions)) {
+      return positions.filter(
+        (item: string) => !!item && item.length > 0
+      );
+    }
+
+    if (typeof positions === "string") {
+      return positions
+        .split(",")
+        .map((item: string) => item.trim())
+        .filter((item: string) => item.length > 0);
+    }
+
+    return [];
+  }, [teamData]);
 
   return (
-    <>
-      <Header2 text={teamData?.teamName} />
+    <PageWrapper>
+      <Header2 text={teamData?.teamName || "팀 정보"} />
 
-      <Container>
-        {teamData && (
+      <HeroSection>
+        <HeroContent>
+          {isLoading ? (
+            <HeroSkeleton>
+              <HeroAvatarSkeleton />
+              <HeroTextSkeleton>
+                <HeroTitleSkeleton />
+                <HeroMetaSkeleton />
+              </HeroTextSkeleton>
+            </HeroSkeleton>
+          ) : hasError || !teamData ? (
+            <HeroError>
+              <HeroErrorTitle>팀 정보를 불러오지 못했어요</HeroErrorTitle>
+              <HeroErrorDesc>잠시 후 다시 시도해주세요.</HeroErrorDesc>
+            </HeroError>
+          ) : (
+            <HeroRow>
+              <TeamAvatar
+                src={teamData.teamImageUrl || "/default-team.png"}
+                alt={teamData.teamName}
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  if (!target.dataset.fallback) {
+                    target.dataset.fallback = "true";
+                    target.src =
+                      "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='72' height='72' viewBox='0 0 72 72'%3E%3Crect fill='%23ffffff' fill-opacity='.2' width='72' height='72' rx='18'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' fill='%23ffffff' fill-opacity='.8' font-size='12'%3ETEAM%3C/text%3E%3C/svg%3E";
+                  }
+                }}
+              />
+              <HeroText>
+                <HeroTitle>{teamData.teamName}</HeroTitle>
+                <HeroMeta>
+                  <HeroMetaItem>
+                    <FaLocationDot />
+                    {teamData.region} {teamData.town}
+                  </HeroMetaItem>
+                  <HeroMetaItem>
+                    <HiUserGroup />
+                    {teamData.teamGender} · {teamData.teamLevel}
+                  </HeroMetaItem>
+                </HeroMeta>
+              </HeroText>
+            </HeroRow>
+          )}
+        </HeroContent>
+      </HeroSection>
+
+      <ContentContainer>
+        {isLoading ? (
           <>
-            <ProfileWrapper>
-              <TeamProfile>
-                <TeamProfileImg src={teamData.teamImageUrl} />
-                <TeamProfileInfor>
-                  <TeamProfileText>
-                    <FaLocationDot /> 지역 {teamData.region} {teamData.town}
-                  </TeamProfileText>
-                  <TeamProfileText>
-                    <FaPeopleGroup /> 연령대 {teamData.ageRange}
-                  </TeamProfileText>
-                  <TeamProfileText>
-                    <FaPeopleGroup /> 성별 {teamData.teamGender}
-                  </TeamProfileText>
-                  <TeamProfileText>
-                    <FaPeopleGroup /> 레벨 {teamData.teamLevel}
-                  </TeamProfileText>
-                </TeamProfileInfor>
-              </TeamProfile>
-              {/* <TeamProfileSetting
-                onClick={() => handleEditClick(Number(teamId))}
-              >
-                <IoSettingsSharp />
-              </TeamProfileSetting> */}
-            </ProfileWrapper>
-            <CardWrapper>
-              <Card>선수 수 : {teamData.memberCount}명</Card>
-              <Card>회비/월 : {teamData.dues}원</Card>
-            </CardWrapper>
-            <TeamDetails>
-              <TeamTitle>팀 소개</TeamTitle>
-              <p style={{ fontSize: "14px" }}>{teamData.team_introduce}</p>
-            </TeamDetails>
-            <TeamDetails>
-              {/* <p>팀 이름: {teamData.teamName}</p> */}
+            <CardSkeleton />
+            <CardSkeleton />
+            <CardSkeleton />
+          </>
+        ) : hasError || !teamData ? (
+          <ErrorCard>
+            <ErrorTitle>데이터를 표시할 수 없어요</ErrorTitle>
+            <ErrorDesc>네트워크 상태를 확인하고 다시 시도해주세요.</ErrorDesc>
+          </ErrorCard>
+        ) : (
+          <>
+            <StatsGrid>
+              <StatCard>
+                <StatIcon color="var(--color-info)">
+                  <HiUserGroup size={18} />
+                </StatIcon>
+                <StatLabel>팀원</StatLabel>
+                <StatValue>{teamData.memberCount}명</StatValue>
+              </StatCard>
+              <StatCard>
+                <StatIcon color="var(--color-warning)">
+                  <HiCurrencyDollar size={18} />
+                </StatIcon>
+                <StatLabel>회비/월</StatLabel>
+                <StatValue>{teamData.dues}원</StatValue>
+              </StatCard>
+              <StatCard>
+                <StatIcon color="var(--color-success)">
+                  <HiCalendarDays size={18} />
+                </StatIcon>
+                <StatLabel>주요 일정</StatLabel>
+                <StatValue>{scheduleList.length}회</StatValue>
+              </StatCard>
+              <StatCard>
+                <StatIcon color="var(--color-sub)">
+                  <HiTicket size={18} />
+                </StatIcon>
+                <StatLabel>초대코드</StatLabel>
+                <StatValue>{teamData.invitedCode || "-"}</StatValue>
+              </StatCard>
+            </StatsGrid>
 
-              <>
-                <TeamTitle>주요 활동 일정</TeamTitle>
-                <ItemWrapper>
-                  {teamData.activitySchedule.map((item, idx) => {
-                    const isActive = teamData.activitySchedule.includes(item); // 해당 요일이 활성화 상태인지 확인
+            <Card>
+              <CardHeader>
+                <CardTitle>팀 소개</CardTitle>
+              </CardHeader>
+              <CardBody>
+                <CardText>
+                  {teamData.team_introduce || "소개가 없어요."}
+                </CardText>
+              </CardBody>
+            </Card>
 
-                    var times = "";
-                    if (Array.isArray(item)) {
-                      // item이 배열일 때
-                      times = item.join(", "); // '아침,점심'으로 결합
-                    } else {
-                      // item이 문자열일 때
-                      times = item.split(",").join(", ");
-                    }
-                    console.log(item);
-                    var dayName = "";
-                    switch (idx) {
-                      case 0:
-                        dayName = "월";
-                        break;
-                      case 1:
-                        dayName = "화";
-                        break;
-                      case 2:
-                        dayName = "수";
-                        break;
-                      case 3:
-                        dayName = "목";
-                        break;
-                      case 4:
-                        dayName = "금";
-                        break;
-                      case 5:
-                        dayName = "토";
-                        break;
-                      case 6:
-                        dayName = "일";
-                        break;
-                    }
+            <Card>
+              <CardHeader>
+                <CardTitle>주요 활동 일정</CardTitle>
+              </CardHeader>
+              <CardBody>
+                {scheduleList.length > 0 ? (
+                  <ScheduleList>
+                    {scheduleList.map((raw, idx) => {
+                      const times = raw.split(",").join(", ");
+                      return (
+                        <ScheduleRow key={`${raw}-${idx}`}>
+                          <DayChip>
+                            {dayLabels[idx % dayLabels.length] ?? `${idx + 1}`}
+                          </DayChip>
+                          <ScheduleText>{times}</ScheduleText>
+                        </ScheduleRow>
+                      );
+                    })}
+                  </ScheduleList>
+                ) : (
+                  <CardMuted>등록된 일정이 없어요.</CardMuted>
+                )}
+              </CardBody>
+            </Card>
 
-                    return (
-                      item.length !== 0 && (
-                        <ActivityDaysItem
-                          key={item}
-                          isActive={isActive}
-                          className="border-df shadow-df"
-                        >
-                          <div>{dayName}</div> <div>{times}</div>
-                        </ActivityDaysItem>
-                      )
-                    );
-                  })}
-                </ItemWrapper>
-              </>
-              {/* <>
-          <TeamTitle>활동 시간</TeamTitle>
-          <TimeWrapper>
-        {timeBlock.map((hour, idx) => {
-          const isActive = teamData.activityTime.includes(hour); // 활성 상태 확인
-          return (
-            <TimeItemWrpper>
-            <TimeTitle>{hour === 0 ? "오전\n12시" : hour === 12 ? "오후\n12시" : hour === 6||hour === 9||hour === 15||hour === 18||hour === 21||hour === 3 ? `${hour}시` : ""}</TimeTitle>
-            <TimeItem key={hour} isActive={isActive}>
+            <Card>
+              <CardHeader>
+                <CardTitle>팀 정보</CardTitle>
+              </CardHeader>
+              <CardBody>
+                <InfoGrid>
+                  <InfoItem>
+                    <InfoLabel>연령대</InfoLabel>
+                    <InfoValue>{teamData.ageRange || "-"}</InfoValue>
+                  </InfoItem>
+                  <InfoItem>
+                    <InfoLabel>주 활동 지역</InfoLabel>
+                    <InfoValue>{teamData.matchLocation || "-"}</InfoValue>
+                  </InfoItem>
+                </InfoGrid>
 
-            </TimeItem>
-            </TimeItemWrpper>
+                {positionList.length > 0 && (
+                  <ChipSection>
+                    <ChipTitle>모집 포지션</ChipTitle>
+                    <ChipRow>
+                      {positionList.map((pos) => (
+                        <Chip key={pos}>{pos}</Chip>
+                      ))}
+                    </ChipRow>
+                  </ChipSection>
+                )}
+              </CardBody>
+            </Card>
 
-          );
-        })}
-      </TimeWrapper>
-          </> */}
-            </TeamDetails>
-            <TeamDetails>
-              <TeamTitle>이런 사람을 찾고 있어요</TeamTitle>
-            </TeamDetails>
+            <JoinButton
+              onClick={() => navigate(`/team/list/${resolvedTeamId}/join`)}
+            >
+              팀 가입하기
+            </JoinButton>
           </>
         )}
-        <MainButton onClick={() => navigate(`/team/list/${teamId}/join`)}>
-          팀 가입하기
-        </MainButton>
-      </Container>
-    </>
+      </ContentContainer>
+    </PageWrapper>
   );
 };
 
 export default TeamInfoPage;
 
-// Styled Components
-const Container = styled.div`
-  margin-top: 20px;
-  padding-right: 20px;
-  padding-left: 20px;
+const shimmer = keyframes`
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
 `;
 
-const TeamDetails = styled.div`
-  margin-top: 10px;
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 8px;
+const PageWrapper = styled.div`
+  min-height: 100vh;
+  background-color: #f5f7fa;
+  padding-bottom: 100px;
 `;
 
-const ProfileWrapper = styled.div`
-  display: flex;
-  justify-content: space-between;
-`;
-const TeamProfile = styled.div`
-  display: flex;
+const HeroSection = styled.section`
+  background: linear-gradient(
+    135deg,
+    var(--color-main) 0%,
+    var(--color-main-darker) 100%
+  );
+  padding: 24px 20px 34px;
+  border-radius: 0 0 28px 28px;
+  position: relative;
+  overflow: hidden;
 
-  justify-content: space-around;
+  &::before {
+    content: "";
+    position: absolute;
+    top: -60%;
+    right: -30%;
+    width: 320px;
+    height: 320px;
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 50%;
+  }
 `;
-const TeamTitle = styled.div`
+
+const HeroContent = styled.div`
+  position: relative;
+  z-index: 1;
+`;
+
+const HeroRow = styled.div`
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  gap: 14px;
+`;
+
+const TeamAvatar = styled.img`
+  width: 72px;
+  height: 72px;
+  border-radius: 18px;
+  object-fit: cover;
+  background: rgba(255, 255, 255, 0.15);
+  border: 2px solid rgba(255, 255, 255, 0.25);
+`;
+
+const HeroText = styled.div`
+  min-width: 0;
+  flex: 1;
+`;
+
+const HeroTitle = styled.h1`
+  color: white;
+  font-size: 22px;
+  font-family: "Pretendard-Bold";
+  margin-bottom: 10px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
+
+const HeroMeta = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+`;
+
+const HeroMetaItem = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.85);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  svg {
+    flex-shrink: 0;
+    color: rgba(255, 255, 255, 0.9);
+  }
+`;
+
+const ContentContainer = styled.div`
+  padding: 0 20px;
+  margin-top: -18px;
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+`;
+
+const Card = styled.section`
+  background: white;
+  border-radius: 18px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+`;
+
+const CardHeader = styled.div`
+  padding: 16px 16px 0;
+`;
+
+const CardTitle = styled.h2`
+  font-size: 16px;
+  font-family: "Pretendard-Bold";
+  color: var(--color-dark2);
+`;
+
+const CardBody = styled.div`
+  padding: 14px 16px 16px;
+`;
+
+const CardText = styled.p`
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--color-dark2);
+  white-space: pre-wrap;
+`;
+
+const CardMuted = styled.p`
+  font-size: 14px;
+  color: var(--color-dark1);
+`;
+
+const StatsGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+`;
+
+const StatCard = styled.div`
+  background: white;
+  border-radius: 16px;
+  padding: 14px 14px 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto auto;
+  column-gap: 10px;
+  row-gap: 4px;
+  align-items: center;
+`;
+
+const StatIcon = styled.div<{ color: string }>`
+  grid-row: 1 / span 2;
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: ${(p) => `${p.color}15`};
+  color: ${(p) => p.color};
+`;
+
+const StatLabel = styled.div`
+  font-size: 12px;
+  color: var(--color-dark1);
+`;
+
+const StatValue = styled.div`
+  font-size: 15px;
+  font-family: "Pretendard-Bold";
+  color: var(--color-dark2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
+
+const ScheduleList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+`;
+
+const ScheduleRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 12px;
+  border-radius: 14px;
+  background: #f8faf9;
+  border: 1px solid #eef1f4;
+`;
+
+const DayChip = styled.div`
+  width: 40px;
+  height: 28px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-family: "Pretendard-Bold";
+  color: var(--color-main);
+  background: var(--color-subtle);
+  flex-shrink: 0;
+`;
+
+const ScheduleText = styled.div`
+  font-size: 14px;
+  color: var(--color-dark2);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+`;
+
+const InfoGrid = styled.div`
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+`;
+
+const InfoItem = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+`;
+
+const InfoLabel = styled.div`
+  font-size: 13px;
+  color: var(--color-dark1);
+  flex-shrink: 0;
+`;
+
+const InfoValue = styled.div`
+  font-size: 14px;
+  color: var(--color-dark2);
+  font-family: "Pretendard-SemiBold";
+  text-align: right;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+`;
+
+const ChipSection = styled.div`
+  margin-top: 14px;
+`;
+
+const ChipTitle = styled.div`
+  font-size: 13px;
+  color: var(--color-dark1);
   margin-bottom: 10px;
 `;
-const TeamProfileImg = styled.img`
-  width: 70px;
-  height: 70px;
-  border-radius: 50%;
+
+const ChipRow = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 `;
-const TeamProfileInfor = styled.div`
+
+const Chip = styled.div`
+  padding: 6px 10px;
+  background: #f0f0f0;
+  color: var(--color-dark2);
+  border-radius: 999px;
+  font-size: 12px;
+  font-family: "Pretendard-SemiBold";
+`;
+
+const JoinButton = styled.button`
+  width: 100%;
+  padding: 16px;
+  border: none;
+  border-radius: 16px;
+  background: linear-gradient(
+    135deg,
+    var(--color-main) 0%,
+    var(--color-main-darker) 100%
+  );
+  color: white;
+  font-size: 16px;
+  font-family: "Pretendard-Bold";
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(14, 98, 68, 0.25);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 26px rgba(14, 98, 68, 0.32);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+`;
+
+const CardSkeleton = styled.div`
+  height: 140px;
+  border-radius: 18px;
+  background: linear-gradient(90deg, #f5f5f5 25%, #eee 50%, #f5f5f5 75%);
+  background-size: 200% 100%;
+  animation: ${shimmer} 1.5s infinite;
+`;
+
+const HeroSkeleton = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 14px;
+`;
+
+const HeroAvatarSkeleton = styled.div`
+  width: 72px;
+  height: 72px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.15);
+`;
+
+const HeroTextSkeleton = styled.div`
+  flex: 1;
   display: flex;
   flex-direction: column;
-  margin-left: 10px;
-`;
-const TeamProfileText = styled.div`
-  font-size: 14px;
-`;
-const CardWrapper = styled.div`
-  margin-top: 20px;
-  display: flex;
   gap: 10px;
 `;
-const Card = styled.div`
-  padding: 10px;
-  border: 1px solid #ccc;
-  width: 50%;
-  border-radius: 8px;
+
+const HeroTitleSkeleton = styled.div`
+  width: 60%;
+  height: 18px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.18);
 `;
-const ItemWrapper = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+
+const HeroMetaSkeleton = styled.div`
+  width: 80%;
+  height: 14px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.14);
 `;
-const ActivityDaysItem = styled.div<{ isActive: boolean }>`
-  display: flex;
-  justify-content: space-evenly;
-  margin: 0 auto;
-  width: 90%;
-  height: 15px;
-  border-radius: 8px;
-  padding: 10px;
-  font-size: 14px;
+
+const ErrorCard = styled.div`
+  background: white;
+  border-radius: 18px;
+  padding: 18px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
   text-align: center;
-  background-color: ${({ isActive }) =>
-    isActive
-      ? "var(--color-light2)"
-      : "#ffffff"}; /* 활성화: 초록색, 비활성화: 회색 */
-  color: ${({ isActive }) =>
-    isActive
-      ? "var(--color-main)"
-      : "#9e9e9e"}; /* 활성화: 흰색, 비활성화: 연한 회색 */
+`;
+
+const ErrorTitle = styled.div`
+  font-size: 15px;
+  font-family: "Pretendard-Bold";
+  color: var(--color-dark2);
+  margin-bottom: 8px;
+`;
+
+const ErrorDesc = styled.div`
+  font-size: 13px;
+  color: var(--color-dark1);
+`;
+
+const HeroError = styled.div`
+  padding: 6px 0 2px;
+`;
+
+const HeroErrorTitle = styled.div`
+  color: white;
+  font-size: 18px;
+  font-family: "Pretendard-Bold";
+  margin-bottom: 6px;
+`;
+
+const HeroErrorDesc = styled.div`
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 13px;
 `;

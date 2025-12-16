@@ -263,7 +263,7 @@ input:focus {
   /*기본 흰~검 팔레트*/
   --color-light1: #f9f9f9;
   --color-light2: #ededed;
-  --color-dark1: #b3b3b3;
+  --color-dark1: #797979;
   --color-dark2: #333333;
   --color-border: rgba(51, 51, 51, 0.3);
   --color-shabow: rgba(51, 51, 51, 0.1);

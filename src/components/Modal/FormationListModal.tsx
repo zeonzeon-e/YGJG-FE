@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import apiClient from "../../api/apiClient";
 
@@ -33,7 +33,7 @@ const FormationListModal: React.FC<FormationModal2Props> = ({
     { id: 3, name: "10번", isStarred: false },
   ];
 
-    useEffect(() => {
+  useEffect(() => {
     // const fetchGameName = async () => {
     //   if (!numericTeamId) return;
     //   try {
@@ -59,7 +59,7 @@ const FormationListModal: React.FC<FormationModal2Props> = ({
             params: { formationId: 3, teamId: 13 },
           }
         );
-        console.log(response)
+        console.log(response);
       } catch (error) {
         console.error("Failed to fetch players:", error);
       }
