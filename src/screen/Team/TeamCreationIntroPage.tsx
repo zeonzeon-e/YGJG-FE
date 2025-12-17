@@ -132,11 +132,6 @@ const FeatureItem = styled.div`
   border-radius: 16px;
   text-align: left;
   transition: all 0.2s;
-
-  &:hover {
-    background: #f0fdf4;
-    transform: translateX(4px);
-  }
 `;
 
 const FeatureIcon = styled.div`
@@ -169,7 +164,7 @@ const FeatureTitle = styled.p`
 
 const FeatureDesc = styled.p`
   font-size: 13px;
-  color: var(--color-dark1);
+  color: #666666;
 `;
 
 const PrimaryButton = styled(Link)`

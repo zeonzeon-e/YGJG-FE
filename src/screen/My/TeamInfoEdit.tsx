@@ -13,6 +13,8 @@ import Header2 from "../../components/Header/Header2/Header2";
 import apiClient from "../../api/apiClient";
 import { getAccessToken } from "../../utils/authUtils";
 
+import AlertModal from "../../components/Modal/AlertModal";
+
 const TeamInfoEdit: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>(); // route param is :id
@@ -32,6 +34,49 @@ const TeamInfoEdit: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [showColorPicker, setShowColorPicker] = useState(false);
 
+  // Alert State
+  const [alertOpen, setAlertOpen] = useState(false);
+  const [alertMessage, setAlertMessage] = useState("");
+  const [alertTitle, setAlertTitle] = useState("");
+  const [alertCallback, setAlertCallback] = useState<(() => void) | undefined>(
+    undefined
+  );
+  const [alertType, setAlertType] = useState<"alert" | "confirm">("alert");
+
+  const showAlert = (title: string, message: string, callback?: () => void) => {
+    setAlertTitle(title);
+    setAlertMessage(message);
+    setAlertType("alert");
+    setAlertCallback(() => callback);
+    setAlertOpen(true);
+  };
+
+  const showConfirm = (
+    title: string,
+    message: string,
+    onConfirm: () => void
+  ) => {
+    setAlertTitle(title);
+    setAlertMessage(message);
+    setAlertType("confirm");
+    setAlertCallback(() => onConfirm);
+    setAlertOpen(true);
+  };
+
+  const handleAlertClose = () => {
+    setAlertOpen(false);
+    if (alertType === "alert" && alertCallback) {
+      alertCallback();
+    }
+  };
+
+  const handleConfirmAction = () => {
+    setAlertOpen(false);
+    if (alertCallback) {
+      alertCallback();
+    }
+  };
+
   // --- Handlers ---
   const handleColorChange = (color: any) => {
     setSelectedColor(color.hex);
@@ -45,8 +90,9 @@ const TeamInfoEdit: React.FC = () => {
     // Dev Mock
     if (token?.startsWith("dev-")) {
       await new Promise((r) => setTimeout(r, 800));
-      alert("[개발 모드] 설정이 변경되었습니다.");
-      navigate("/my");
+      showAlert("설정 완료", "[개발 모드] 설정이 변경되었습니다.", () =>
+        navigate("/my")
+      );
       return;
     }
 
@@ -55,31 +101,30 @@ const TeamInfoEdit: React.FC = () => {
         position: newPosition,
         teamColor: selectedColor,
       });
-      alert("팀 설정이 변경되었습니다.");
-      navigate("/my");
+      showAlert("성공", "팀 설정이 변경되었습니다.", () => navigate("/my"));
     } catch (err) {
       console.error("Error updating team info:", err);
-      alert("설정 변경에 실패했습니다.");
+      showAlert("오류", "설정 변경에 실패했습니다.");
     } finally {
       setLoading(false);
     }
   };
 
   const handleOutClick = () => {
-    if (
-      window.confirm(
-        "정말 팀을 탈퇴하시겠습니까? 이 작업은 되돌릴 수 없습니다."
-      )
-    ) {
-      navigate(`/out/${teamId}`);
-    }
+    showConfirm(
+      "팀 탈퇴",
+      "정말 팀을 탈퇴하시겠습니까?\n이 작업은 되돌릴 수 없습니다.",
+      () => navigate(`/out/${teamId}`)
+    );
   };
 
   return (
     <PageWrapper>
       <GlobalStyles />
       <Header2 text="팀 활동 설정" />
+      {/* ... ContentContainer ... */}
 
+      {/* Place ContentContainer here ... */}
       <ContentContainer>
         <SectionTitle>내 포지션</SectionTitle>
         <Card>
@@ -155,6 +200,20 @@ const TeamInfoEdit: React.FC = () => {
           {loading ? "저장 중..." : "설정 저장하기"}
         </SubmitButton>
       </BottomBar>
+
+      <AlertModal
+        isOpen={alertOpen}
+        onClose={handleAlertClose}
+        title={alertTitle}
+        message={alertMessage}
+        type={alertType}
+        variant={
+          alertTitle === "오류" || alertTitle === "팀 탈퇴"
+            ? "danger"
+            : "success"
+        }
+        onConfirm={handleConfirmAction}
+      />
     </PageWrapper>
   );
 };
@@ -353,7 +412,7 @@ const BottomBar = styled.div`
   padding-bottom: 24px; // Safe area
   border-top: 1px solid #f5f5f5;
   box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.05);
-  z-index: 100;
+  z-index: 1002;
 `;
 
 const SubmitButton = styled.button`

@@ -8,6 +8,7 @@ import {
 } from "react-icons/hi2";
 import apiClient from "../../api/apiClient";
 import Header2 from "../../components/Header/Header2/Header2";
+import AlertModal from "../../components/Modal/AlertModal";
 import { getAccessToken } from "../../utils/authUtils";
 
 const ChangePasswordPage: React.FC = () => {
@@ -42,35 +43,130 @@ const ChangePasswordPage: React.FC = () => {
     hasSpecial &&
     isMatch;
 
+  /* New Additions for Password Verification */
+  const [userEmail, setUserEmail] = useState("");
+
+  useEffect(() => {
+    // 1. Fetch user email on mount to use for verification
+    apiClient
+      .get("api/member/getUser")
+      .then((res) => {
+        if (res.data && res.data.email) {
+          setUserEmail(res.data.email);
+        }
+      })
+      .catch((err) => console.error("Failed to fetch user info", err));
+  }, []);
+
+  /* Alert Modal State & Logic */
+  const [alertState, setAlertState] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
+    type: "alert" as "alert" | "confirm",
+    variant: "info" as "success" | "danger" | "info",
+    onConfirm: () => {},
+  });
+
+  const showAlert = (
+    title: string,
+    message: string,
+    variant: "success" | "danger" | "info" = "info",
+    onConfirm?: () => void
+  ) => {
+    setAlertState({
+      isOpen: true,
+      title,
+      message,
+      type: "alert",
+      variant,
+      onConfirm: onConfirm || (() => {}),
+    });
+  };
+
+  const showConfirm = (
+    title: string,
+    message: string,
+    onConfirm: () => void
+  ) => {
+    setAlertState({
+      isOpen: true,
+      title,
+      message,
+      type: "confirm",
+      variant: "danger",
+      onConfirm,
+    });
+  };
+
+  const closeAlert = () => {
+    setAlertState((prev) => ({ ...prev, isOpen: false }));
+  };
+
   const handleSubmit = async () => {
     if (!isFormValid || isLoading) return;
 
-    if (!window.confirm("비밀번호를 변경하시겠습니까?")) return;
+    showConfirm(
+      "비밀번호 변경",
+      "정말로 비밀번호를 변경하시겠습니까?",
+      async () => {
+        await executeChangePassword();
+      }
+    );
+  };
 
+  const executeChangePassword = async () => {
     setIsLoading(true);
     try {
       // Mock for Dev Mode
       const token = getAccessToken();
       if (token?.startsWith("dev-")) {
         await new Promise((r) => setTimeout(r, 1000));
-        alert("비밀번호가 성공적으로 변경되었습니다. (Dev Mode)");
-        navigate("/my");
+        showAlert(
+          "변경 완료",
+          "비밀번호가 성공적으로 변경되었습니다. (Dev Mode)",
+          "success",
+          () => navigate("/my")
+        );
         return;
       }
 
+      // 2. Verify current password first by trying to Login
+      if (!userEmail) {
+        throw new Error(
+          "사용자 정보를 불러오지 못했습니다. 다시 시도해주세요."
+        );
+      }
+
+      try {
+        await apiClient.post("api/sign/sign-in", {
+          email: userEmail,
+          password: currentPassword,
+        });
+      } catch (e) {
+        showAlert("변경 실패", "현재 비밀번호가 일치하지 않습니다.", "danger");
+        setIsLoading(false);
+        return;
+      }
+
+      // 3. Password verified, now change it
       await apiClient.put("/api/my/password", {
         currentPassword,
         newPassword,
       });
 
-      alert("비밀번호가 성공적으로 변경되었습니다.");
-      navigate("/my");
+      showAlert(
+        "변경 완료",
+        "비밀번호가 성공적으로 변경되었습니다.",
+        "success",
+        () => navigate("/my")
+      );
     } catch (error: any) {
       console.error("Password change failed", error);
       const msg =
         error.response?.data?.message ||
-        "비밀번호 변경에 실패했습니다. 기존 비밀번호를 확인해주세요.";
-      alert(msg);
+        "비밀번호 변경에 실패했습니다. 잠시 후 다시 시도해주세요.";
+      showAlert("변경 실패", msg, "danger");
     } finally {
       setIsLoading(false);
     }
@@ -169,6 +265,17 @@ const ChangePasswordPage: React.FC = () => {
           </SubmitButton>
         </BottomButtonArea>
       </Container>
+
+      <AlertModal
+        isOpen={alertState.isOpen}
+        onClose={closeAlert}
+        onConfirm={alertState.onConfirm}
+        title={alertState.title}
+        message={alertState.message}
+        type={alertState.type}
+        variant={alertState.variant}
+        confirmText={alertState.type === "confirm" ? "확인" : "확인"}
+      />
     </PageWrapper>
   );
 };

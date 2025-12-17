@@ -382,6 +382,11 @@ const TeamProfileCreation: React.FC<{ onNext: (data: any) => void }> = ({
       setError("10자 이내로 입력해주세요.");
       return;
     }
+    // 초성/모음만 있는 경우 체크 (완성형 한글이 아닌 자음/모음이 포함된 경우)
+    if (/[ㄱ-ㅎㅏ-ㅣ]/.test(teamName)) {
+      setError("올바른 한글을 입력해주세요 (자음/모음만 입력 불가).");
+      return;
+    }
     onNext({ teamName, profileImage, profileImageFile });
   };
 
@@ -468,6 +473,10 @@ const TeamDetailOne: React.FC<{ onNext: (data: any) => void }> = ({
   const handleNext = () => {
     if (!region || !address || !schedule.flat().includes(true)) {
       setError("모든 항목을 입력해주세요.");
+      return;
+    }
+    if (/[ㄱ-ㅎㅏ-ㅣ]/.test(region)) {
+      setError("지역명에 올바른 한글을 입력해주세요 (자음/모음만 입력 불가).");
       return;
     }
     onNext({ region, selectedAddress: address, activitySchedule: schedule });
@@ -596,7 +605,7 @@ const TeamDetailTwo: React.FC<{ onNext: (data: any) => void }> = ({
         height={50}
         placeholder="예: 30,000원"
         value={fee}
-        onChange={(e) => setFee(e.target.value)}
+        onChange={(e) => setFee(e.target.value.replace(/[^0-9]/g, ""))}
       />
 
       <InputLabel>팀 수준</InputLabel>

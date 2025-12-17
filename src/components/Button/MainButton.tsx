@@ -11,7 +11,8 @@ interface MainButtonProps {
   children?: React.ReactNode;
   isClick?: boolean;
   onClick?: () => void;
-  disabled?: boolean; // disabled 속성 추가
+  disabled?: boolean;
+  style?: React.CSSProperties; // Add style prop
 }
 
 // StyledButton 컴포넌트 정의
@@ -46,6 +47,12 @@ const StyledButton = styled.button<MainButtonProps>`
     `};
 
   margin: 5px 0px 5px 0px;
+
+  @media (max-width: 768px) {
+    padding: ${(props) =>
+      props.height ? `${props.height / 12}px 0` : "12px 0"};
+    font-size: ${(props) => (props.fontSize ? `${props.fontSize}px` : "16px")};
+  }
 `;
 
 /**
@@ -58,6 +65,7 @@ const StyledButton = styled.button<MainButtonProps>`
  * @param {number} [props.width] - 너비 (선택적)
  * @param {number} [props.fontSize] - 텍스트 사이즈 (선택적)
  * @param {boolean} [props.disabled] - 버튼 비활성화 여부 (선택적, 기본값=false)
+ * @param {React.CSSProperties} [props.style] - 인라인 스타일 (선택적)
  * @returns {JSX.Element} button 컴포넌트
  */
 const MainButton: React.FC<MainButtonProps> = ({
@@ -67,8 +75,9 @@ const MainButton: React.FC<MainButtonProps> = ({
   width,
   fontSize,
   children = "확인",
-  disabled = false, // 기본값 설정
-  onClick, // 클릭 핸들러 전달받기
+  disabled = false,
+  onClick,
+  style,
 }) => {
   const [isClick, setIsClick] = useState(false);
 
@@ -76,17 +85,16 @@ const MainButton: React.FC<MainButtonProps> = ({
     if (isClick) {
       const timer = setTimeout(() => {
         setIsClick(false);
-      }, 150); // 0.15초 후에 상태를 false로 바꿈
-      return () => clearTimeout(timer); // 컴포넌트 언마운트 시 타이머를 정리
+      }, 150);
+      return () => clearTimeout(timer);
     }
   }, [isClick]);
 
   const handleClick = () => {
     if (!disabled) {
-      // disabled가 false인 경우에만 클릭 허용
-      setIsClick(true); // 클릭 시 배경색 변경
+      setIsClick(true);
       if (onClick) {
-        onClick(); // 전달된 onClick 핸들러 호출
+        onClick();
       }
     }
   };
@@ -101,7 +109,8 @@ const MainButton: React.FC<MainButtonProps> = ({
       isClick={isClick}
       width={width}
       fontSize={fontSize}
-      disabled={disabled} // disabled 속성 전달
+      disabled={disabled}
+      style={style}
     >
       {children}
     </StyledButton>

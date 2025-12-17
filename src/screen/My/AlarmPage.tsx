@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import {
   HiBell,
@@ -54,6 +55,7 @@ const generateMockNotifications = (): NotificationItem[] => [
     isRead: false,
     dateGroup: "오늘",
     teamName: "FC 개발자들",
+    link: "/team/1/notice/1", // Link to notice
   },
   {
     id: 3,
@@ -64,6 +66,7 @@ const generateMockNotifications = (): NotificationItem[] => [
     isRead: true,
     dateGroup: "어제",
     teamName: "FC 개발자들",
+    link: "/team/1/calendar", // Link to calendar
   },
   {
     id: 4,
@@ -88,6 +91,7 @@ const generateMockNotifications = (): NotificationItem[] => [
 ];
 
 const AlarmPage: React.FC = () => {
+  const navigate = useNavigate();
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"ALL" | "UNREAD">("ALL");
@@ -188,7 +192,12 @@ const AlarmPage: React.FC = () => {
                     <NotificationCard
                       key={item.id}
                       isRead={item.isRead}
-                      onClick={() => handleMarkAsRead(item.id)}
+                      onClick={() => {
+                        handleMarkAsRead(item.id);
+                        if (item.link) {
+                          navigate(item.link);
+                        }
+                      }}
                     >
                       <IconWrapper type={item.type}>
                         {getIcon(item.type)}

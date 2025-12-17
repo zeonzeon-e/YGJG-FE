@@ -14,6 +14,9 @@ import {
   HiSparkles,
 } from "react-icons/hi2";
 import apiClient from "../../api/apiClient";
+import AlertModal from "../../components/Modal/AlertModal";
+
+import { removeTokens } from "../../utils/authUtils"; // Add import
 
 interface TeamItem {
   position: string;
@@ -69,6 +72,34 @@ const MyPage: React.FC = () => {
     navigate(`/team-edit/${teamId}`, {
       state: { teamId, teamColor, position },
     });
+  };
+
+  /* Alert Modal State */
+  const [alertState, setAlertState] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
+    type: "alert" as "alert" | "confirm",
+    variant: "info" as "success" | "danger" | "info",
+    onConfirm: () => {},
+  });
+
+  const handleLogout = () => {
+    setAlertState({
+      isOpen: true,
+      title: "로그아웃",
+      message: "정말로 로그아웃 하시겠습니까?",
+      type: "confirm",
+      variant: "danger",
+      onConfirm: () => {
+        removeTokens();
+        navigate("/login");
+      },
+    });
+  };
+
+  const closeAlert = () => {
+    setAlertState((prev) => ({ ...prev, isOpen: false }));
   };
 
   const getPositionColor = (position: string): string => {
@@ -175,11 +206,18 @@ const MyPage: React.FC = () => {
                         }
                       }}
                     />
-                    <TeamInfo onClick={() => navigate("/myteam")}>
+                    <TeamInfo
+                      onClick={() =>
+                        navigate("/myteam", { state: { teamId: team.teamId } })
+                      }
+                    >
                       <TeamName>{team.teamName}</TeamName>
-                      <PositionBadge color={getPositionColor(team.position)}>
-                        {team.position}
-                      </PositionBadge>
+                      <BadgeContainer>
+                        <PositionBadge color={getPositionColor(team.position)}>
+                          {team.position}
+                        </PositionBadge>
+                        {team.role && <RoleBadge>{team.role}</RoleBadge>}
+                      </BadgeContainer>
                     </TeamInfo>
                     <EditTeamButton
                       onClick={() =>
@@ -237,7 +275,7 @@ const MyPage: React.FC = () => {
               </SettingsItemLeft>
               <HiChevronRight size={20} color="#999" />
             </SettingsItem>
-            <SettingsItem onClick={() => navigate("/login")}>
+            <SettingsItem onClick={handleLogout}>
               <SettingsItemLeft>
                 <SettingsIcon>
                   <HiArrowRightOnRectangle size={20} />
@@ -251,7 +289,7 @@ const MyPage: React.FC = () => {
                 <SettingsIcon danger>
                   <HiUserMinus size={20} />
                 </SettingsIcon>
-                <SettingsLabel danger>서비스 탈퇴</SettingsLabel>
+                <SettingsLabel>서비스 탈퇴</SettingsLabel>
               </SettingsItemLeft>
               <HiChevronRight size={20} color="#ff6b6b" />
             </SettingsItem>
@@ -260,6 +298,17 @@ const MyPage: React.FC = () => {
 
         <AppVersion>요기조기 v1.0.0</AppVersion>
       </ContentContainer>
+
+      <AlertModal
+        isOpen={alertState.isOpen}
+        onClose={closeAlert}
+        onConfirm={alertState.onConfirm}
+        title={alertState.title}
+        message={alertState.message}
+        type={alertState.type}
+        variant={alertState.variant}
+        confirmText={alertState.type === "confirm" ? "확인" : "확인"}
+      />
     </PageWrapper>
   );
 };
@@ -592,6 +641,22 @@ const PositionBadge = styled.span<{ color: string }>`
   font-family: "Pretendard-Bold";
   color: ${(props) => props.color};
   background: ${(props) => props.color}15;
+  padding: 2px 8px;
+  border-radius: 4px;
+`;
+
+const BadgeContainer = styled.div`
+  display: flex;
+  gap: 4px;
+  align-items: center;
+`;
+
+const RoleBadge = styled.span`
+  display: inline-block;
+  font-size: 11px;
+  font-family: "Pretendard-Bold";
+  color: #666;
+  background: #f0f0f0;
   padding: 2px 8px;
   border-radius: 4px;
 `;

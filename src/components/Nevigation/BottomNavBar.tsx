@@ -84,7 +84,6 @@ const BottomNavBar: React.FC = () => {
             >
               <IconWrapper $isSelected={isSelected}>
                 {isSelected ? item.activeIcon : item.icon}
-                {isSelected && <ActiveIndicator />}
               </IconWrapper>
               <IconLabel $isSelected={isSelected}>{item.label}</IconLabel>
             </NavItem>
@@ -106,17 +105,6 @@ const scaleIn = keyframes`
   100% {
     transform: scale(1);
     opacity: 1;
-  }
-`;
-
-const pulseRing = keyframes`
-  0% {
-    transform: scale(1);
-    opacity: 1;
-  }
-  100% {
-    transform: scale(1.5);
-    opacity: 0;
   }
 `;
 
@@ -198,26 +186,6 @@ const IconWrapper = styled.div<{ $isSelected: boolean }>`
 
   svg {
     transition: all 0.3s ease;
-  }
-`;
-
-const ActiveIndicator = styled.div`
-  position: absolute;
-  top: -4px;
-  right: -4px;
-  width: 8px;
-  height: 8px;
-  background: var(--color-sub);
-  border-radius: 50%;
-  box-shadow: 0 0 8px var(--color-sub);
-
-  &::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: var(--color-sub);
-    border-radius: 50%;
-    animation: ${pulseRing} 1.5s ease-out infinite;
   }
 `;
 

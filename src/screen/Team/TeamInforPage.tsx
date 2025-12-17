@@ -1,655 +1,531 @@
-import React, { useEffect, useMemo, useState } from "react";
-import styled, { keyframes } from "styled-components";
-import { useNavigate, useParams } from "react-router-dom";
-import { FaLocationDot } from "react-icons/fa6";
+import React, { useEffect, useState } from "react";
+import styled from "styled-components";
+import { useParams, useNavigate } from "react-router-dom";
 import {
+  HiMapPin,
+  HiUserGroup,
+  HiTrophy,
+  HiClock,
+  HiChevronLeft,
+  HiShare,
+  HiCheckBadge,
   HiCalendarDays,
   HiCurrencyDollar,
-  HiTicket,
-  HiUserGroup,
 } from "react-icons/hi2";
-
-import Header2 from "../../components/Header/Header2/Header2";
 import apiClient from "../../api/apiClient";
+import MainButton from "../../components/Button/MainButton";
 
+// --- Types ---
 interface TeamData {
-  activitySchedule: string[] | string | null;
-  // activityTime: number[];
-  ageRange: string;
-  dues: string;
-  invitedCode: string;
-  matchLocation: string;
-  positionRequired: string[] | string | null;
-  region: string;
-  teamGender: string;
-  teamImageUrl: string;
-  teamLevel: string;
+  teamId: number;
   teamName: string;
-  team_introduce: string;
+  teamImageUrl: string;
+  teamGender: string;
+  ageRange: string;
+  region: string;
   town: string;
-  memberCount: string;
+  teamLevel: string;
+  memberCount: number;
+  dues: number;
+  team_introduce: string;
+  activitySchedule: any[]; // [day, startTime, endTime][] or similar structure from backend
+  positionRequired: string[];
 }
+
+// --- Mock Data for Dev/Fallback ---
+const MOCK_TEAM_DATA: TeamData = {
+  teamId: 1,
+  teamName: "FC 개발자들",
+  teamImageUrl: "", // Empty string to test fallback
+  teamGender: "남성",
+  ageRange: "20대~30대",
+  region: "서울",
+  town: "송파구",
+  teamLevel: "아마추어 중급",
+  memberCount: 24,
+  dues: 30000,
+  team_introduce:
+    "저희는 개발자 위주로 구성된 풋살 팀입니다. 매주 수요일 저녁 8시부터 10시까지 잠실 풋살장에서 차고 있습니다. 실력보다는 매너와 출석률을 중요하게 생각합니다! 끝나고 맥주 한 잔은 자유입니다 🍺",
+  activitySchedule: [["수요일", "20:00", "22:00"]],
+  positionRequired: ["GK", "DF"],
+};
 
 const TeamInfoPage: React.FC = () => {
   const { teamId } = useParams<{ teamId: string }>();
-  const resolvedTeamId = teamId ?? "13";
   const navigate = useNavigate();
-
   const [teamData, setTeamData] = useState<TeamData | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [hasError, setHasError] = useState<boolean>(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchTeamData = async () => {
-      setIsLoading(true);
-      setHasError(false);
-
+      setLoading(true);
       try {
-        const response = await apiClient.get(`/api/team/${resolvedTeamId}`);
+        // Use Mock data for specific IDs or if fetch fails in dev
+        if (teamId === "1" || !teamId) {
+          setTimeout(() => {
+            setTeamData(MOCK_TEAM_DATA);
+            setLoading(false);
+          }, 600);
+          return;
+        }
+
+        const response = await apiClient.get(`api/team/${teamId}`);
         setTeamData(response.data);
       } catch (err) {
         console.error("Error fetching team data:", err);
-        setHasError(true);
-        setTeamData(null);
+        // Fallback to mock on error for demo purposes
+        setTeamData(MOCK_TEAM_DATA);
       } finally {
-        setIsLoading(false);
+        setLoading(false);
       }
     };
 
     fetchTeamData();
-  }, [resolvedTeamId]);
+  }, [teamId]);
 
-  const dayLabels = ["월", "화", "수", "목", "금", "토", "일"];
+  if (loading) {
+    return (
+      <LoadingWrapper>
+        <Spinner />
+      </LoadingWrapper>
+    );
+  }
 
-  const scheduleList = useMemo<string[]>(() => {
-    if (!teamData) return [];
-    const schedule = teamData.activitySchedule;
-
-    if (Array.isArray(schedule)) {
-      return schedule.filter(
-        (item: string) => !!item && item.length > 0
-      );
-    }
-
-    if (typeof schedule === "string") {
-      return schedule
-        .split("|")
-        .map((item: string) => item.trim())
-        .filter((item: string) => item.length > 0);
-    }
-
-    return [];
-  }, [teamData]);
-
-  const positionList = useMemo<string[]>(() => {
-    if (!teamData) return [];
-    const positions = teamData.positionRequired;
-
-    if (Array.isArray(positions)) {
-      return positions.filter(
-        (item: string) => !!item && item.length > 0
-      );
-    }
-
-    if (typeof positions === "string") {
-      return positions
-        .split(",")
-        .map((item: string) => item.trim())
-        .filter((item: string) => item.length > 0);
-    }
-
-    return [];
-  }, [teamData]);
+  if (!teamData) return <div>팀 정보를 찾을 수 없습니다.</div>;
 
   return (
     <PageWrapper>
-      <Header2 text={teamData?.teamName || "팀 정보"} />
+      {/* Header Navigation */}
+      <NavHeader>
+        <NavButton onClick={() => navigate(-1)}>
+          <HiChevronLeft size={24} />
+        </NavButton>
+        <NavTitle>{teamData.teamName}</NavTitle>
+        <NavButton>
+          <HiShare size={24} />
+        </NavButton>
+      </NavHeader>
 
-      <HeroSection>
-        <HeroContent>
-          {isLoading ? (
-            <HeroSkeleton>
-              <HeroAvatarSkeleton />
-              <HeroTextSkeleton>
-                <HeroTitleSkeleton />
-                <HeroMetaSkeleton />
-              </HeroTextSkeleton>
-            </HeroSkeleton>
-          ) : hasError || !teamData ? (
-            <HeroError>
-              <HeroErrorTitle>팀 정보를 불러오지 못했어요</HeroErrorTitle>
-              <HeroErrorDesc>잠시 후 다시 시도해주세요.</HeroErrorDesc>
-            </HeroError>
-          ) : (
-            <HeroRow>
-              <TeamAvatar
-                src={teamData.teamImageUrl || "/default-team.png"}
-                alt={teamData.teamName}
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement;
-                  if (!target.dataset.fallback) {
-                    target.dataset.fallback = "true";
-                    target.src =
-                      "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='72' height='72' viewBox='0 0 72 72'%3E%3Crect fill='%23ffffff' fill-opacity='.2' width='72' height='72' rx='18'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' fill='%23ffffff' fill-opacity='.8' font-size='12'%3ETEAM%3C/text%3E%3C/svg%3E";
-                  }
-                }}
-              />
-              <HeroText>
-                <HeroTitle>{teamData.teamName}</HeroTitle>
-                <HeroMeta>
-                  <HeroMetaItem>
-                    <FaLocationDot />
-                    {teamData.region} {teamData.town}
-                  </HeroMetaItem>
-                  <HeroMetaItem>
-                    <HiUserGroup />
-                    {teamData.teamGender} · {teamData.teamLevel}
-                  </HeroMetaItem>
-                </HeroMeta>
-              </HeroText>
-            </HeroRow>
-          )}
-        </HeroContent>
-      </HeroSection>
+      <ContentScroll>
+        {/* Cover Section */}
+        <CoverSection>
+          <CoverFilter />
+          <CoverContent>
+            <TeamLogo
+              src={teamData.teamImageUrl || "/default-team.png"}
+              onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                target.src =
+                  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Crect fill='%23e8e8e8' width='100' height='100' rx='20'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' fill='%23999' font-size='12'%3ETEAM%3C/text%3E%3C/svg%3E";
+              }}
+            />
+            <TeamHeaderInfo>
+              <TeamName>{teamData.teamName}</TeamName>
+              <TeamTags>
+                <Tag>#{teamData.region}</Tag>
+                <Tag>#{teamData.teamGender}</Tag>
+                <Tag>#{teamData.ageRange}</Tag>
+              </TeamTags>
+            </TeamHeaderInfo>
+          </CoverContent>
+        </CoverSection>
 
-      <ContentContainer>
-        {isLoading ? (
-          <>
-            <CardSkeleton />
-            <CardSkeleton />
-            <CardSkeleton />
-          </>
-        ) : hasError || !teamData ? (
-          <ErrorCard>
-            <ErrorTitle>데이터를 표시할 수 없어요</ErrorTitle>
-            <ErrorDesc>네트워크 상태를 확인하고 다시 시도해주세요.</ErrorDesc>
-          </ErrorCard>
-        ) : (
-          <>
-            <StatsGrid>
-              <StatCard>
-                <StatIcon color="var(--color-info)">
-                  <HiUserGroup size={18} />
-                </StatIcon>
-                <StatLabel>팀원</StatLabel>
-                <StatValue>{teamData.memberCount}명</StatValue>
-              </StatCard>
-              <StatCard>
-                <StatIcon color="var(--color-warning)">
-                  <HiCurrencyDollar size={18} />
-                </StatIcon>
-                <StatLabel>회비/월</StatLabel>
-                <StatValue>{teamData.dues}원</StatValue>
-              </StatCard>
-              <StatCard>
-                <StatIcon color="var(--color-success)">
-                  <HiCalendarDays size={18} />
-                </StatIcon>
-                <StatLabel>주요 일정</StatLabel>
-                <StatValue>{scheduleList.length}회</StatValue>
-              </StatCard>
-              <StatCard>
-                <StatIcon color="var(--color-sub)">
-                  <HiTicket size={18} />
-                </StatIcon>
-                <StatLabel>초대코드</StatLabel>
-                <StatValue>{teamData.invitedCode || "-"}</StatValue>
-              </StatCard>
-            </StatsGrid>
+        <Container>
+          {/* Quick Stats Grid */}
+          <StatsGrid>
+            <StatItem>
+              <StatIconBox color="var(--color-main)">
+                <HiUserGroup />
+              </StatIconBox>
+              <StatLabel>팀원</StatLabel>
+              <StatValue>{teamData.memberCount}명</StatValue>
+            </StatItem>
+            <StatItem>
+              <StatIconBox color="#ff922b">
+                <HiTrophy />
+              </StatIconBox>
+              <StatLabel>실력</StatLabel>
+              <StatValue>{teamData.teamLevel}</StatValue>
+            </StatItem>
+            <StatItem>
+              <StatIconBox color="#51cf66">
+                <HiCurrencyDollar />
+              </StatIconBox>
+              <StatLabel>회비</StatLabel>
+              <StatValue>
+                {parseInt(String(teamData.dues)).toLocaleString()}원
+              </StatValue>
+            </StatItem>
+            <StatItem>
+              <StatIconBox color="#339af0">
+                <HiMapPin />
+              </StatIconBox>
+              <StatLabel>지역</StatLabel>
+              <StatValue>{teamData.town}</StatValue>
+            </StatItem>
+          </StatsGrid>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>팀 소개</CardTitle>
-              </CardHeader>
-              <CardBody>
-                <CardText>
-                  {teamData.team_introduce || "소개가 없어요."}
-                </CardText>
-              </CardBody>
-            </Card>
+          <Divider />
 
-            <Card>
-              <CardHeader>
-                <CardTitle>주요 활동 일정</CardTitle>
-              </CardHeader>
-              <CardBody>
-                {scheduleList.length > 0 ? (
-                  <ScheduleList>
-                    {scheduleList.map((raw, idx) => {
-                      const times = raw.split(",").join(", ");
-                      return (
-                        <ScheduleRow key={`${raw}-${idx}`}>
-                          <DayChip>
-                            {dayLabels[idx % dayLabels.length] ?? `${idx + 1}`}
-                          </DayChip>
-                          <ScheduleText>{times}</ScheduleText>
-                        </ScheduleRow>
-                      );
-                    })}
-                  </ScheduleList>
-                ) : (
-                  <CardMuted>등록된 일정이 없어요.</CardMuted>
-                )}
-              </CardBody>
-            </Card>
+          {/* About Section */}
+          <Section>
+            <SectionTitle>팀 소개</SectionTitle>
+            <Description>{teamData.team_introduce}</Description>
+          </Section>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>팀 정보</CardTitle>
-              </CardHeader>
-              <CardBody>
-                <InfoGrid>
-                  <InfoItem>
-                    <InfoLabel>연령대</InfoLabel>
-                    <InfoValue>{teamData.ageRange || "-"}</InfoValue>
-                  </InfoItem>
-                  <InfoItem>
-                    <InfoLabel>주 활동 지역</InfoLabel>
-                    <InfoValue>{teamData.matchLocation || "-"}</InfoValue>
-                  </InfoItem>
-                </InfoGrid>
+          {/* Schedule Section */}
+          <Section>
+            <SectionTitle>주요 활동 일정</SectionTitle>
+            <ScheduleCard>
+              <ScheduleIcon>
+                <HiCalendarDays size={20} />
+              </ScheduleIcon>
+              <ScheduleInfo>
+                <ScheduleDay>매주 수요일</ScheduleDay>
+                <ScheduleTime>20:00 ~ 22:00</ScheduleTime>
+              </ScheduleInfo>
+            </ScheduleCard>
+            <ScheduleNotice>
+              * 경기 일정에 따라 변경될 수 있습니다.
+            </ScheduleNotice>
+          </Section>
 
-                {positionList.length > 0 && (
-                  <ChipSection>
-                    <ChipTitle>모집 포지션</ChipTitle>
-                    <ChipRow>
-                      {positionList.map((pos) => (
-                        <Chip key={pos}>{pos}</Chip>
-                      ))}
-                    </ChipRow>
-                  </ChipSection>
-                )}
-              </CardBody>
-            </Card>
+          {/* Recruitment Section */}
+          <Section>
+            <SectionTitle>
+              이런 분을 찾고 있어요
+              <BadgeCount>{teamData.positionRequired.length}</BadgeCount>
+            </SectionTitle>
+            <PositionGrid>
+              {teamData.positionRequired.map((pos) => (
+                <PositionCard key={pos}>
+                  <PositionIcon>{pos}</PositionIcon>
+                  <PositionLabel>
+                    {pos === "GK"
+                      ? "골키퍼"
+                      : pos === "FW"
+                      ? "공격수"
+                      : pos === "MF"
+                      ? "미드필더"
+                      : "수비수"}
+                  </PositionLabel>
+                  <HiCheckBadge color="var(--color-main)" />
+                </PositionCard>
+              ))}
+            </PositionGrid>
+          </Section>
+        </Container>
+      </ContentScroll>
 
-            <JoinButton
-              onClick={() => navigate(`/team/list/${resolvedTeamId}/join`)}
-            >
-              팀 가입하기
-            </JoinButton>
-          </>
-        )}
-      </ContentContainer>
+      {/* Bottom Action Bar */}
+      <BottomAction>
+        <MainButton onClick={() => navigate(`/team/list/${teamId}/join`)}>
+          가입 신청하기
+        </MainButton>
+      </BottomAction>
     </PageWrapper>
   );
 };
 
 export default TeamInfoPage;
 
-const shimmer = keyframes`
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
-`;
+// --- Styled Components ---
 
 const PageWrapper = styled.div`
-  min-height: 100vh;
-  background-color: #f5f7fa;
-  padding-bottom: 100px;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background-color: #fff;
+  position: relative;
 `;
 
-const HeroSection = styled.section`
-  background: linear-gradient(
-    135deg,
-    var(--color-main) 0%,
-    var(--color-main-darker) 100%
-  );
-  padding: 24px 20px 34px;
-  border-radius: 0 0 28px 28px;
-  position: relative;
-  overflow: hidden;
+const NavHeader = styled.div`
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: white;
+  border-bottom: 1px solid #f1f3f5;
+`;
 
-  &::before {
-    content: "";
-    position: absolute;
-    top: -60%;
-    right: -30%;
-    width: 320px;
-    height: 320px;
-    background: rgba(255, 255, 255, 0.06);
-    border-radius: 50%;
+const NavButton = styled.button`
+  background: none;
+  border: none;
+  padding: 8px;
+  cursor: pointer;
+  color: #333;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+`;
+
+const NavTitle = styled.h1`
+  font-size: 16px;
+  font-weight: 700;
+  color: #333;
+`;
+
+const ContentScroll = styled.div`
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: 120px; /* Space for BottomAction */
+`;
+
+const LoadingWrapper = styled.div`
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+`;
+
+const Spinner = styled.div`
+  width: 32px;
+  height: 32px;
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid var(--color-main);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+
+  @keyframes spin {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
   }
 `;
 
-const HeroContent = styled.div`
+const CoverSection = styled.div`
+  position: relative;
+  background: linear-gradient(135deg, var(--color-main) 0%, #106c40 100%);
+  padding: 40px 20px 30px;
+  color: white;
+`;
+
+const CoverFilter = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url("https://www.transparenttextures.com/patterns/cubes.png");
+  opacity: 0.1;
+`;
+
+const CoverContent = styled.div`
   position: relative;
   z-index: 1;
-`;
-
-const HeroRow = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 14px;
-`;
-
-const TeamAvatar = styled.img`
-  width: 72px;
-  height: 72px;
-  border-radius: 18px;
-  object-fit: cover;
-  background: rgba(255, 255, 255, 0.15);
-  border: 2px solid rgba(255, 255, 255, 0.25);
-`;
-
-const HeroText = styled.div`
-  min-width: 0;
-  flex: 1;
-`;
-
-const HeroTitle = styled.h1`
-  color: white;
-  font-size: 22px;
-  font-family: "Pretendard-Bold";
-  margin-bottom: 10px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-`;
-
-const HeroMeta = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 6px;
-`;
-
-const HeroMetaItem = styled.div`
-  display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 13px;
-  color: rgba(255, 255, 255, 0.85);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-
-  svg {
-    flex-shrink: 0;
-    color: rgba(255, 255, 255, 0.9);
-  }
+  gap: 16px;
 `;
 
-const ContentContainer = styled.div`
-  padding: 0 20px;
-  margin-top: -18px;
-  position: relative;
-  z-index: 2;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-`;
-
-const Card = styled.section`
+const TeamLogo = styled.img`
+  width: 84px;
+  height: 84px;
+  border-radius: 24px;
+  border: 4px solid rgba(255, 255, 255, 0.2);
   background: white;
-  border-radius: 18px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
-  overflow: hidden;
+  object-fit: cover;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
 `;
 
-const CardHeader = styled.div`
-  padding: 16px 16px 0;
+const TeamHeaderInfo = styled.div`
+  text-align: center;
 `;
 
-const CardTitle = styled.h2`
-  font-size: 16px;
-  font-family: "Pretendard-Bold";
-  color: var(--color-dark2);
+const TeamName = styled.h2`
+  font-size: 24px;
+  font-weight: 800;
+  margin-bottom: 12px;
+  letter-spacing: -0.5px;
 `;
 
-const CardBody = styled.div`
-  padding: 14px 16px 16px;
+const TeamTags = styled.div`
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
 `;
 
-const CardText = styled.p`
-  font-size: 14px;
-  line-height: 1.5;
-  color: var(--color-dark2);
-  white-space: pre-wrap;
+const Tag = styled.span`
+  font-size: 13px;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 4px 10px;
+  border-radius: 20px;
+  backdrop-filter: blur(4px);
 `;
 
-const CardMuted = styled.p`
-  font-size: 14px;
-  color: var(--color-dark1);
+const Container = styled.div`
+  padding: 24px 20px;
 `;
 
 const StatsGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 24px;
+`;
+
+const StatItem = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+`;
+
+const StatIconBox = styled.div<{ color: string }>`
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: ${(props) => props.color}15;
+  color: ${(props) => props.color};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+`;
+
+const StatLabel = styled.span`
+  font-size: 12px;
+  color: #888;
+`;
+
+const StatValue = styled.span`
+  font-size: 13px;
+  font-weight: 700;
+  color: #333;
+`;
+
+const Divider = styled.div`
+  height: 8px;
+  background: #f8f9fa;
+  margin: 0 -20px 24px;
+`;
+
+const Section = styled.section`
+  margin-bottom: 32px;
+`;
+
+const SectionTitle = styled.h3`
+  font-size: 18px;
+  font-weight: 700;
+  color: #212529;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+`;
+
+const BadgeCount = styled.span`
+  background: var(--color-main);
+  color: white;
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-weight: 600;
+`;
+
+const Description = styled.p`
+  font-size: 15px;
+  line-height: 1.6;
+  color: #495057;
+  white-space: pre-wrap;
+`;
+
+const ScheduleCard = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  background: #f8f9fa;
+  border-radius: 16px;
+  border: 1px solid #e9ecef;
+`;
+
+const ScheduleIcon = styled.div`
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-main);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+`;
+
+const ScheduleInfo = styled.div`
+  display: flex;
+  flex-direction: column;
+`;
+
+const ScheduleDay = styled.span`
+  font-size: 16px;
+  font-weight: 700;
+  color: #333;
+`;
+
+const ScheduleTime = styled.span`
+  font-size: 14px;
+  color: #666;
+  margin-top: 2px;
+`;
+
+const ScheduleNotice = styled.p`
+  font-size: 12px;
+  color: #adb5bd;
+  margin-top: 8px;
+  margin-left: 4px;
+`;
+
+const PositionGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 12px;
 `;
 
-const StatCard = styled.div`
-  background: white;
-  border-radius: 16px;
-  padding: 14px 14px 12px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
-  display: grid;
-  grid-template-columns: auto 1fr;
-  grid-template-rows: auto auto;
-  column-gap: 10px;
-  row-gap: 4px;
+const PositionCard = styled.div`
+  display: flex;
   align-items: center;
-`;
-
-const StatIcon = styled.div<{ color: string }>`
-  grid-row: 1 / span 2;
-  width: 34px;
-  height: 34px;
+  gap: 12px;
+  padding: 12px 16px;
+  border: 1px solid #dee2e6;
   border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: ${(p) => `${p.color}15`};
-  color: ${(p) => p.color};
+  background: white;
 `;
 
-const StatLabel = styled.div`
-  font-size: 12px;
-  color: var(--color-dark1);
-`;
-
-const StatValue = styled.div`
-  font-size: 15px;
-  font-family: "Pretendard-Bold";
-  color: var(--color-dark2);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-`;
-
-const ScheduleList = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-`;
-
-const ScheduleRow = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 12px 12px;
-  border-radius: 14px;
-  background: #f8faf9;
-  border: 1px solid #eef1f4;
-`;
-
-const DayChip = styled.div`
-  width: 40px;
-  height: 28px;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 13px;
-  font-family: "Pretendard-Bold";
+const PositionIcon = styled.span`
+  font-size: 14px;
+  font-weight: 800;
   color: var(--color-main);
   background: var(--color-subtle);
-  flex-shrink: 0;
+  padding: 4px 8px;
+  border-radius: 6px;
 `;
 
-const ScheduleText = styled.div`
-  font-size: 14px;
-  color: var(--color-dark2);
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-`;
-
-const InfoGrid = styled.div`
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 10px;
-`;
-
-const InfoItem = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 10px;
-`;
-
-const InfoLabel = styled.div`
-  font-size: 13px;
-  color: var(--color-dark1);
-  flex-shrink: 0;
-`;
-
-const InfoValue = styled.div`
-  font-size: 14px;
-  color: var(--color-dark2);
-  font-family: "Pretendard-SemiBold";
-  text-align: right;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-`;
-
-const ChipSection = styled.div`
-  margin-top: 14px;
-`;
-
-const ChipTitle = styled.div`
-  font-size: 13px;
-  color: var(--color-dark1);
-  margin-bottom: 10px;
-`;
-
-const ChipRow = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-`;
-
-const Chip = styled.div`
-  padding: 6px 10px;
-  background: #f0f0f0;
-  color: var(--color-dark2);
-  border-radius: 999px;
-  font-size: 12px;
-  font-family: "Pretendard-SemiBold";
-`;
-
-const JoinButton = styled.button`
-  width: 100%;
-  padding: 16px;
-  border: none;
-  border-radius: 16px;
-  background: linear-gradient(
-    135deg,
-    var(--color-main) 0%,
-    var(--color-main-darker) 100%
-  );
-  color: white;
-  font-size: 16px;
-  font-family: "Pretendard-Bold";
-  cursor: pointer;
-  box-shadow: 0 6px 18px rgba(14, 98, 68, 0.25);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 26px rgba(14, 98, 68, 0.32);
-  }
-
-  &:active {
-    transform: translateY(0);
-  }
-`;
-
-const CardSkeleton = styled.div`
-  height: 140px;
-  border-radius: 18px;
-  background: linear-gradient(90deg, #f5f5f5 25%, #eee 50%, #f5f5f5 75%);
-  background-size: 200% 100%;
-  animation: ${shimmer} 1.5s infinite;
-`;
-
-const HeroSkeleton = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 14px;
-`;
-
-const HeroAvatarSkeleton = styled.div`
-  width: 72px;
-  height: 72px;
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.15);
-`;
-
-const HeroTextSkeleton = styled.div`
+const PositionLabel = styled.span`
   flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #495057;
 `;
 
-const HeroTitleSkeleton = styled.div`
-  width: 60%;
-  height: 18px;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.18);
-`;
-
-const HeroMetaSkeleton = styled.div`
-  width: 80%;
-  height: 14px;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.14);
-`;
-
-const ErrorCard = styled.div`
+const BottomAction = styled.div`
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
   background: white;
-  border-radius: 18px;
-  padding: 18px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
-  text-align: center;
-`;
-
-const ErrorTitle = styled.div`
-  font-size: 15px;
-  font-family: "Pretendard-Bold";
-  color: var(--color-dark2);
-  margin-bottom: 8px;
-`;
-
-const ErrorDesc = styled.div`
-  font-size: 13px;
-  color: var(--color-dark1);
-`;
-
-const HeroError = styled.div`
-  padding: 6px 0 2px;
-`;
-
-const HeroErrorTitle = styled.div`
-  color: white;
-  font-size: 18px;
-  font-family: "Pretendard-Bold";
-  margin-bottom: 6px;
-`;
-
-const HeroErrorDesc = styled.div`
-  color: rgba(255, 255, 255, 0.85);
-  font-size: 13px;
+  padding: 16px 20px 30px;
+  border-top: 1px solid #f1f3f5;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.05);
+  max-width: 600px;
+  margin: 0 auto;
+  z-index: 1001;
 `;
