@@ -3,25 +3,29 @@ import styled from "styled-components";
 
 interface TimePickerModalProps {
   onTimeSelect: (time: string) => void;
+  onTimeEnd?: (time: string) => void;
   onClose: () => void;
 }
 
 const TimePickerModal: React.FC<TimePickerModalProps> = ({
   onTimeSelect,
+  onTimeEnd,
   onClose,
 }) => {
   const [selectedHour, setSelectedHour] = useState<number>(1);
   const [selectedMinute, setSelectedMinute] = useState<number>(0);
   const [period, setPeriod] = useState<string>("오전");
 
-  const hours = Array.from({ length: 12 }, (_, i) => i + 1); // 1 to 12
+  const hours = Array.from({ length: 24 }, (_, i) => i + 1); // 1 to 12
   const minutes = Array.from({ length: 12 }, (_, i) => i * 5); // 0 to 55 in steps of 5
   const periods = ["오전", "오후"];
 
   const handleTimeSelect = () => {
     const formattedMinute = selectedMinute.toString().padStart(2, "0");
-    const time = `${period} ${selectedHour}:${formattedMinute}`;
+    const time = `${selectedHour}:${formattedMinute}`;
+    const entTime = `${selectedHour + 3}:${formattedMinute}`;
     onTimeSelect(time);
+    onTimeEnd && onTimeEnd(entTime);
     onClose();
   };
 
@@ -30,14 +34,13 @@ const TimePickerModal: React.FC<TimePickerModalProps> = ({
       <ModalContent onClick={(e) => e.stopPropagation()}>
         {/* Headers for 시, 분, 오전/오후 */}
         <HeaderRow>
-          <HeaderItem>오전/오후</HeaderItem>
           <HeaderItem>시</HeaderItem>
           <HeaderItem>분</HeaderItem>
         </HeaderRow>
 
         <PickerContainer>
           {/* AM/PM Picker */}
-          <Picker>
+          {/* <Picker>
             {periods.map((p) => (
               <PickerItem
                 key={p}
@@ -47,7 +50,7 @@ const TimePickerModal: React.FC<TimePickerModalProps> = ({
                 {p}
               </PickerItem>
             ))}
-          </Picker>
+          </Picker> */}
 
           {/* Hour Picker */}
           <Picker>
@@ -118,7 +121,7 @@ const HeaderRow = styled.div`
 `;
 
 const HeaderItem = styled.div`
-  width: 33.33%;
+  width: 50%;
   text-align: center;
   font-weight: bold;
   font-size: 16px;
@@ -136,7 +139,7 @@ const Picker = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 33.33%;
+  width: 50%;
   height: 150px;
   overflow-y: scroll;
   scrollbar-width: thin;

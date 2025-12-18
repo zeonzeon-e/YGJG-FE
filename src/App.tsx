@@ -7,6 +7,7 @@ import IntroPage from "./screen/IntroPage";
 const App = () => {
   return (
     <>
+    
       <GlobalStyles />
       <div className="App">
         <IntroPage />

@@ -1,9 +1,10 @@
-import React, { useState } from "react";
-import styled from "styled-components";
+import React, { useState, useEffect } from "react";
+import styled, { keyframes } from "styled-components";
+import apiClient from "../../api/apiClient";
 
 interface FormationModal2Props {
   onClose: () => void;
-  onSave: (circles: CirclePosition[]) => void;
+  onSave: (circles: CirclePosition[], formationName?: string) => void;
 }
 
 // 포메이션 위치한 원
@@ -31,7 +32,46 @@ const FormationListModal: React.FC<FormationModal2Props> = ({
     { id: 2, name: "확인중", isStarred: false },
     { id: 3, name: "10번", isStarred: false },
   ];
+
+  useEffect(() => {
+    // const fetchGameName = async () => {
+    //   if (!numericTeamId) return;
+    //   try {
+    //     const response = await apiClient.get<Player[]>(
+    //       `/api/team-strategy/get-position/name`,
+    //       {
+    //         params: { positionName: "", teamId: numericTeamId },
+    //       }
+    //     );
+    //     setAvailablePlayers(response.data ?? []);
+    //     setInitialPlayers(response.data ?? []);
+    //   } catch (error) {
+    //     console.error("Failed to fetch players:", error);
+    //   }
+    // };
+    // fetchGameName();
+
+    const fetchForamtionList = async () => {
+      try {
+        const response = await apiClient.get(
+          `/api/team-strategy/get/formation`,
+          {
+            params: { formationId: 3, teamId: 13 },
+          }
+        );
+        console.log(response);
+      } catch (error) {
+        console.error("Failed to fetch players:", error);
+      }
+    };
+    fetchForamtionList();
+  }, []);
   const [items, setItems] = useState<ListItem[]>(initialItems);
+  const [searchTerm, setSearchTerm] = useState("");
+  const filteredItems = items.filter((item) =>
+    item.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   const toggleStar = (id: number) => {
     setItems((prevItems) => {
       const newItems = prevItems.map((item) =>
@@ -45,118 +85,272 @@ const FormationListModal: React.FC<FormationModal2Props> = ({
 
   return (
     <ModalOverlay onClick={onClose}>
-      <ModalContent onClick={(e) => e.stopPropagation()}>
+      <ModalCard onClick={(e) => e.stopPropagation()}>
         <Header>
-          <Title>포메이션 설정</Title>
-          <CloseButton onClick={onClose}>X</CloseButton>
+          <div>
+            <Title>포메이션 불러오기</Title>
+            <Subtitle>즐겨찾기한 전술을 빠르게 선택하세요</Subtitle>
+          </div>
+          <CloseButton onClick={onClose}>×</CloseButton>
         </Header>
-        <SearchContainer>
-          <SearchInput placeholder="포메이션 검색" />
-          <SearchButton>검색</SearchButton>
-        </SearchContainer>
+
+        <SearchBar>
+          <SearchInput
+            placeholder="포메이션 이름 검색"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+          <SearchHint>⌘K</SearchHint>
+        </SearchBar>
+
         <ItemList>
-          {items.map((item) => (
-            <Item key={item.id}>
-              <Icon
-                onClick={() => toggleStar(item.id)}
-                color={item.isStarred ? "gold" : "gray"}
-              >
-                {item.isStarred ? "★" : "☆"}
-              </Icon>
-              <Text>{item.name}</Text>
-              <RemoveButton onClick={() => console.log("remove")}>
-                ×
-              </RemoveButton>
-            </Item>
-          ))}
+          {filteredItems.length > 0 ? (
+            filteredItems.map((item) => (
+              <Item key={item.id}>
+                <ItemInfo>
+                  <StarButton
+                    type="button"
+                    onClick={() => toggleStar(item.id)}
+                    aria-label="즐겨찾기"
+                    isActive={item.isStarred}
+                  >
+                    {item.isStarred ? "★" : "☆"}
+                  </StarButton>
+                  <ItemName>{item.name}</ItemName>
+                </ItemInfo>
+                <ItemActions>
+                  <GhostButton onClick={() => console.log("remove")}>
+                    삭제
+                  </GhostButton>
+                </ItemActions>
+              </Item>
+            ))
+          ) : (
+            <EmptyState>
+              <p>결과가 없습니다</p>
+              <span>검색어를 다시 확인해주세요.</span>
+            </EmptyState>
+          )}
         </ItemList>
-      </ModalContent>
+
+        <Footer>
+          <Hint>길게 눌러 상세 전술을 미리 볼 수 있어요</Hint>
+          <CloseAction onClick={onClose}>닫기</CloseAction>
+        </Footer>
+      </ModalCard>
     </ModalOverlay>
   );
 };
 
 export default FormationListModal;
 
+const fadeIn = keyframes`
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+`;
+
 const ModalOverlay = styled.div`
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.6);
+  inset: 0;
+  background: rgba(5, 10, 20, 0.65);
+  backdrop-filter: blur(6px);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 1000;
+  animation: ${fadeIn} 0.25s ease;
 `;
 
-const ModalContent = styled.div`
-  background: white;
-  padding: 20px;
-  border-radius: 10px;
-  width: 300px;
-  position: relative;
+const ModalCard = styled.div`
+  width: min(360px, calc(100% - 40px));
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafd 100%);
+  border-radius: 24px;
+  padding: 28px 24px 20px;
+  box-shadow: 0 30px 60px rgba(15, 30, 60, 0.2);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  animation: ${fadeIn} 0.3s ease forwards;
 `;
 
 const Header = styled.div`
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
+  gap: 12px;
 `;
 
 const Title = styled.h3`
   margin: 0;
+  font-size: 20px;
+  color: var(--color-dark2);
+`;
+
+const Subtitle = styled.p`
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: var(--color-dark1);
 `;
 
 const CloseButton = styled.button`
-  background: none;
   border: none;
+  background: rgba(0, 0, 0, 0.05);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  font-size: 18px;
   cursor: pointer;
+  transition: background 0.2s ease;
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.1);
+  }
 `;
 
-const SearchContainer = styled.div`
+const SearchBar = styled.div`
+  position: relative;
   display: flex;
-  margin-top: 10px;
+  align-items: center;
+  border-radius: 16px;
+  border: 1px solid #e2e6ef;
+  padding: 0 12px;
+  background: #f8f9fd;
 `;
 
 const SearchInput = styled.input`
   flex: 1;
-  padding: 8px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  margin-right: 5px;
+  border: none;
+  background: transparent;
+  padding: 12px 0;
+  font-size: 14px;
+  color: var(--color-dark2);
+
+  &:focus {
+    outline: none;
+  }
 `;
 
-const SearchButton = styled.button`
-  padding: 8px 12px;
-  background-color: #4caf50;
-  color: white;
-  border: none;
-  border-radius: 5px;
+const SearchHint = styled.span`
+  font-size: 12px;
+  color: #a0a8b8;
 `;
 
 const ItemList = styled.div`
-  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 320px;
+  overflow-y: auto;
+  padding-right: 4px;
 `;
 
 const Item = styled.div`
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  padding: 5px 0;
+  align-items: center;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: white;
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: #dfe3ec;
+    box-shadow: 0 8px 18px rgba(8, 24, 68, 0.06);
+    transform: translateY(-1px);
+  }
 `;
 
-const Icon = styled.span`
-  color: ${(props) => props.color || "black"};
-  margin-right: 10px;
+const ItemInfo = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
 `;
 
-const Text = styled.span`
-  flex: 1;
-`;
-
-const RemoveButton = styled.button`
+const StarButton = styled.button<{ isActive: boolean }>`
   background: none;
   border: none;
+  font-size: 20px;
   cursor: pointer;
+  color: ${(props) => (props.isActive ? "#f0c419" : "#c5c9d7")};
+  transition: transform 0.2s ease;
+
+  &:hover {
+    transform: scale(1.1);
+  }
+`;
+
+const ItemName = styled.span`
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-dark2);
+`;
+
+const ItemActions = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+`;
+
+const GhostButton = styled.button`
+  border: none;
+  background: rgba(0, 0, 0, 0.04);
+  border-radius: 12px;
+  padding: 6px 12px;
+  font-size: 13px;
+  cursor: pointer;
+  color: #7d8597;
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.08);
+  }
+`;
+
+const EmptyState = styled.div`
+  text-align: center;
+  padding: 40px 20px;
+  color: #9ca3b5;
+
+  p {
+    margin: 0 0 6px;
+    font-weight: 600;
+  }
+
+  span {
+    font-size: 13px;
+  }
+`;
+
+const Footer = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 8px;
+  border-top: 1px solid #eef1f7;
+`;
+
+const Hint = styled.span`
+  font-size: 12px;
+  color: #9aa2b5;
+`;
+
+const CloseAction = styled.button`
+  border: none;
+  background: linear-gradient(135deg, var(--color-main) 0%, #0c5135 100%);
+  color: white;
+  border-radius: 14px;
+  padding: 10px 18px;
+  font-size: 13px;
+  cursor: pointer;
+  box-shadow: 0 10px 18px rgba(13, 80, 54, 0.3);
+
+  &:hover {
+    transform: translateY(-1px);
+  }
 `;

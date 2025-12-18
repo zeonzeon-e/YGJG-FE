@@ -1,47 +1,20 @@
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import styled from "styled-components";
 import MiniButton from "../Button/MiniButton";
 import TeamList3 from "../TeamList/TeamList3";
+import { useParams } from "react-router-dom";
+import apiClient from "../../api/apiClient";
 
-const playersData = [
-  {
-    id: 1,
-    name: "이지현",
-    position: "공격수",
-    detail_position: "ST",
-  },
-  {
-    id: 2,
-    name: "이지현",
-    position: "수비수",
-    detail_position: "WD",
-  },
-  {
-    id: 3,
-    name: "최민석",
-    position: "수비수",
-    detail_position: "WD",
-  },
-  {
-    id: 4,
-    name: "김유성",
-    position: "미드필더",
-    detail_position: "MF",
-  },
-  {
-    id: 5,
-    name: "김민기",
-    position: "골키퍼",
-    detail_position: "GK",
-  },
-];
-
-interface FormationModalProps {
-  onClose: () => void;
-  onSave: (circles: CirclePosition[]) => void;
+interface Player {
+  id: number;
+  name: string;
+  position: string;
+  profileUrl?: string;
+  role?: string;
+  detail_position?: string;
+  teamMemberId: number;
 }
 
-// 포메이션 위치한 원
 interface CirclePosition {
   id: number;
   x: number;
@@ -49,226 +22,414 @@ interface CirclePosition {
   color: string;
   detail_position: string;
   name: string;
+  /** ✅ 원과 연결된 실제 선수 id (색상 원만 추가한 경우는 undefined) */
+  playerId?: number;
 }
+
+interface FormationModalProps {
+  onClose: () => void;
+  onSave: (circles: CirclePosition[], formationName?: string) => void;
+}
+
+const CIRCLE_SIZE = 50;
 
 const FormationModal: React.FC<FormationModalProps> = ({ onClose, onSave }) => {
   const [circles, setCircles] = useState<CirclePosition[]>([]);
-  const [draggingCircle, setDraggingCircle] = useState<number | null>(null);
-  const [dragOffset, setDragOffset] = useState<{ x: number; y: number }>({
-    x: 0,
-    y: 0,
-  });
-  const [availablePlayers, setAvailablePlayers] = useState(playersData);
+  const [draggingId, setDraggingId] = useState<number | null>(null);
+  const dragOffsetRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
 
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const lastWHRef = useRef<{ w: number; h: number }>({ w: 0, h: 0 });
+
+  const [availablePlayers, setAvailablePlayers] = useState<Player[]>([]);
+  const [initialPlayers, setInitialPlayers] = useState<Player[]>([]);
+  const [formationName, setFormationName] = useState("");
+  const [formationList, setFormationList] = useState<Player[]>([]); // 필요시 사용
+
+  // 이름 에러 상태 & 인풋 ref
+  const [nameError, setNameError] = useState(false);
+      const nameInputRef = useRef<HTMLInputElement | null>(null);
+
+  const { teamId } = useParams<{ teamId: string }>();
+  const numericTeamId = Number(teamId);
+
+  // 선수 목록 로딩
   useEffect(() => {
-    const originalStyle = window.getComputedStyle(document.body).overflow;
-    document.body.style.overflow = "hidden"; // Disable background scroll
+    // const fetchGameName = async () => {
+    //   if (!numericTeamId) return;
+    //   try {
+    //     const response = await apiClient.get<Player[]>(
+    //       `/api/team-strategy/get-position/name`,
+    //       {
+    //         params: { positionName: "", teamId: numericTeamId },
+    //       }
+    //     );
+    //     setAvailablePlayers(response.data ?? []);
+    //     setInitialPlayers(response.data ?? []);
+    //   } catch (error) {
+    //     console.error("Failed to fetch players:", error);
+    //   }
+    // };
+    // fetchGameName();
 
+    const fetchPlayers = async () => {
+      if (!numericTeamId) return;
+      try {
+        const response = await apiClient.get<Player[]>(
+          `/api/team/${numericTeamId}/memberList`,
+          {
+            params: { position: "전체", teamId: numericTeamId },
+          }
+        );
+        setAvailablePlayers(response.data ?? []);
+        setInitialPlayers(response.data ?? []);
+      } catch (error) {
+        console.error("Failed to fetch players:", error);
+      }
+    };
+    fetchPlayers();
+  }, [numericTeamId]);
+console.log(availablePlayers)
+  // 바디 스크롤 잠금
+  useEffect(() => {
+    const original = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
     return () => {
-      document.body.style.overflow = originalStyle; // Re-enable background scroll
+      document.body.style.overflow = original;
     };
   }, []);
 
-  const getColorByPosition = (position: string): string => {
-    switch (position) {
-      case "공격수":
-        return "var(--color-sk)";
-      case "수비수":
-        return "var(--color-dp)";
-      case "미드필더":
-        return "var(--color-mf)";
-      case "골키퍼":
-        return "var(--color-gk)";
-      default:
-        return "#9E9E9E";
+  // 컨테이너 크기 초기화 + 관찰
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    const updateSize = () => {
+      const rect = el.getBoundingClientRect();
+      if (lastWHRef.current.w === 0 || lastWHRef.current.h === 0) {
+        lastWHRef.current = { w: rect.width, h: rect.height };
+        return;
+      }
+      const prev = lastWHRef.current;
+      if (prev.w !== rect.width || prev.h !== rect.height) {
+        const sx = rect.width / prev.w;
+        const sy = rect.height / prev.h;
+        setCircles((prevCircles) =>
+          prevCircles.map((c) => ({
+            ...c,
+            x: Math.max(0, Math.min(c.x * sx, rect.width - CIRCLE_SIZE)),
+            y: Math.max(0, Math.min(c.y * sy, rect.height - CIRCLE_SIZE)),
+          }))
+        );
+        lastWHRef.current = { w: rect.width, h: rect.height };
+      }
+    };
+
+    updateSize();
+
+    const RO = (window as any).ResizeObserver as
+      | typeof ResizeObserver
+      | undefined;
+
+    let ro: ResizeObserver | null = null;
+    let onWinResize: (() => void) | null = null;
+
+    if (RO) {
+      ro = new RO(() => {
+        updateSize();
+      });
+      ro.observe(el);
+    } else {
+      onWinResize = () => updateSize();
+      window.addEventListener("resize", onWinResize);
     }
+
+    return () => {
+      ro?.disconnect();
+      if (onWinResize) window.removeEventListener("resize", onWinResize);
+    };
+  }, []);
+
+  // 포지션별 색상
+  const getColorByPosition = (pos: string): string => {
+    const position = pos.toUpperCase().trim() || "";
+
+    if (["ST", "CF", "LW", "RW", "SS", "LF", "RF", "공격수"].includes(position)) {
+      return "var(--color-sk)";
+    }
+    if (["CM", "CAM", "CDM", "LM", "RM", "AM", "DM", "미드필더"].includes(position)) {
+      return "var(--color-mf)";
+    }
+    if (
+      ["CB", "LB", "RB", "LWB", "RWB", "WB", "SW", "WD", "수비수"].includes(
+        position
+      )
+    ) {
+      return "var(--color-dp)";
+    }
+    if (["GK", "골키퍼"].includes(position)) {
+      return "var(--color-gk)";
+    }
+    return "#95a5a6";
   };
 
-  // 선택된 색상의 원을 추가하는 함수
+  const getCenterXY = () => {
+    const rect = containerRef.current?.getBoundingClientRect();
+    if (!rect) return { x: 0, y: 0 };
+    return {
+      x: rect.width / 2 - CIRCLE_SIZE / 2,
+      y: rect.height / 2 - CIRCLE_SIZE / 2,
+    };
+  };
+
+  // 색상 원 추가 (독립적인 마커용)
   const handleColorCircleAdd = (color: string) => {
-    const imageRect = document
-      .getElementById("formation-image")
-      ?.getBoundingClientRect();
-    if (imageRect) {
-      const newCircle: CirclePosition = {
-        id: circles.length + 1,
-        x: imageRect.width / 2 - 15,
-        y: imageRect.height / 2 - 15,
-        color: color,
-        detail_position: "", // 색상 선택 시 별도의 포지션 대신 Custom으로 추가
+    const { x, y } = getCenterXY();
+    setCircles((prev) => [
+      ...prev,
+      {
+        id: prev.length + 1,
+        x,
+        y,
+        color,
+        detail_position: "",
         name: "",
-      };
-      setCircles([...circles, newCircle]);
-    }
+        playerId: undefined, // 선수 미연결
+      },
+    ]);
   };
 
+  // 선수 선택 시 원 추가 + 목록에서 제거
   const handlePlayerSelect = (player: {
     name: string;
     detail_position: string;
     position: string;
+    id?: number;
+    teamMemberId?: number;
   }) => {
-    const imageRect = document
-      .getElementById("formation-image")
-      ?.getBoundingClientRect();
-    if (imageRect) {
-      const newCircle: CirclePosition = {
-        id: circles.length + 1,
-        x: imageRect.width / 2 - 15,
-        y: imageRect.height / 2 - 15,
+    const { x, y } = getCenterXY();
+
+    //console.log(player)
+    setCircles((prev) => [
+      ...prev,
+      {
+        id: prev.length + 1,
+        x,
+        y,
         color: getColorByPosition(player.position),
         detail_position: player.detail_position,
         name: player.name,
-      };
-      setCircles([...circles, newCircle]);
-      // 선택된 선수를 availablePlayers에서 제거
-      setAvailablePlayers((prevPlayers) =>
-        prevPlayers.filter(
-          (p) =>
-            !(
-              p.name === player.name &&
-              p.detail_position === player.detail_position
-            )
-        )
-      );
-    }
-  };
+        playerId: player.teamMemberId, 
+      },
+    ]);
 
-  const startDrag = useCallback(
-    (
-      id: number,
-      event: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>
-    ) => {
-      setDraggingCircle(id);
-      const rect = event.currentTarget.getBoundingClientRect();
-      setDragOffset({
-        x:
-          "touches" in event
-            ? event.touches[0].clientX - rect.left
-            : event.clientX - rect.left,
-        y:
-          "touches" in event
-            ? event.touches[0].clientY - rect.top
-            : event.clientY - rect.top,
-      });
-    },
-    []
-  );
-
-  const onDrag = useCallback(
-    (
-      event: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>
-    ) => {
-      if (draggingCircle !== null) {
-        const imageRect = document
-          .getElementById("formation-image")
-          ?.getBoundingClientRect();
-        if (!imageRect) return;
-        let x =
-          "touches" in event
-            ? event.touches[0].clientX - imageRect.left - dragOffset.x
-            : event.clientX - imageRect.left - dragOffset.x;
-        let y =
-          "touches" in event
-            ? event.touches[0].clientY - imageRect.top - dragOffset.y
-            : event.clientY - imageRect.top - dragOffset.y;
-        x = Math.max(0, Math.min(x, imageRect.width - 50));
-        y = Math.max(0, Math.min(y, imageRect.height - 50));
-        setCircles((prevCircles) =>
-          prevCircles.map((circle) =>
-            circle.id === draggingCircle ? { ...circle, x, y } : circle
+    setAvailablePlayers((prev) =>
+      prev.filter(
+        (p) =>
+          !(
+            p.name === player.name &&
+            (p.detail_position || "") === (player.detail_position || "")
           )
-        );
-      }
-    },
-    [draggingCircle, dragOffset]
-  );
-
-  const stopDrag = useCallback(() => {
-    setDraggingCircle(null);
-  }, []);
-
-  const handleSave = () => {
-    onSave(circles);
-    onClose();
+      )
+    );
   };
+
+  const handlePointerDown =
+    (id: number) => (e: React.PointerEvent<HTMLDivElement>) => {
+      e.preventDefault();
+      setDraggingId(id);
+      const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
+      dragOffsetRef.current = {
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top,
+      };
+      (e.currentTarget as HTMLDivElement).setPointerCapture?.(e.pointerId);
+    };
+
+  useEffect(() => {
+    if (draggingId === null) return;
+
+    const move = (e: PointerEvent) => {
+      const rect = containerRef.current?.getBoundingClientRect();
+      if (!rect) return;
+
+      let x = e.clientX - rect.left - dragOffsetRef.current.x;
+      let y = e.clientY - rect.top - dragOffsetRef.current.y;
+
+      x = Math.max(0, Math.min(x, rect.width - CIRCLE_SIZE));
+      y = Math.max(0, Math.min(y, rect.height - CIRCLE_SIZE));
+
+      setCircles((prev) =>
+        prev.map((c) => (c.id === draggingId ? { ...c, x, y } : c))
+      );
+    };
+
+    const up = () => setDraggingId(null);
+
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", up);
+    return () => {
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", up);
+    };
+  }, [draggingId]);
 
   const onReset = () => {
     setCircles([]);
-    setAvailablePlayers(playersData);
+    setAvailablePlayers(initialPlayers);
+    setFormationName("");
+    setNameError(false);
   };
+
+  const handleFormationNameChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const value = e.target.value;
+    setFormationName(value);
+    if (nameError && value.trim()) {
+      setNameError(false);
+    }
+  };
+
+const handleSave = () => {
+  if (!formationName.trim()) {
+    setNameError(true);
+    if (nameInputRef.current) {
+      nameInputRef.current.focus();
+      nameInputRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+    }
+    return;
+  }
+
+  const formationDetailRequestDtos = circles
+    .filter((c) => c.playerId != null)
+    .map((c) => ({
+      playerId: c.playerId as number,
+      x: Math.round(c.x),
+      y: Math.round(c.y),
+    }));
+
+  // const fetchFormationSave = async () => {
+  //   if (!numericTeamId) return;
+  //   try {
+  //     await apiClient.post(`/api/team-strategy/save/formation`, {
+  //       teamId: numericTeamId,
+  //       formationName: formationName,
+  //       formationDetailRequestDtos : JSON.stringify(formationDetailRequestDtos),
+  //     });
+  //   } catch (error) {
+  //     console.error("Failed to save formation:", error);
+  //   }
+  // };
+const fetchFormationSave = async () => {
+    if (!numericTeamId) return;
+
+    try {
+      await apiClient.post(
+        "/api/team-strategy/save/formation",
+        // ⭐ body: formationDetailRequestDtos (배열 자체를 body로 보냄)
+
+        formationDetailRequestDtos,
+        {
+           headers: { "Content-Type": "application/json" },
+          // ⭐ query: formationName, teamId
+          params: {
+            formationName,
+            teamId: numericTeamId,
+          },
+        }
+      );
+    } catch (error) {
+      console.error("Failed to save formation:", error);
+    }
+  };
+
+
+  fetchFormationSave();
+  onSave(circles, formationName);
+  onClose();
+};
+
 
   return (
     <ModalOverlay onClick={onClose}>
       <ScrollableTeamListContainer>
         <ModalContent onClick={(e) => e.stopPropagation()}>
-          <CloseButton onClick={onClose}>X</CloseButton>
+          <CloseButton aria-label="닫기" onClick={onClose}>
+            ×
+          </CloseButton>
+
           <FomationTitle>
-            <h3>포메이션을 설정하세요</h3>
+            <h3>포메이션 추가하기</h3>
             <MiniButton onClick={onReset}>초기화</MiniButton>
           </FomationTitle>
 
-          <FormationImageContainer
-            id="formation-image"
-            onMouseMove={onDrag}
-            onMouseUp={stopDrag}
-            onTouchMove={onDrag}
-            onTouchEnd={stopDrag}
-          >
-            <FormationImage src="/formation.png" alt="Formation Field" />
-            {circles.map((circle) => (
+          <FomationTitle>
+            <div style={{ minWidth: 90 }}>포메이션 이름</div>
+            <NameInput
+              ref={nameInputRef}
+              hasError={nameError}
+              value={formationName}
+              onChange={handleFormationNameChange}
+              placeholder="포메이션 이름을 입력해주세요"
+            />
+          </FomationTitle>
+          {nameError && (
+            <ErrorText>포메이션 이름을 입력해주세요.</ErrorText>
+          )}
+
+          <FormationImageContainer ref={containerRef}>
+            <FormationImage
+              src={`${process.env.PUBLIC_URL}/formation.png`}
+              alt="Formation Field"
+              draggable={false}
+              onLoad={() => {
+                const rect = containerRef.current?.getBoundingClientRect();
+                if (rect)
+                  lastWHRef.current = { w: rect.width, h: rect.height };
+              }}
+            />
+
+            {circles.map((c) => (
               <DraggableCircle
-                key={circle.id}
+                key={c.id}
                 style={{
-                  left: `${circle.x}px`,
-                  top: `${circle.y}px`,
-                  backgroundColor: circle.color,
+                  left: `${c.x}px`,
+                  top: `${c.y}px`,
+                  backgroundColor: c.color,
                 }}
-                onMouseDown={(e) => startDrag(circle.id, e)}
-                onTouchStart={(e) => startDrag(circle.id, e)}
+                onPointerDown={handlePointerDown(c.id)}
               >
-                {circle.detail_position}
-                <br />
-                {circle.name}
+                <div className="label">
+                  {c.detail_position && <div>{c.detail_position}</div>}
+                  {c.name && <div>{c.name}</div>}
+                </div>
               </DraggableCircle>
             ))}
           </FormationImageContainer>
 
-          <TeamList3
-            players={availablePlayers}
-            onPlayerSelect={handlePlayerSelect}
-          />
-          <ColorSelectionContainer>
-            <CircleButton
-              color="red"
-              onClick={() => handleColorCircleAdd("red")}
-            >
-              <ColorCircle color="red" />
-            </CircleButton>
-            <CircleButton
-              color="blue"
-              onClick={() => handleColorCircleAdd("blue")}
-            >
-              <ColorCircle color="blue" />
-            </CircleButton>
-            <CircleButton
-              color="green"
-              onClick={() => handleColorCircleAdd("green")}
-            >
-              <ColorCircle color="green" />
-            </CircleButton>
-            <CircleButton
-              color="yellow"
-              onClick={() => handleColorCircleAdd("yellow")}
-            >
-              <ColorCircle color="yellow" />
-            </CircleButton>
-            <CircleButton
-              color="gray"
-              onClick={() => handleColorCircleAdd("gray")}
-            >
-              <ColorCircle color="gray" />
-            </CircleButton>
+          {availablePlayers.length > 0 && (
+            <TeamList3
+              players={availablePlayers}
+              onPlayerSelect={handlePlayerSelect}
+            />
+          )}
+
+          <ColorSelectionContainer aria-label="색상 선택">
+            {["red", "blue", "green", "yellow", "gray"].map((color) => (
+              <CircleButton
+                key={color}
+                color={color}
+                onClick={() => handleColorCircleAdd(color)}
+              >
+                <ColorCircle color={color} />
+              </CircleButton>
+            ))}
           </ColorSelectionContainer>
+
           <SaveButton onClick={handleSave}>적용하기</SaveButton>
         </ModalContent>
       </ScrollableTeamListContainer>
@@ -278,96 +439,113 @@ const FormationModal: React.FC<FormationModalProps> = ({ onClose, onSave }) => {
 
 export default FormationModal;
 
-// Styled Components
+/* ===================== styled ===================== */
+
 const ModalOverlay = styled.div`
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.6);
+  inset: 0;
+  background: rgba(0,0,0,0.6);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 1000;
 `;
 
-const ModalContent = styled.div`
-  background: white;
-  padding: 20px;
+const ScrollableTeamListContainer = styled.div`
+  max-height: 80%;
+  overflow-x: auto;
   border-radius: 10px;
+`;
+
+const ModalContent = styled.div`
+  background: #fff;
+  padding: 20px;
   width: 89%;
   max-width: 500px;
-  position: relative;
   max-height: 90%;
+  border-radius: 10px;
+  position: relative;
   overflow: hidden;
 `;
 
 const CloseButton = styled.button`
   position: absolute;
-  top: 10px;
-  right: 10px;
-  background: none;
-  border: none;
-  font-size: 16px;
-  cursor: pointer;
+  top: 10px; right: 10px;
+  background: none; border: none;
+  font-size: 20px; cursor: pointer;
 `;
 
 const FomationTitle = styled.div`
-  display: flex;
-  align-items: center;
+  display: flex; 
+  align-items: center; 
+  gap: 10px;
   margin-bottom: 10px;
-  & > h3 {
-    padding-right: 10px;
+
+  & > h3 { 
+    padding-right: 10px; 
+    margin: 0; 
   }
+`;
+
+const NameInput = styled.input<{ hasError: boolean }>`
+  flex: 1;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid ${({ hasError }) => (hasError ? "#e53935" : "#ccc")};
+  font-size: 14px;
+  box-sizing: border-box;
+
+  &:focus {
+    outline: none;
+    border-color: ${({ hasError }) => (hasError ? "#e53935" : "#4caf50")};
+    box-shadow: ${({ hasError }) =>
+      hasError
+        ? "0 0 0 1px rgba(229, 57, 53, 0.3)"
+        : "0 0 0 1px rgba(76, 175, 80, 0.3)"};
+  }
+
+  &::placeholder {
+    color: #b0b0b0;
+  }
+`;
+
+const ErrorText = styled.div`
+  margin: 2px 0 8px 90px;
+  font-size: 12px;
+  color: #e53935;
 `;
 
 const FormationImageContainer = styled.div`
   position: relative;
   width: 100%;
-  height: auto;
-  display: inline-block;
   margin-bottom: 20px;
   user-select: none;
 `;
 
 const FormationImage = styled.img`
   width: 100%;
+  display: block;
+  pointer-events: none;
 `;
 
 const DraggableCircle = styled.div`
   position: absolute;
-  width: 50px;
-  height: 50px;
+  width: ${CIRCLE_SIZE}px;
+  height: ${CIRCLE_SIZE}px;
   border-radius: 50%;
+  color: #fff;
+  font-size: 12px;
+  line-height: 1.1;
+  display: flex; 
+  justify-content: center; 
+  align-items: center;
+  text-align: center;
   cursor: grab;
   touch-action: none;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  color: white;
-  font-size: 12px;
-  text-align: center;
-`;
 
-const ScrollableTeamListContainer = styled.div`
-  max-height: 90%;
-  overflow-y: auto;
-  margin-bottom: 10px;
-  border-radius: 10px;
-`;
-
-const SaveButton = styled.button`
-  background-color: #4caf50;
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 8px;
-  margin-top: 20px;
-  width: 100%;
-  cursor: pointer;
-  font-family: Pretendard-Medium;
-  font-size: 18px;
+  .label { 
+    pointer-events: none; 
+  }
 `;
 
 const ColorSelectionContainer = styled.div`
@@ -376,22 +554,35 @@ const ColorSelectionContainer = styled.div`
   margin-bottom: 15px;
 `;
 
-const ColorCircle = styled.div<{ color: string }>`
-  width: 20px;
-  height: 20px;
+const CircleButton = styled.button<{ color: string }>`
+  display: flex; 
+  align-items: center; 
+  justify-content: center;
+  width: 32px; 
+  height: 32px; 
   border-radius: 50%;
-  background-color: ${(props) => props.color};
+  border: 1px solid var(--color-dark2, #666);
+  background: #fff; 
+  cursor: pointer;
 `;
 
-const CircleButton = styled.div<{ color: string }>`
-  display: flex;
-  padding: 10px;
-  align-items: center;
-  text-align: center;
-  border-radius: 100px;
-  background-color: ${(props) => props.color};
-  width: 25px;
-  height: 25px;
-  margin: 10px;
-  border: 1px solid var(--color-dark2);
+const ColorCircle = styled.div<{ color: string }>`
+  width: 20px; 
+  height: 20px; 
+  border-radius: 50%;
+  background-color: ${(p) => p.color};
+`;
+
+const SaveButton = styled.button`
+  width: 100%;
+  background-color: #4caf50; 
+  color: #fff;
+  border: none; 
+  border-radius: 8px;
+  padding: 10px 20px;
+  margin-top: 20px;
+  font-family: Pretendard-Medium, system-ui, -apple-system, Segoe UI, Roboto,
+    "Helvetica Neue", Arial;
+  font-size: 18px;
+  cursor: pointer;
 `;

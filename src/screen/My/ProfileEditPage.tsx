@@ -317,12 +317,11 @@ const ProfileEditPage: React.FC = () => {
               ))}
             </ChipsContainer>
           </FormGroup>
+          <BottomAction>
+            <MainButton onClick={handleSubmit}>저장하기</MainButton>
+          </BottomAction>
         </Section>
       </ContentScroll>
-
-      <BottomAction>
-        <MainButton onClick={handleSubmit}>저장하기</MainButton>
-      </BottomAction>
 
       {showMapModal && (
         <KakaoMapModal
@@ -383,7 +382,7 @@ const NavTitle = styled.h1`
 const ContentScroll = styled.div`
   flex: 1;
   overflow-y: auto;
-  padding-bottom: 100px;
+  padding-bottom: 40px;
 `;
 
 const ProfileHeader = styled.div`
@@ -546,16 +545,8 @@ const Divider = styled.div`
 `;
 
 const BottomAction = styled.div`
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: white;
-  padding: 16px 20px 30px;
-  border-top: 1px solid #f1f3f5;
-  z-index: 100;
-  max-width: 600px;
-  margin: 0 auto;
+  margin-top: 100px;
+  padding-top: 8px;
 `;
 
 const LoadingScreen = styled.div`

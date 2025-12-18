@@ -76,7 +76,7 @@ interface UserActions {
 // create 함수를 persist 미들웨어로 감싸서 로컬 스토리지에 상태를 저장합니다.
 export const useUserStore = create<UserState & UserActions>()(
   persist(
-    (set, get) => ({
+    (set: any, get) => ({
       // 초기 상태
       isLoggedIn: false,
       user: null,
@@ -150,7 +150,7 @@ export const useUserStore = create<UserState & UserActions>()(
       // 헬퍼 함수: 특정 팀 ID로 팀 역할을 찾는 함수
       getRoleByTeamId: (teamId: number) => {
         const { teams } = get();
-        return teams.find((team) => team.teamId === teamId);
+        return teams.find((team: any) => team.teamId === teamId);
       },
     }),
     {
