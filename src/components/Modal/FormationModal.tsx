@@ -28,7 +28,7 @@ interface CirclePosition {
 
 interface FormationModalProps {
   onClose: () => void;
-  onSave: (circles: CirclePosition[]) => void;
+  onSave: (circles: CirclePosition[], formationName?: string) => void;
 }
 
 const CIRCLE_SIZE = 50;
@@ -349,7 +349,7 @@ const fetchFormationSave = async () => {
 
 
   fetchFormationSave();
-  onSave(circles);
+  onSave(circles, formationName);
   onClose();
 };
 
