@@ -78,10 +78,26 @@ const GameStrategy: React.FC = () => {
             </ButtonRow>
             <ButtonRow>
               <StrategyButton onClick={() => setShowSTimePicker(true)}>
-                {startTime ? `시작 시간 · ${startTime}` : "시작 시간을 선택하세요"}
+                {startTime ? (
+                  `시작 시간 · ${startTime}`
+                ) : (
+                  <>
+                    시작 시간을
+                    <br />
+                    선택하세요
+                  </>
+                )}
               </StrategyButton>
               <StrategyButton onClick={() => setShowETimePicker(true)}>
-                {endTime ? `종료 시간 · ${endTime}` : "종료 시간을 선택하세요"}
+                {endTime ? (
+                  `종료 시간 · ${endTime}`
+                ) : (
+                  <>
+                    종료 시간을
+                    <br />
+                    선택하세요
+                  </>
+                )}
               </StrategyButton>
             </ButtonRow>
           </SectionCard>
@@ -96,7 +112,7 @@ const GameStrategy: React.FC = () => {
             <StyledInput
               type="text"
               placeholder="상대팀명을 입력해주세요"
-              title="상대팀명을 입력해주세요"
+              
             />
           </SectionCard>
 
@@ -151,14 +167,18 @@ const GameStrategy: React.FC = () => {
             </SectionHeader>
             <ButtonRow>
               <FormationButton onClick={() => setShowFormationModal(true)}>
-                포메이션 새로 만들기
+                포메이션
+                <br />
+                새로 만들기
               </FormationButton>
               <FormationButton onClick={() => setShowFormationModal2(true)}>
-                기존 포메이션 불러오기
+                기존 포메이션
+                <br />
+                불러오기
               </FormationButton>
             </ButtonRow>
             <FormationNameLabel>
-              {formationName || "포메이션 이름을 입력해주세요"}
+              {formationName || ""}
             </FormationNameLabel>
             <FormationPreview>
               <FormationImage
@@ -466,5 +486,6 @@ const FixedCircle = styled.div`
 `;
 
 const PrimaryAction = styled.div`
+  margin-top: 50px;
   padding: 4px 0 24px;
 `;

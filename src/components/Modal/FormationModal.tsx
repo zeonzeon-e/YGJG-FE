@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import styled from "styled-components";
-import MiniButton from "../Button/MiniButton";
+import { HiArrowPath } from "react-icons/hi2";
 import TeamList3 from "../TeamList/TeamList3";
 import { useParams } from "react-router-dom";
 import apiClient from "../../api/apiClient";
@@ -361,10 +361,8 @@ const fetchFormationSave = async () => {
           <CloseButton aria-label="닫기" onClick={onClose}>
             ×
           </CloseButton>
-
           <FomationTitle>
             <h3>포메이션 추가하기</h3>
-            <MiniButton onClick={onReset}>초기화</MiniButton>
           </FomationTitle>
 
           <FomationTitle>
@@ -382,6 +380,9 @@ const fetchFormationSave = async () => {
           )}
 
           <FormationImageContainer ref={containerRef}>
+            <RefreshButton aria-label="포메이션 새로고침" onClick={onReset}>
+              <HiArrowPath size={18} />
+            </RefreshButton>
             <FormationImage
               src={`${process.env.PUBLIC_URL}/formation.png`}
               alt="Formation Field"
@@ -444,75 +445,102 @@ export default FormationModal;
 const ModalOverlay = styled.div`
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.6);
+  background: rgba(5, 10, 20, 0.6);
+  backdrop-filter: blur(6px);
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
   z-index: 1000;
+  overflow-y: auto;
+  padding: 24px 16px;
 `;
 
 const ScrollableTeamListContainer = styled.div`
-  max-height: 80%;
-  overflow-x: auto;
-  border-radius: 10px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
 `;
 
 const ModalContent = styled.div`
-  background: #fff;
-  padding: 20px;
-  width: 89%;
-  max-width: 500px;
-  max-height: 90%;
-  border-radius: 10px;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  padding: 32px 28px 24px;
+  width: min(520px, 100%);
+  max-height: calc(100vh - 80px);
+  border-radius: 24px;
+  box-shadow: 0 30px 60px rgba(13, 40, 80, 0.25);
   position: relative;
-  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  overflow-y: auto;
+
+  @media (max-width: 480px) {
+    padding: 24px 20px 20px;
+    border-radius: 20px;
+    gap: 16px;
+  }
 `;
 
 const CloseButton = styled.button`
   position: absolute;
-  top: 10px; right: 10px;
-  background: none; border: none;
-  font-size: 20px; cursor: pointer;
+  top: 16px;
+  right: 16px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0, 0, 0, 0.05);
+  font-size: 20px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.1);
+  }
 `;
 
 const FomationTitle = styled.div`
-  display: flex; 
-  align-items: center; 
-  gap: 10px;
-  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 4px;
 
-  & > h3 { 
-    padding-right: 10px; 
-    margin: 0; 
+  h3 {
+    margin: 0;
+    font-size: 20px;
+    color: var(--color-dark2);
   }
 `;
 
 const NameInput = styled.input<{ hasError: boolean }>`
   flex: 1;
-  padding: 6px 10px;
-  border-radius: 6px;
-  border: 1px solid ${({ hasError }) => (hasError ? "#e53935" : "#ccc")};
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid ${({ hasError }) => (hasError ? "#f16c6c" : "#dfe4ec")};
   font-size: 14px;
-  box-sizing: border-box;
+  font-family: "Pretendard-Medium";
+  background: white;
+  transition: border 0.2s ease, box-shadow 0.2s ease;
 
   &:focus {
     outline: none;
-    border-color: ${({ hasError }) => (hasError ? "#e53935" : "#4caf50")};
+    border-color: ${({ hasError }) => (hasError ? "#f16c6c" : "var(--color-main)")};
     box-shadow: ${({ hasError }) =>
       hasError
-        ? "0 0 0 1px rgba(229, 57, 53, 0.3)"
-        : "0 0 0 1px rgba(76, 175, 80, 0.3)"};
+        ? "0 0 0 3px rgba(241, 108, 108, 0.2)"
+        : "0 0 0 3px rgba(14, 98, 68, 0.15)"};
   }
 
   &::placeholder {
-    color: #b0b0b0;
+    color: #b8bfcc;
   }
 `;
 
 const ErrorText = styled.div`
-  margin: 2px 0 8px 90px;
+  margin: -6px 0 10px auto;
   font-size: 12px;
-  color: #e53935;
+  color: #f16c6c;
 `;
 
 const FormationImageContainer = styled.div`
@@ -522,10 +550,34 @@ const FormationImageContainer = styled.div`
   user-select: none;
 `;
 
+const RefreshButton = styled.button`
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 40px;
+  height: 40px;
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.35);
+  border: none;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+  transition: background 0.2s ease, transform 0.2s ease;
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.5);
+    transform: translateY(-1px);
+  }
+`;
+
 const FormationImage = styled.img`
   width: 100%;
   display: block;
   pointer-events: none;
+  border-radius: 20px;
 `;
 
 const DraggableCircle = styled.div`
@@ -536,53 +588,65 @@ const DraggableCircle = styled.div`
   color: #fff;
   font-size: 12px;
   line-height: 1.1;
-  display: flex; 
-  justify-content: center; 
+  display: flex;
+  justify-content: center;
   align-items: center;
   text-align: center;
   cursor: grab;
   touch-action: none;
+  box-shadow: 0 8px 16px rgba(8, 24, 68, 0.25);
 
-  .label { 
-    pointer-events: none; 
+  .label {
+    pointer-events: none;
   }
 `;
 
 const ColorSelectionContainer = styled.div`
   display: flex;
-  justify-content: space-around;
-  margin-bottom: 15px;
+  justify-content: space-between;
+  margin-bottom: 12px;
 `;
 
 const CircleButton = styled.button<{ color: string }>`
-  display: flex; 
-  align-items: center; 
+  width: 40px;
+  height: 40px;
+  border-radius: 16px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: white;
+  display: flex;
+  align-items: center;
   justify-content: center;
-  width: 32px; 
-  height: 32px; 
-  border-radius: 50%;
-  border: 1px solid var(--color-dark2, #666);
-  background: #fff; 
   cursor: pointer;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    border-color: var(--color-main);
+  }
 `;
 
 const ColorCircle = styled.div<{ color: string }>`
-  width: 20px; 
-  height: 20px; 
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
   background-color: ${(p) => p.color};
 `;
 
 const SaveButton = styled.button`
   width: 100%;
-  background-color: #4caf50; 
+  background: linear-gradient(135deg, var(--color-main) 0%, #0c5135 100%);
   color: #fff;
-  border: none; 
-  border-radius: 8px;
-  padding: 10px 20px;
-  margin-top: 20px;
-  font-family: Pretendard-Medium, system-ui, -apple-system, Segoe UI, Roboto,
-    "Helvetica Neue", Arial;
-  font-size: 18px;
+  border: none;
+  border-radius: 16px;
+  padding: 14px 20px;
+  margin-top: 10px;
+  font-family: "Pretendard-Bold";
+  font-size: 16px;
   cursor: pointer;
+  box-shadow: 0 18px 35px rgba(12, 81, 53, 0.3);
+  transition: transform 0.2s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+  }
 `;
