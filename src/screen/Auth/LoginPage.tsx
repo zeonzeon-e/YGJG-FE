@@ -109,14 +109,18 @@ const LoginPage: React.FC = () => {
 
     setIsLoading(true);
     try {
-      const response = await apiClient.post("api/sign/signin/sign-in", {
-        email,
-        password
-      },{
-        headers: {
-          "Content-Type": "application/json",
+      const response = await apiClient.post(
+        "api/sign/signin/sign-in",
+        {
+          email: email,
+          password: password,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
         }
-      });
+      );
 
       if (response.status === 200) {
         const { token, refreshToken } = response.data;
