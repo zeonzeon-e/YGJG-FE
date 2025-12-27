@@ -1,13 +1,9 @@
 import React, { useState, useEffect } from "react";
 import styled, { keyframes } from "styled-components";
 import apiClient from "../../api/apiClient";
+import { useParams } from "react-router-dom";
+import { IoClose, IoSearch, IoStar, IoStarOutline, IoTrashOutline } from "react-icons/io5";
 
-interface FormationModal2Props {
-  onClose: () => void;
-  onSave: (circles: CirclePosition[], formationName?: string) => void;
-}
-
-// 포메이션 위치한 원
 interface CirclePosition {
   id: number;
   x: number;
@@ -17,340 +13,419 @@ interface CirclePosition {
   name: string;
 }
 
-interface ListItem {
-  id: number; //고유코드
-  name: string; //저장된 포메이션의 이름
-  isStarred: boolean; //즐겨찾기 여부
+interface FormationModal2Props {
+  onClose: () => void;
+  onSave: (circles: CirclePosition[], formationName?: string) => void;
+}
+
+interface FormationItem {
+  id: number;
+  name: string;
+  favorites: boolean;
 }
 
 const FormationListModal: React.FC<FormationModal2Props> = ({
   onClose,
   onSave,
 }) => {
-  const initialItems = [
-    { id: 1, name: "연습", isStarred: false },
-    { id: 2, name: "확인중", isStarred: false },
-    { id: 3, name: "10번", isStarred: false },
-  ];
+  const { teamId } = useParams<{ teamId: string }>();
+  const [items, setItems] = useState<FormationItem[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
-    // const fetchGameName = async () => {
-    //   if (!numericTeamId) return;
-    //   try {
-    //     const response = await apiClient.get<Player[]>(
-    //       `/api/team-strategy/get-position/name`,
-    //       {
-    //         params: { positionName: "", teamId: numericTeamId },
-    //       }
-    //     );
-    //     setAvailablePlayers(response.data ?? []);
-    //     setInitialPlayers(response.data ?? []);
-    //   } catch (error) {
-    //     console.error("Failed to fetch players:", error);
-    //   }
-    // };
-    // fetchGameName();
-
-    const fetchForamtionList = async () => {
+    const fetchFormationList = async () => {
+      if (!teamId) return;
       try {
-        const response = await apiClient.get(
-          `/api/team-strategy/get/formation`,
+        const response = await apiClient.get<FormationItem[]>(
+          `/api/team/formation-list`, 
           {
-            params: { formationId: 3, teamId: 13 },
+            params: { teamId: Number(teamId) },
           }
         );
-        console.log(response);
+        
+        const data = response.data || [];
+
+        const sortedData = data.sort((a, b) => {
+          if (Number(b.favorites) !== Number(a.favorites)) {
+            return Number(b.favorites) - Number(a.favorites);
+          }
+          return a.id - b.id;
+        });
+
+        setItems(sortedData);
       } catch (error) {
-        console.error("Failed to fetch players:", error);
+        console.error("Failed to fetch formation list:", error);
       }
     };
-    fetchForamtionList();
-  }, []);
-  const [items, setItems] = useState<ListItem[]>(initialItems);
-  const [searchTerm, setSearchTerm] = useState("");
+
+    fetchFormationList();
+  }, [teamId]);
+
   const filteredItems = items.filter((item) =>
     item.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const toggleStar = (id: number) => {
+  const toggleStar = (e: React.MouseEvent, id: number) => {
+    e.stopPropagation();
     setItems((prevItems) => {
       const newItems = prevItems.map((item) =>
-        item.id === id ? { ...item, isStarred: !item.isStarred } : item
+        item.id === id ? { ...item, favorites: !item.favorites } : item
       );
-      return newItems.sort(
-        (a, b) => (b.isStarred ? 1 : 0) - (a.isStarred ? 1 : 0)
-      );
+      return newItems.sort((a, b) => {
+        if (Number(b.favorites) !== Number(a.favorites)) {
+          return Number(b.favorites) - Number(a.favorites);
+        }
+        return a.id - b.id;
+      });
     });
   };
 
+  const handleDelete = (e: React.MouseEvent, id: number) => {
+    e.stopPropagation();
+    if(window.confirm("정말 이 포메이션을 삭제하시겠습니까?")) {
+        setItems(prev => prev.filter(item => item.id !== id));
+    }
+  };
+
+  const handleSelect = async (item: FormationItem) => {
+     try {
+        console.log("Selected Formation:", item.name);
+        // const response = await apiClient.get(...)
+        // onSave(response.data.circles, item.name);
+        alert(`'${item.name}' 포메이션을 불러옵니다.`);
+        onClose();
+     } catch (error) {
+         console.error("Failed to load details", error);
+     }
+  };
+
   return (
-    <ModalOverlay onClick={onClose}>
-      <ModalCard onClick={(e) => e.stopPropagation()}>
+    <Overlay onClick={onClose}>
+      <ModalContainer onClick={(e) => e.stopPropagation()}>
         <Header>
-          <div>
-            <Title>포메이션 불러오기</Title>
-            <Subtitle>즐겨찾기한 전술을 빠르게 선택하세요</Subtitle>
-          </div>
-          <CloseButton onClick={onClose}>×</CloseButton>
+          <HeaderTitle>
+            <h3>포메이션 불러오기</h3>
+            <p>저장된 전술을 터치하여 불러오세요.</p>
+          </HeaderTitle>
+          <CloseButton onClick={onClose}>
+            <IoClose size={24} />
+          </CloseButton>
         </Header>
 
-        <SearchBar>
-          <SearchInput
-            placeholder="포메이션 이름 검색"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-          <SearchHint>⌘K</SearchHint>
-        </SearchBar>
+        <SearchSection>
+          <SearchWrapper>
+            <IoSearch color="#9ca3af" size={18} />
+            <SearchInput
+              placeholder="전술 이름 검색..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </SearchWrapper>
+        </SearchSection>
 
-        <ItemList>
+        {/* Body 영역이 남은 공간을 모두 차지하며 스크롤됨 */}
+        <Body>
           {filteredItems.length > 0 ? (
-            filteredItems.map((item) => (
-              <Item key={item.id}>
-                <ItemInfo>
-                  <StarButton
-                    type="button"
-                    onClick={() => toggleStar(item.id)}
-                    aria-label="즐겨찾기"
-                    isActive={item.isStarred}
-                  >
-                    {item.isStarred ? "★" : "☆"}
-                  </StarButton>
-                  <ItemName>{item.name}</ItemName>
-                </ItemInfo>
-                <ItemActions>
-                  <GhostButton onClick={() => console.log("remove")}>
-                    삭제
-                  </GhostButton>
-                </ItemActions>
-              </Item>
-            ))
+            <List>
+              {filteredItems.map((item) => (
+                <ListItem key={item.id} onClick={() => handleSelect(item)}>
+                  <ItemLeft>
+                    <StarButton
+                      onClick={(e) => toggleStar(e, item.id)}
+                      active={item.favorites}
+                    >
+                      {item.favorites ? <IoStar /> : <IoStarOutline />}
+                    </StarButton>
+                    <ItemContent>
+                      <ItemName>{item.name}</ItemName>
+                      <ItemId>ID: {item.id}</ItemId>
+                    </ItemContent>
+                  </ItemLeft>
+                  
+                  <DeleteButton onClick={(e) => handleDelete(e, item.id)}>
+                    <IoTrashOutline />
+                  </DeleteButton>
+                </ListItem>
+              ))}
+            </List>
           ) : (
             <EmptyState>
-              <p>결과가 없습니다</p>
-              <span>검색어를 다시 확인해주세요.</span>
+              <p>검색 결과가 없습니다.</p>
+              <span>새로운 포메이션을 만들어보세요!</span>
             </EmptyState>
           )}
-        </ItemList>
+        </Body>
 
         <Footer>
-          <Hint>길게 눌러 상세 전술을 미리 볼 수 있어요</Hint>
-          <CloseAction onClick={onClose}>닫기</CloseAction>
+          <CancelButton onClick={onClose}>닫기</CancelButton>
         </Footer>
-      </ModalCard>
-    </ModalOverlay>
+      </ModalContainer>
+    </Overlay>
   );
 };
 
 export default FormationListModal;
 
+/* ===================== Styled Components ===================== */
+
 const fadeIn = keyframes`
-  from {
-    opacity: 0;
-    transform: translateY(12px) scale(0.98);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
+  from { opacity: 0; }
+  to { opacity: 1; }
 `;
 
-const ModalOverlay = styled.div`
+const popIn = keyframes`
+  0% { transform: scale(0.95); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+`;
+
+const Overlay = styled.div`
   position: fixed;
   inset: 0;
-  background: rgba(5, 10, 20, 0.65);
-  backdrop-filter: blur(6px);
+  background-color: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(5px);
+  z-index: 2000;
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000;
-  animation: ${fadeIn} 0.25s ease;
+  padding: 20px;
+  animation: ${fadeIn} 0.2s ease-out;
+  overflow: hidden; 
 `;
 
-const ModalCard = styled.div`
-  width: min(360px, calc(100% - 40px));
-  background: linear-gradient(180deg, #ffffff 0%, #f8fafd 100%);
-  border-radius: 24px;
-  padding: 28px 24px 20px;
-  box-shadow: 0 30px 60px rgba(15, 30, 60, 0.2);
+const ModalContainer = styled.div`
+  width: 100%;
+  max-width: 400px;
+  background: #fff;
+  border-radius: 28px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+  
+  /* ⭐️ [핵심] Flex Layout으로 내부 영역 제어 */
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  animation: ${fadeIn} 0.3s ease forwards;
+  
+  animation: ${popIn} 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  
+  /* ⭐️ [핵심] 최대 높이를 화면의 80%로 제한 (모바일 주소창 고려 dvh 사용) */
+  max-height: 40vh; 
+  max-height: 40dvh; 
+  
+  margin: auto;
+  position: relative;
 `;
 
 const Header = styled.div`
+  padding: 24px 24px 16px;
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 12px;
+  flex-shrink: 0; /* 스크롤 시 줄어들지 않음 */
 `;
 
-const Title = styled.h3`
-  margin: 0;
-  font-size: 20px;
-  color: var(--color-dark2);
-`;
-
-const Subtitle = styled.p`
-  margin: 4px 0 0;
-  font-size: 13px;
-  color: var(--color-dark1);
-`;
-
-const CloseButton = styled.button`
-  border: none;
-  background: rgba(0, 0, 0, 0.05);
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  font-size: 18px;
-  cursor: pointer;
-  transition: background 0.2s ease;
-
-  &:hover {
-    background: rgba(0, 0, 0, 0.1);
+const HeaderTitle = styled.div`
+  h3 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 4px;
+  }
+  p {
+    margin: 0;
+    font-size: 13px;
+    color: #6b7280;
   }
 `;
 
-const SearchBar = styled.div`
-  position: relative;
+const CloseButton = styled.button`
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #9ca3af;
+  padding: 4px;
+  border-radius: 50%;
+  transition: background 0.2s;
+  display: flex;
+
+  &:hover {
+    background: #f3f4f6;
+    color: #4b5563;
+  }
+`;
+
+const SearchSection = styled.div`
+  padding: 0 24px 16px;
+  flex-shrink: 0; /* 스크롤 시 줄어들지 않음 */
+`;
+
+const SearchWrapper = styled.div`
   display: flex;
   align-items: center;
-  border-radius: 16px;
-  border: 1px solid #e2e6ef;
+  background: #f3f4f6;
+  border-radius: 14px;
   padding: 0 12px;
-  background: #f8f9fd;
+  height: 44px;
+  border: 1px solid transparent;
+  transition: all 0.2s;
+
+  &:focus-within {
+    background: #fff;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  }
 `;
 
 const SearchInput = styled.input`
   flex: 1;
-  border: none;
   background: transparent;
-  padding: 12px 0;
+  border: none;
+  margin-left: 8px;
   font-size: 14px;
-  color: var(--color-dark2);
+  color: #1f2937;
+  height: 100%;
 
   &:focus {
     outline: none;
   }
+  &::placeholder {
+    color: #9ca3af;
+  }
 `;
 
-const SearchHint = styled.span`
-  font-size: 12px;
-  color: #a0a8b8;
+/* ⭐️ [핵심] Body: 남은 공간을 차지하고 스크롤 발생 */
+const Body = styled.div`
+  flex: 1; /* 남은 공간 모두 차지 */
+  min-height: 0; /* Flex 자식 스크롤 버그 방지 */
+  overflow-y: auto; /* 내용 넘치면 스크롤 */
+  padding: 0 24px 24px;
+  
+  /* iOS 스크롤 부드럽게 */
+  -webkit-overflow-scrolling: touch;
+  
+  /* 스크롤바 숨김 */
+  scrollbar-width: none;
+  &::-webkit-scrollbar { display: none; }
 `;
 
-const ItemList = styled.div`
+const List = styled.div`
+  padding-top:2px;
   display: flex;
   flex-direction: column;
   gap: 10px;
-  max-height: 320px;
-  overflow-y: auto;
-  padding-right: 4px;
 `;
 
-const Item = styled.div`
+const ListItem = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 14px 16px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  padding: 12px 16px;
   border-radius: 16px;
-  background: white;
-  border: 1px solid transparent;
-  transition: all 0.2s ease;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0; /* 리스트 아이템이 찌그러지지 않도록 */
 
   &:hover {
-    border-color: #dfe3ec;
-    box-shadow: 0 8px 18px rgba(8, 24, 68, 0.06);
+    border-color: #3b82f6;
+    background: #f0f9ff;
     transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.08);
   }
 `;
 
-const ItemInfo = styled.div`
+const ItemLeft = styled.div`
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
 `;
 
-const StarButton = styled.button<{ isActive: boolean }>`
-  background: none;
-  border: none;
+const StarButton = styled.div<{ active: boolean }>`
   font-size: 20px;
+  color: ${(props) => (props.active ? "#fbbf24" : "#d1d5db")};
+  display: flex;
+  align-items: center;
+  padding: 4px;
   cursor: pointer;
-  color: ${(props) => (props.isActive ? "#f0c419" : "#c5c9d7")};
-  transition: transform 0.2s ease;
+  transition: transform 0.2s;
 
   &:hover {
-    transform: scale(1.1);
+    transform: scale(1.15);
   }
+`;
+
+const ItemContent = styled.div`
+  display: flex;
+  flex-direction: column;
 `;
 
 const ItemName = styled.span`
   font-size: 15px;
   font-weight: 600;
-  color: var(--color-dark2);
+  color: #1f2937;
 `;
 
-const ItemActions = styled.div`
+const ItemId = styled.span`
+  font-size: 11px;
+  color: #9ca3af;
+  margin-top: 2px;
+`;
+
+const DeleteButton = styled.div`
+  color: #9ca3af;
+  padding: 8px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
-  gap: 8px;
-`;
-
-const GhostButton = styled.button`
-  border: none;
-  background: rgba(0, 0, 0, 0.04);
-  border-radius: 12px;
-  padding: 6px 12px;
-  font-size: 13px;
   cursor: pointer;
-  color: #7d8597;
+  transition: all 0.2s;
 
   &:hover {
-    background: rgba(0, 0, 0, 0.08);
+    background: #fee2e2;
+    color: #ef4444;
   }
 `;
 
 const EmptyState = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 0;
   text-align: center;
-  padding: 40px 20px;
-  color: #9ca3b5;
+  color: #9ca3af;
 
   p {
     margin: 0 0 6px;
     font-weight: 600;
+    color: #6b7280;
   }
-
   span {
     font-size: 13px;
   }
 `;
 
 const Footer = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding-top: 8px;
-  border-top: 1px solid #eef1f7;
+  padding: 16px 24px 24px;
+  border-top: 1px solid #f0f2f5;
+  background: #fff;
+  flex-shrink: 0; /* 스크롤 시 줄어들지 않음 */
+  border-radius: 28px;
 `;
 
-const Hint = styled.span`
-  font-size: 12px;
-  color: #9aa2b5;
-`;
-
-const CloseAction = styled.button`
-  border: none;
-  background: linear-gradient(135deg, var(--color-main) 0%, #0c5135 100%);
-  color: white;
-  border-radius: 14px;
-  padding: 10px 18px;
-  font-size: 13px;
+const CancelButton = styled.button`
+  width: 100%;
+  padding: 14px;
+  border-radius: 16px;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  color: #4b5563;
+  font-size: 15px;
+  font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 10px 18px rgba(13, 80, 54, 0.3);
+  transition: all 0.2s;
 
   &:hover {
-    transform: translateY(-1px);
+    background: #f9fafb;
+    border-color: #d1d5db;
   }
 `;

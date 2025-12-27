@@ -112,7 +112,7 @@ const LoginPage: React.FC = () => {
       const response = await apiClient.post(
         "api/sign/signin/sign-in",
         {
-          email: email,
+          email: email, 
           password: password,
         },
         {

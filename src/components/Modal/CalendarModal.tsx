@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import styled from "styled-components";
+import styled, { keyframes, css } from "styled-components";
 import {
   format,
   addMonths,
@@ -15,27 +15,47 @@ import {
 
 interface CalendarProps {
   onDateSelect: (date: Date) => void;
-  onClose: () => void; // Callback to close the modal
-  selectedDate?: Date | null; // 선택된 날짜 (Date 타입)
+  onClose: () => void;
+  selectedDate?: Date | null;
 }
+
+// 아이콘 컴포넌트 (SVG)
+const ChevronLeft = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+    <path
+      d="M15 18L9 12L15 6"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
+const ChevronRight = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+    <path
+      d="M9 18L15 12L9 6"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
 
 const CalendarModal: React.FC<CalendarProps> = ({
   onDateSelect,
   onClose,
   selectedDate,
 }) => {
-  // 오늘 기준
   const today = new Date();
-  const minMonth = startOfMonth(today); // 오늘이 속한 달의 1일
-
-  // props로 들어온 selectedDate 사용 (없으면 null)
+  const minMonth = startOfMonth(today);
   const selectedDateObj: Date | null = selectedDate ?? null;
 
-  // 처음 열릴 때 보여줄 달: selectedDate가 있으면 그 달, 없으면 오늘
   const [currentMonth, setCurrentMonth] = useState<Date>(() => {
     if (selectedDateObj) {
       const startOfSelectedMonth = startOfMonth(selectedDateObj);
-      // selectedDate의 달이 오늘보다 과거면 오늘 달을 기준으로
       if (isBefore(startOfSelectedMonth, minMonth)) {
         return today;
       }
@@ -50,26 +70,28 @@ const CalendarModal: React.FC<CalendarProps> = ({
 
   const handlePrevMonth = () => {
     const prevMonth = subMonths(currentMonth, 1);
-    // 이전 달의 시작일이 오늘이 속한 달의 시작일보다 이전이면 이동 금지
-    if (isBefore(startOfMonth(prevMonth), minMonth)) {
-      return;
-    }
+    if (isBefore(startOfMonth(prevMonth), minMonth)) return;
     setCurrentMonth(prevMonth);
   };
 
   const handleDayClick = (date: Date) => {
-    // 오늘보다 이전 날짜는 선택 불가 (단, 오늘은 허용)
-    if (isBefore(date, today) && !isSameDay(date, today)) {
-      return;
-    }
+    if (isBefore(date, today) && !isSameDay(date, today)) return;
     onDateSelect(date);
-    onClose();
+    setTimeout(onClose, 150);
   };
 
-  // [오늘] 버튼: 모달은 그대로, "보는 달"만 오늘이 속한 달로 이동
   const handleTodayClick = () => {
     setCurrentMonth(today);
   };
+
+  const isPrevDisabled = isBefore(
+    startOfMonth(subMonths(currentMonth, 1)),
+    minMonth
+  );
+
+  // ⭐️ [수정된 부분] 날짜 형식을 "yyyy년"으로 변경
+  const yearLabel = format(currentMonth, "yyyy년"); 
+  const monthLabel = format(currentMonth, "M월");
 
   const renderWeekDays = () => {
     const weekDays = ["일", "월", "화", "수", "목", "금", "토"];
@@ -91,68 +113,67 @@ const CalendarModal: React.FC<CalendarProps> = ({
   const renderDays = () => {
     const monthStart = startOfMonth(currentMonth);
     const monthEnd = endOfMonth(monthStart);
-    const startDate = startOfWeek(monthStart); // 기본: 일요일 시작
+    const startDate = startOfWeek(monthStart);
     const endDate = endOfWeek(monthEnd);
 
     const days: JSX.Element[] = [];
-
     let day = startDate;
-    while (day <= endDate) {
-      const formattedDate = format(day, "d");
-      const cloneDay = new Date(day);
 
+    while (day <= endDate) {
+      const cloneDay = new Date(day);
+      const isCurrentMonth = format(currentMonth, "M") === format(cloneDay, "M");
       const isDisabled =
         isBefore(cloneDay, today) && !isSameDay(cloneDay, today);
-
-      // props로 들어온 selectedDate와 같은 날이면 하이라이트
       const isSelected =
         selectedDateObj !== null ? isSameDay(cloneDay, selectedDateObj) : false;
+      const isToday = isSameDay(cloneDay, today);
 
       days.push(
-        <Day
-          key={cloneDay.toString()}
-          isDisabled={isDisabled}
-          isSelected={isSelected}
-          onClick={() => handleDayClick(cloneDay)}
-        >
-          {formattedDate}
-        </Day>
+        <DayWrapper key={cloneDay.toString()}>
+          <Day
+            isCurrentMonth={isCurrentMonth}
+            isDisabled={isDisabled}
+            isSelected={isSelected}
+            isToday={isToday}
+            onClick={() => !isDisabled && handleDayClick(cloneDay)}
+          >
+            {format(cloneDay, "d")}
+          </Day>
+        </DayWrapper>
       );
       day = addDays(day, 1);
     }
-    return <DaysGrid>{days}</DaysGrid>;
+    
+    return <DaysGrid key={currentMonth.toString()}>{days}</DaysGrid>;
   };
-
-  // 현재 보고 있는 달 기준으로 이전 달 버튼 비활성화 여부 계산
-  const isPrevDisabled = isBefore(
-    startOfMonth(subMonths(currentMonth, 1)),
-    minMonth
-  );
-
-  const yearLabel = format(currentMonth, "yyyy년");
-  const monthLabel = format(currentMonth, "M월"); // 1월, 2월, 3월 ...
 
   return (
     <Overlay onClick={onClose}>
       <Modal onClick={(e) => e.stopPropagation()}>
-        <CalendarHeader>
-          <Button onClick={handlePrevMonth} disabled={isPrevDisabled}>
-            이전 달
-          </Button>
+        <Header>
+          <NavButton onClick={handlePrevMonth} disabled={isPrevDisabled}>
+            <ChevronLeft />
+          </NavButton>
 
-          <CurrentMonth>
-            <span className="year">{yearLabel}</span>
-            <span className="month">{monthLabel}</span>
-            <TodayButton type="button" onClick={handleTodayClick}>
-              오늘
-            </TodayButton>
-          </CurrentMonth>
+          <MonthDisplay>
+            {/* ⭐️ [수정된 부분] 점(.)을 제거하고 띄어쓰기로 연결 */}
+            <span className="label">
+              {yearLabel} {monthLabel}
+            </span>
+            {!isSameDay(currentMonth, today) && (
+              <TodayBadge onClick={handleTodayClick}>오늘</TodayBadge>
+            )}
+          </MonthDisplay>
 
-          <Button onClick={handleNextMonth}>다음 달</Button>
-        </CalendarHeader>
+          <NavButton onClick={handleNextMonth}>
+            <ChevronRight />
+          </NavButton>
+        </Header>
 
-        {renderWeekDays()}
-        {renderDays()}
+        <CalendarBody>
+          {renderWeekDays()}
+          {renderDays()}
+        </CalendarBody>
       </Modal>
     </Overlay>
   );
@@ -160,111 +181,191 @@ const CalendarModal: React.FC<CalendarProps> = ({
 
 export default CalendarModal;
 
-// Styled components
+/* --- Styled Components --- */
+
+const fadeIn = keyframes`
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+`;
+
+const popIn = keyframes`
+  0% { transform: scale(0.9); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+`;
+
 const Overlay = styled.div`
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 1000;
+  animation: ${fadeIn} 0.3s ease-out;
 `;
 
 const Modal = styled.div`
   background: white;
-  padding: 20px;
-  border-radius: 10px;
-  width: 300px;
+  padding: 24px;
+  border-radius: 24px;
+  width: 340px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1), 0 4px 12px rgba(0,0,0,0.05);
   z-index: 1001;
-  position: relative;
+  user-select: none;
+  animation: ${popIn} 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 `;
 
-const CalendarHeader = styled.div`
+const Header = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
+  margin-bottom: 24px;
+  padding: 0 4px;
 `;
 
-const CurrentMonth = styled.div`
+const MonthDisplay = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
+  gap: 4px;
 
-  .year {
-    font-size: 12px;
-    color: #999;
-    margin-bottom: 2px;
-  }
-
-  .month {
+  .label {
     font-size: 18px;
     font-weight: 700;
-    margin-bottom: 4px;
+    color: #111;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   }
 `;
 
-const TodayButton = styled.button`
-  padding: 2px 10px;
-  border-radius: 999px;
-  border: 1px solid #ddd;
-  background-color: #f5f5f5;
+const TodayBadge = styled.button`
+  background: #f0f2f5;
+  border: none;
+  padding: 4px 10px;
+  border-radius: 12px;
   font-size: 11px;
+  color: #555;
+  font-weight: 600;
   cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    background: #e4e6eb;
+    color: #333;
+  }
+`;
+
+const NavButton = styled.button`
+  background: transparent;
+  border: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #333;
+  transition: all 0.2s ease;
+
+  &:hover:not(:disabled) {
+    background-color: #f3f4f6;
+  }
+
+  &:active:not(:disabled) {
+    transform: scale(0.9);
+  }
+
+  &:disabled {
+    color: #e0e0e0;
+    cursor: default;
+  }
+`;
+
+const CalendarBody = styled.div`
+  /* 컨텐츠 영역 */
 `;
 
 const WeekDaysRow = styled.div`
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 5px;
-  margin-bottom: 4px;
+  margin-bottom: 12px;
 `;
 
 const WeekDay = styled.div<{ isSunday?: boolean; isSaturday?: boolean }>`
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  text-align: center;
   font-size: 12px;
-  font-weight: 500;
+  font-weight: 600;
   color: ${({ isSunday, isSaturday }) =>
-    isSunday ? "#e53935" : isSaturday ? "#1e88e5" : "#666"};
+    isSunday ? "#ff4d4f" : isSaturday ? "#1890ff" : "#8c8c8c"};
+  padding: 8px 0;
 `;
 
 const DaysGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 5px;
+  row-gap: 8px;
+  animation: ${fadeIn} 0.3s ease;
 `;
 
-const Day = styled.div<{ isSelected: boolean; isDisabled: boolean }>`
-  padding: 8px 5px;
-  background: ${({ isSelected, isDisabled }) =>
-    isDisabled ? "#e0e0e0" : isSelected ? "#a4d65e" : "none"};
-  color: ${({ isDisabled }) => (isDisabled ? "#ccc" : "black")};
-  cursor: ${({ isDisabled }) => (isDisabled ? "default" : "pointer")};
-  text-align: center;
+const DayWrapper = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  aspect-ratio: 1;
+`;
+
+interface DayProps {
+  isSelected: boolean;
+  isDisabled: boolean;
+  isCurrentMonth: boolean;
+  isToday: boolean;
+}
+
+const Day = styled.div<DayProps>`
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+  position: relative;
+
+  color: ${({ isDisabled, isCurrentMonth }) =>
+    isDisabled
+      ? "#d1d5db"
+      : !isCurrentMonth
+      ? "#9ca3af"
+      : "#1f2937"};
+
+  background-color: ${({ isSelected }) =>
+    isSelected ? "#3b82f6" : "transparent"};
+
+  color: ${({ isSelected, isDisabled }) =>
+    isSelected && !isDisabled ? "#ffffff" : undefined};
+
+  border: ${({ isToday, isSelected }) =>
+    isToday && !isSelected ? "1.5px solid #3b82f6" : "1.5px solid transparent"};
+  
+  ${({ isDisabled }) =>
+    isDisabled &&
+    css`
+      cursor: default;
+      pointer-events: none;
+    `}
 
   &:hover {
-    background-color: ${({ isDisabled }) =>
-      isDisabled ? "#e0e0e0" : "#a4d65e"};
+    background-color: ${({ isSelected, isDisabled }) =>
+      !isDisabled && !isSelected ? "#eff6ff" : undefined};
+    color: ${({ isSelected, isDisabled }) =>
+      !isDisabled && !isSelected ? "#3b82f6" : undefined};
   }
-`;
 
-const Button = styled.button`
-  padding: 8px 16px;
-  border: none;
-  background-color: #a4d65e;
-  color: black;
-  cursor: pointer;
-  border-radius: 5px;
-  margin-bottom: 10px;
-
-  &:disabled {
-    background-color: #ccc;
-    cursor: not-allowed;
+  &:active {
+    transform: ${({ isDisabled }) => (!isDisabled ? "scale(0.9)" : "none")};
   }
 `;
