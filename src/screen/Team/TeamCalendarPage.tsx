@@ -7,6 +7,7 @@ import apiClient from "../../api/apiClient";
 import { getAccessToken } from "../../utils/authUtils";
 import { useUserStore } from "../../stores/userStore";
 import { HiPlus, HiXMark } from "react-icons/hi2";
+import GameStrategy from "./Manager/GameStrategy/GameStrategy";
 
 // --- Types ---
 interface ScheduleApiData {
@@ -82,6 +83,7 @@ const TeamCalendarPage: React.FC = () => {
     null
   );
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [canEdit, setCanEdit] = useState(false);
 
   // Add Form
   const [newSchedule, setNewSchedule] = useState({
@@ -94,9 +96,23 @@ const TeamCalendarPage: React.FC = () => {
 
   const userRole = teamId ? getRoleByTeamId(Number(teamId)) : undefined;
   const isManager =
-    userRole && ["MANAGER", "SUB_MANAGER"].includes(userRole.role);
+    userRole && ["ROLE_MANAGER","MANAGER", "SUB_MANAGER"].includes(userRole.role);
   const isDevMode = getAccessToken()?.startsWith("dev-");
-  const canEdit = isManager || isDevMode;
+
+  useEffect(() => {
+    setCanEdit(Boolean(isManager || isDevMode));
+  }, [isManager, isDevMode]);
+  useEffect(() => {
+    const originalOverflow = document.body.style.overflow;
+    if (isDetailModalOpen || isAddModalOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = originalOverflow || "";
+    }
+    return () => {
+      document.body.style.overflow = originalOverflow || "";
+    };
+  }, [isDetailModalOpen, isAddModalOpen]);
 
   const fetchSchedules = async () => {
     if (!teamId) return;
@@ -333,8 +349,15 @@ const TeamCalendarPage: React.FC = () => {
 
       {/* Modals are represented with the same structure but simplified for brevity in this full file write */}
       {isDetailModalOpen && selectedEvent && (
-        <ModalOverlay onClick={() => setIsDetailModalOpen(false)}>
-          <DetailModalContent onClick={(e) => e.stopPropagation()}>
+        <ModalOverlay
+          onClick={() => setIsDetailModalOpen(false)}
+          role="presentation"
+        >
+          <DetailModalContent
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+          >
             <ModalHeader>
               <ModalTitle>경기 상세 정보</ModalTitle>
               <CloseBtn onClick={() => setIsDetailModalOpen(false)}>
@@ -369,9 +392,16 @@ const TeamCalendarPage: React.FC = () => {
       )}
 
       {isAddModalOpen && (
-        <ModalOverlay>
-          <AddModalContent onClick={(e) => e.stopPropagation()}>
-            <ModalHeader>
+        <ModalOverlay
+          onClick={() => setIsAddModalOpen(false)}
+          role="presentation"
+        >
+          <AddModalContent
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+          >
+            {/* <ModalHeader>
               <ModalTitle>새 일정 추가</ModalTitle>
               <CloseBtn onClick={() => setIsAddModalOpen(false)}>
                 <HiXMark />
@@ -443,7 +473,8 @@ const TeamCalendarPage: React.FC = () => {
               <SubmitButton onClick={handleCreateSchedule}>
                 일정 등록
               </SubmitButton>
-            </AddFormBody>
+            </AddFormBody> */}
+            <GameStrategy />
           </AddModalContent>
         </ModalOverlay>
       )}
@@ -598,7 +629,7 @@ const EmptyText = styled.p`
 `;
 const FloatingActionButton = styled.button`
   position: fixed;
-  bottom: 25px;
+  bottom:100px;
   right: 25px;
   width: 56px;
   height: 56px;
@@ -626,7 +657,8 @@ const ModalOverlay = styled.div`
   align-items: center;
   justify-content: center;
   z-index: 200;
-  padding: 20px;
+  padding: 20px 20px 100px;
+  overflow-y: auto;
 `;
 const ModalBase = styled.div`
   background: white;
@@ -636,13 +668,19 @@ const ModalBase = styled.div`
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
   overflow: hidden;
 `;
-const DetailModalContent = styled(ModalBase)``;
-const AddModalContent = styled(ModalBase)``;
+const DetailModalContent = styled(ModalBase)`
+  max-height: 90vh;
+  overflow-y: auto;
+`;
+const AddModalContent = styled(ModalBase)`
+  max-height: 80vh;
+  overflow-y: auto;
+`;
 const ModalHeader = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 20px;
+ // padding: 16px 20px;
   border-bottom: 1px solid #eee;
 `;
 const ModalTitle = styled.h4`

@@ -385,15 +385,33 @@ const MainPage: React.FC = () => {
                 <HiCalendarDays color="var(--color-info)" />
                 경기 일정
               </SectionTitleWithIcon>
-              <MoreButton
-                onClick={() =>
-                  navigate(`/team/${currentTeamInfo.teamId}/calendar`, {
-                    state: { teamName: teamData.teamName },
-                  })
-                }
-              >
-                달력보기 <HiChevronRight size={16} />
-              </MoreButton>
+              <HeaderActionGroup>
+                {(selectedTeam.role === "ROLE_MANAGER" ||
+                  selectedTeam.role === "MANAGER" ||
+                  selectedTeam.role === "SUB_MANAGER") && (
+                  <MoreButton
+                    onClick={() =>
+                      navigate(
+                        `/manager/${currentTeamInfo.teamId}/team-strategy/1`,
+                        {
+                          state: { teamName: teamData.teamName },
+                        }
+                      )
+                    }
+                  >
+                    일정 추가하기
+                  </MoreButton>
+                )}
+                <MoreButton
+                  onClick={() =>
+                    navigate(`/team/${currentTeamInfo.teamId}/calendar`, {
+                      state: { teamName: teamData.teamName },
+                    })
+                  }
+                >
+                  달력보기 <HiChevronRight size={16} />
+                </MoreButton>
+              </HeaderActionGroup>
             </SectionHeader>
             <GameList>
               {gameScheduleList?.length > 0 ? (
@@ -864,4 +882,9 @@ const JoinTeamButton = styled.button`
   &:hover {
     background: var(--color-main-darker);
   }
+`;
+const HeaderActionGroup = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px; /* 버튼 사이의 간격 */
 `;

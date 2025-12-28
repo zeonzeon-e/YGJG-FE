@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import styled from "styled-components";
 import GlobalStyles from "../../../../components/Styled/GlobalStyled";
 import Header2 from "../../../../components/Header/Header2/Header2";
@@ -20,7 +20,10 @@ interface CirclePosition {
   color: string;
   detail_position: string;
   name: string;
+  playerId?: number;
 }
+
+const CIRCLE_SIZE = 44;
 
 const GameStrategy: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
@@ -32,29 +35,70 @@ const GameStrategy: React.FC = () => {
   const [showMapModal, setShowMapModal] = useState(false);
   const [selectedAddress, setSelectedAddress] = useState<string>("");
   const [showFormationModal, setShowFormationModal] = useState(false);
-  const [formationCircles, setFormationCircles] = useState<CirclePosition[]>(
-    []
-  );
   const [formationName, setFormationName] = useState<string>("");
   const [showFormationModal2, setShowFormationModal2] = useState(false);
+
+  const [formationCircles, setFormationCircles] = useState<CirclePosition[]>([]);
+  const previewRef = useRef<HTMLDivElement | null>(null);
+  const lastPreviewWH = useRef<{ w: number; h: number }>({ w: 0, h: 0 });
 
   const handleAddressSelect = (address: string) => {
     setSelectedAddress(address);
   };
 
-  const handleFormationSave2 = (circles: CirclePosition[], name?: string) => {
-    setFormationCircles(circles);
-    if (name) {
-      setFormationName(name);
-    }
-  };
-
   const handleFormationSave = (circles: CirclePosition[], name?: string) => {
     setFormationCircles(circles);
-    if (name) {
-      setFormationName(name);
-    }
+    if (name) setFormationName(name);
   };
+
+  const handleFormationSave2 = (circles: CirclePosition[], name?: string) => {
+    setFormationCircles(circles);
+    if (name) setFormationName(name);
+  };
+
+  useEffect(() => {
+    const el = previewRef.current;
+    if (!el) return;
+
+    const rect = el.getBoundingClientRect();
+    if (lastPreviewWH.current.w === 0) {
+      lastPreviewWH.current = { w: rect.width, h: rect.height };
+    }
+
+    const updateSize = () => {
+      const currentRect = el.getBoundingClientRect();
+      const prev = lastPreviewWH.current;
+
+      if (prev.w !== 0 && (prev.w !== currentRect.width || prev.h !== currentRect.height)) {
+        const sx = currentRect.width / prev.w;
+        const sy = currentRect.height / prev.h;
+
+        setFormationCircles((prevCircles) =>
+          prevCircles.map((c) => ({
+            ...c,
+            x: c.x * sx,
+            y: c.y * sy,
+          }))
+        );
+        lastPreviewWH.current = { w: currentRect.width, h: currentRect.height };
+      }
+    };
+
+    const RO = (window as any).ResizeObserver as typeof ResizeObserver | undefined;
+    let ro: ResizeObserver | null = null;
+
+    if (RO) {
+      ro = new RO(() => updateSize());
+      ro.observe(el);
+    } else {
+      window.addEventListener("resize", updateSize);
+    }
+
+    return () => {
+      ro?.disconnect();
+      window.removeEventListener("resize", updateSize);
+    };
+  }, [formationCircles]);
 
   return (
     <>
@@ -93,11 +137,7 @@ const GameStrategy: React.FC = () => {
                 준비 중인 경기의 상대 팀을 입력해주세요.
               </SectionDescription>
             </SectionHeader>
-            <StyledInput
-              type="text"
-              placeholder="상대팀명을 입력해주세요"
-              title="상대팀명을 입력해주세요"
-            />
+            <StyledInput type="text" placeholder="상대팀명을 입력해주세요" />
           </SectionCard>
 
           <SectionCard>
@@ -135,6 +175,7 @@ const GameStrategy: React.FC = () => {
                 팀의 플레이 방식이나 전략 메모를 자유롭게 작성하세요.
               </SectionDescription>
             </SectionHeader>
+            {/* ⭐️ 문제 해결된 TextArea */}
             <StrategyTextarea
               placeholder="경기 전술을 작성해주세요"
               title="경기전술을 작성해주세요"
@@ -145,8 +186,7 @@ const GameStrategy: React.FC = () => {
             <SectionHeader>
               <SectionTitle>포메이션</SectionTitle>
               <SectionDescription>
-                새로운 포메이션을 만들거나 저장된 포메이션을 불러올 수
-                있습니다.
+                새로운 포메이션을 만들거나 저장된 포메이션을 불러올 수 있습니다.
               </SectionDescription>
             </SectionHeader>
             <ButtonRow>
@@ -157,13 +197,17 @@ const GameStrategy: React.FC = () => {
                 기존 포메이션 불러오기
               </FormationButton>
             </ButtonRow>
-            <FormationNameLabel>
-              {formationName || "포메이션 이름을 입력해주세요"}
-            </FormationNameLabel>
-            <FormationPreview>
+            
+            <FormationNameLabel>{formationName || ""}</FormationNameLabel>
+            
+            <FormationPreview ref={previewRef}>
               <FormationImage
                 src={`${process.env.PUBLIC_URL}/formation.png`}
                 alt="Formation Field"
+                onLoad={() => {
+                   const rect = previewRef.current?.getBoundingClientRect();
+                   if (rect) lastPreviewWH.current = { w: rect.width, h: rect.height };
+                }}
               />
               {formationCircles.map((circle) => (
                 <FixedCircle
@@ -174,9 +218,12 @@ const GameStrategy: React.FC = () => {
                     backgroundColor: circle.color,
                   }}
                 >
-                  {circle.detail_position}
-                  <br />
-                  {circle.name}
+                  <div className="label">
+                    {circle.detail_position && (
+                      <span className="pos">{circle.detail_position}</span>
+                    )}
+                    {circle.name && <span className="name">{circle.name}</span>}
+                  </div>
                 </FixedCircle>
               ))}
             </FormationPreview>
@@ -188,6 +235,7 @@ const GameStrategy: React.FC = () => {
         </ContentWrapper>
       </PageWrapper>
 
+      {/* --- Modals --- */}
       {showDatePicker && (
         <CalendarModal
           onDateSelect={(date: Date) => {
@@ -204,12 +252,10 @@ const GameStrategy: React.FC = () => {
         <TimePickerModal
           onTimeSelect={(time: string) => {
             setStartTime(time);
-            setEndTime(time + 3);
+            setEndTime(time);
             setShowSTimePicker(false);
           }}
-          onTimeEnd={(time: string) => {
-            setEndTime(time);
-          }}
+          onTimeEnd={(time: string) => setEndTime(time)}
           onClose={() => setShowSTimePicker(false)}
         />
       )}
@@ -230,12 +276,14 @@ const GameStrategy: React.FC = () => {
           onAddressSelect={handleAddressSelect}
         />
       )}
+
       {showFormationModal && (
         <FormationModal
           onClose={() => setShowFormationModal(false)}
           onSave={handleFormationSave}
         />
       )}
+      
       {showFormationModal2 && (
         <FormationListModal
           onClose={() => setShowFormationModal2(false)}
@@ -248,28 +296,53 @@ const GameStrategy: React.FC = () => {
 
 export default GameStrategy;
 
-// Styled Components
+/* ===================== Styled Components ===================== */
+
 const PageWrapper = styled.div`
-  min-height: 100vh;
+  width: 100%;
+  /* ⭐️ 중요: 높이를 100vh로 고정하지 말고, 최소 높이만 지정하여 내용만큼 늘어나게 함 */
+  min-height: 100vh; 
+  /* 모바일 주소창 대응 */
+  min-height: 100dvh; 
+  
   background: #f5f7fa;
-  padding-bottom: 40px;
+  padding-bottom: 80px; /* 하단 버튼이 가려지지 않게 여백 충분히 */
+
+  /* ⭐️ 모바일 전체 스크롤 허용 */
+  overflow-y: auto;
+  overflow-x: hidden; /* 가로 스크롤 방지 */
+  
+  /* iOS 관성 스크롤 활성화 */
+  -webkit-overflow-scrolling: touch;
 `;
 
 const ContentWrapper = styled.div`
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
   padding: 20px;
+  box-sizing: border-box;
+
   display: flex;
   flex-direction: column;
   gap: 16px;
+
+  @media (max-width: 480px) {
+    padding: 16px;
+  }
 `;
 
 const SectionCard = styled.div`
   background: white;
-  border-radius: 20px;
-  padding: 20px;
-  box-shadow: 0 12px 30px rgba(28, 43, 70, 0.08);
+  border-radius: 24px;
+  padding: 24px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
   display: flex;
   flex-direction: column;
   gap: 16px;
+  /* 카드 자체가 컨테이너를 넘지 않도록 설정 */
+  width: 100%;
+  box-sizing: border-box; 
 `;
 
 const SectionHeader = styled.div`
@@ -287,121 +360,117 @@ const SectionTitle = styled.h3`
 
 const SectionDescription = styled.p`
   font-size: 13px;
-  color: var(--color-dark1);
+  color: #8b95a1;
   margin: 0;
+  line-height: 1.4;
 `;
 
 const ButtonRow = styled.div`
   display: flex;
-  gap: 12px;
+  gap: 10px;
   flex-wrap: wrap;
 `;
 
 const StrategyButton = styled.button`
   flex: 1;
-  min-width: 140px;
-  background: var(--color-light1);
-  border: 1px solid #e3e7ed;
-  color: var(--color-dark2);
+  min-width: 120px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  color: #374151;
   padding: 14px;
-  border-radius: 14px;
-  font-size: 14px;
-  font-family: "Pretendard-SemiBold";
-  cursor: pointer;
-  transition: all 0.2s ease;
-
-  &:hover {
-    border-color: var(--color-main);
-    box-shadow: 0 6px 16px rgba(14, 98, 68, 0.12);
-  }
-`;
-
-const SecondaryButton = styled.button`
-  padding: 12px 18px;
   border-radius: 12px;
-  border: 1px solid #dadfe7;
-  background: #f7f9fb;
   font-size: 14px;
-  font-family: "Pretendard-SemiBold";
-  color: var(--color-dark2);
+  font-family: "Pretendard-Medium";
   cursor: pointer;
   transition: all 0.2s ease;
+  line-height: 1.4;
 
   &:hover {
-    background: white;
     border-color: var(--color-main);
+    background: #f0fdf4;
     color: var(--color-main);
   }
 `;
 
-/** 공통 Input 스타일 */
+const SecondaryButton = styled.button`
+  padding: 10px 16px;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  background: white;
+  font-size: 13px;
+  font-family: "Pretendard-Medium";
+  color: #4b5563;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: #3b82f6;
+    color: #3b82f6;
+  }
+`;
+
 const StyledInput = styled(Input)`
   width: 100%;
-  border-radius: 8px;
-  border: 1px solid var(--color-border);
-  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  padding: 12px;
   font-size: 14px;
-  box-sizing: border-box;
-  background-color: #ffffff;
+  background-color: #f9fafb;
   margin-top: 8px;
-  min-height: 30px;
+  box-sizing: border-box; /* 필수 */
 
   &:focus {
     outline: none;
     border-color: var(--color-main);
-    box-shadow: 0 0 0 2px rgba(0, 132, 255, 0.15);
-  }
-
-  &::placeholder {
-    color: #b0b0b0;
+    background-color: white;
   }
 `;
 
 const StyledInput2 = styled(Input2)`
   width: 100%;
-  border-radius: 8px;
-  border: 1px solid var(--color-border);
-  padding: 8px 12px;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  padding: 10px 12px;
   font-size: 14px;
-  box-sizing: border-box;
-  background-color: #ffffff;
+  background-color: #f9fafb;
   margin-top: 8px;
+  box-sizing: border-box; /* 필수 */
 
   &:focus {
     outline: none;
     border-color: var(--color-main);
-    box-shadow: 0 0 0 2px rgba(0, 132, 255, 0.15);
-  }
-
-  &::placeholder {
-    color: #b0b0b0;
+    background-color: white;
   }
 `;
 
 const AddressStack = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
 `;
 
-/** 경기 전술용 textarea 스타일 */
+// ⭐️ [TextArea 문제 해결]
 const StrategyTextarea = styled.textarea`
   width: 100%;
-  min-height: 100px;
-  border-radius: 8px;
-  border: 1px solid var(--color-border);
-  padding: 10px 12px;
+  max-width: 100%; /* 부모 영역을 넘어가지 않도록 강제 */
+  min-height: 120px;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  padding: 14px;
   font-size: 14px;
-  box-sizing: border-box;
-  background-color: #ffffff;
+  background-color: #f9fafb;
   margin-top: 8px;
-  resize: vertical;
-  line-height: 1.5;
+  
+  box-sizing: border-box; /* 패딩 포함 크기 계산 */
+  resize: none; /* 사용자 임의 조절 방지 (레이아웃 보호) */
+  
+  line-height: 1.6;
+  font-family: "Pretendard-Regular";
 
   &:focus {
     outline: none;
     border-color: var(--color-main);
-    box-shadow: 0 0 0 2px rgba(0, 132, 255, 0.15);
+    background-color: white;
   }
 
   &::placeholder {
@@ -411,60 +480,87 @@ const StrategyTextarea = styled.textarea`
 
 const FormationButton = styled.button`
   flex: 1;
-  min-width: 140px;
-  background: #f5f7fa;
-  color: var(--color-dark2);
-  border: 1px solid #e1e6ef;
-  padding: 16px;
-  border-radius: 16px;
+  background: #fff;
+  color: #1f2937;
+  border: 1px solid #e5e7eb;
+  padding: 14px;
+  border-radius: 14px;
   cursor: pointer;
   font-size: 14px;
   font-family: "Pretendard-SemiBold";
+  box-shadow: 0 2px 5px rgba(0,0,0,0.03);
   transition: all 0.2s ease;
 
   &:hover {
-    background: white;
     border-color: var(--color-main);
-    box-shadow: 0 8px 18px rgba(14, 98, 68, 0.12);
+    color: var(--color-main);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
   }
 `;
 
 const FormationNameLabel = styled.div`
-  font-size: 14px;
-  font-family: "Pretendard-SemiBold";
-  color: var(--color-dark1);
-  margin-top: 8px;
+  font-size: 15px;
+  font-family: "Pretendard-Bold";
+  color: #374151;
+  margin-top: 4px;
+  padding-left: 4px;
 `;
 
 const FormationPreview = styled.div`
   position: relative;
   width: 100%;
-  border: 1px solid #e1e6ef;
-  border-radius: 20px;
+  border-radius: 16px;
   overflow: hidden;
-  background: #fefefe;
+  background: #e8f5e9;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,0.05);
 `;
 
 const FormationImage = styled.img`
   width: 100%;
   display: block;
+  object-fit: cover;
 `;
 
 const FixedCircle = styled.div`
   position: absolute;
-  width: 50px;
-  height: 50px;
+  width: ${CIRCLE_SIZE}px;
+  height: ${CIRCLE_SIZE}px;
   border-radius: 50%;
   display: flex;
   justify-content: center;
   align-items: center;
-  color: white;
-  font-size: 12px;
   text-align: center;
-  cursor: default; /* No drag */
-  box-shadow: 0 8px 12px rgba(0, 0, 0, 0.2);
+  color: #fff;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2), inset 0 1px 1px rgba(255,255,255,0.3);
+  border: 2px solid #fff;
+  pointer-events: none; 
+  z-index: 10;
+
+  .label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    line-height: 1;
+    
+    .pos {
+      font-size: 10px;
+      font-weight: 700;
+      opacity: 0.95;
+      margin-bottom: 1px;
+    }
+    .name {
+      font-size: 9px;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 38px;
+    }
+  }
 `;
 
 const PrimaryAction = styled.div`
-  padding: 4px 0 24px;
+  margin-top: 20px;
+  padding-bottom: 20px;
 `;

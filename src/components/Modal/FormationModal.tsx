@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
-import styled from "styled-components";
-import MiniButton from "../Button/MiniButton";
+import styled, { keyframes } from "styled-components";
+import { HiArrowPath } from "react-icons/hi2";
+import { IoClose } from "react-icons/io5"; // 닫기 아이콘 변경 (선택사항, 없으면 X 텍스트 유지)
 import TeamList3 from "../TeamList/TeamList3";
 import { useParams } from "react-router-dom";
 import apiClient from "../../api/apiClient";
@@ -22,7 +23,6 @@ interface CirclePosition {
   color: string;
   detail_position: string;
   name: string;
-  /** ✅ 원과 연결된 실제 선수 id (색상 원만 추가한 경우는 undefined) */
   playerId?: number;
 }
 
@@ -31,7 +31,7 @@ interface FormationModalProps {
   onSave: (circles: CirclePosition[], formationName?: string) => void;
 }
 
-const CIRCLE_SIZE = 50;
+const CIRCLE_SIZE = 44; // 원 크기도 살짝 줄여서 비율 맞춤 (기존 50 -> 44)
 
 const FormationModal: React.FC<FormationModalProps> = ({ onClose, onSave }) => {
   const [circles, setCircles] = useState<CirclePosition[]>([]);
@@ -44,34 +44,15 @@ const FormationModal: React.FC<FormationModalProps> = ({ onClose, onSave }) => {
   const [availablePlayers, setAvailablePlayers] = useState<Player[]>([]);
   const [initialPlayers, setInitialPlayers] = useState<Player[]>([]);
   const [formationName, setFormationName] = useState("");
-  const [formationList, setFormationList] = useState<Player[]>([]); // 필요시 사용
 
-  // 이름 에러 상태 & 인풋 ref
   const [nameError, setNameError] = useState(false);
-      const nameInputRef = useRef<HTMLInputElement | null>(null);
+  const nameInputRef = useRef<HTMLInputElement | null>(null);
 
   const { teamId } = useParams<{ teamId: string }>();
   const numericTeamId = Number(teamId);
 
   // 선수 목록 로딩
   useEffect(() => {
-    // const fetchGameName = async () => {
-    //   if (!numericTeamId) return;
-    //   try {
-    //     const response = await apiClient.get<Player[]>(
-    //       `/api/team-strategy/get-position/name`,
-    //       {
-    //         params: { positionName: "", teamId: numericTeamId },
-    //       }
-    //     );
-    //     setAvailablePlayers(response.data ?? []);
-    //     setInitialPlayers(response.data ?? []);
-    //   } catch (error) {
-    //     console.error("Failed to fetch players:", error);
-    //   }
-    // };
-    // fetchGameName();
-
     const fetchPlayers = async () => {
       if (!numericTeamId) return;
       try {
@@ -89,7 +70,7 @@ const FormationModal: React.FC<FormationModalProps> = ({ onClose, onSave }) => {
     };
     fetchPlayers();
   }, [numericTeamId]);
-console.log(availablePlayers)
+
   // 바디 스크롤 잠금
   useEffect(() => {
     const original = document.body.style.overflow;
@@ -153,23 +134,10 @@ console.log(availablePlayers)
   // 포지션별 색상
   const getColorByPosition = (pos: string): string => {
     const position = pos.toUpperCase().trim() || "";
-
-    if (["ST", "CF", "LW", "RW", "SS", "LF", "RF", "공격수"].includes(position)) {
-      return "var(--color-sk)";
-    }
-    if (["CM", "CAM", "CDM", "LM", "RM", "AM", "DM", "미드필더"].includes(position)) {
-      return "var(--color-mf)";
-    }
-    if (
-      ["CB", "LB", "RB", "LWB", "RWB", "WB", "SW", "WD", "수비수"].includes(
-        position
-      )
-    ) {
-      return "var(--color-dp)";
-    }
-    if (["GK", "골키퍼"].includes(position)) {
-      return "var(--color-gk)";
-    }
+    if (["ST", "CF", "LW", "RW", "SS", "LF", "RF", "공격수"].includes(position)) return "var(--color-sk, #e74c3c)";
+    if (["CM", "CAM", "CDM", "LM", "RM", "AM", "DM", "미드필더"].includes(position)) return "var(--color-mf, #2ecc71)";
+    if (["CB", "LB", "RB", "LWB", "RWB", "WB", "SW", "WD", "수비수"].includes(position)) return "var(--color-dp, #3498db)";
+    if (["GK", "골키퍼"].includes(position)) return "var(--color-gk, #f1c40f)";
     return "#95a5a6";
   };
 
@@ -182,7 +150,6 @@ console.log(availablePlayers)
     };
   };
 
-  // 색상 원 추가 (독립적인 마커용)
   const handleColorCircleAdd = (color: string) => {
     const { x, y } = getCenterXY();
     setCircles((prev) => [
@@ -194,12 +161,11 @@ console.log(availablePlayers)
         color,
         detail_position: "",
         name: "",
-        playerId: undefined, // 선수 미연결
+        playerId: undefined,
       },
     ]);
   };
 
-  // 선수 선택 시 원 추가 + 목록에서 제거
   const handlePlayerSelect = (player: {
     name: string;
     detail_position: string;
@@ -208,8 +174,6 @@ console.log(availablePlayers)
     teamMemberId?: number;
   }) => {
     const { x, y } = getCenterXY();
-
-    //console.log(player)
     setCircles((prev) => [
       ...prev,
       {
@@ -219,10 +183,9 @@ console.log(availablePlayers)
         color: getColorByPosition(player.position),
         detail_position: player.detail_position,
         name: player.name,
-        playerId: player.teamMemberId, 
+        playerId: player.teamMemberId,
       },
     ]);
-
     setAvailablePlayers((prev) =>
       prev.filter(
         (p) =>
@@ -234,6 +197,7 @@ console.log(availablePlayers)
     );
   };
 
+  // 드래그 로직
   const handlePointerDown =
     (id: number) => (e: React.PointerEvent<HTMLDivElement>) => {
       e.preventDefault();
@@ -248,24 +212,18 @@ console.log(availablePlayers)
 
   useEffect(() => {
     if (draggingId === null) return;
-
     const move = (e: PointerEvent) => {
       const rect = containerRef.current?.getBoundingClientRect();
       if (!rect) return;
-
       let x = e.clientX - rect.left - dragOffsetRef.current.x;
       let y = e.clientY - rect.top - dragOffsetRef.current.y;
-
       x = Math.max(0, Math.min(x, rect.width - CIRCLE_SIZE));
       y = Math.max(0, Math.min(y, rect.height - CIRCLE_SIZE));
-
       setCircles((prev) =>
         prev.map((c) => (c.id === draggingId ? { ...c, x, y } : c))
       );
     };
-
     const up = () => setDraggingId(null);
-
     window.addEventListener("pointermove", move);
     window.addEventListener("pointerup", up);
     return () => {
@@ -281,117 +239,91 @@ console.log(availablePlayers)
     setNameError(false);
   };
 
-  const handleFormationNameChange = (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  const handleFormationNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setFormationName(value);
-    if (nameError && value.trim()) {
-      setNameError(false);
-    }
+    if (nameError && value.trim()) setNameError(false);
   };
 
-const handleSave = () => {
-  if (!formationName.trim()) {
-    setNameError(true);
-    if (nameInputRef.current) {
-      nameInputRef.current.focus();
-      nameInputRef.current.scrollIntoView({
-        behavior: "smooth",
-        block: "center",
-      });
+  const handleSave = () => {
+    if (!formationName.trim()) {
+      setNameError(true);
+      if (nameInputRef.current) {
+        nameInputRef.current.focus();
+        nameInputRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+      return;
     }
-    return;
-  }
 
-  const formationDetailRequestDtos = circles
-    .filter((c) => c.playerId != null)
-    .map((c) => ({
-      playerId: c.playerId as number,
-      x: Math.round(c.x),
-      y: Math.round(c.y),
-    }));
+    const formationDetailRequestDtos = circles
+      .filter((c) => c.playerId != null)
+      .map((c) => ({
+        playerId: c.playerId as number,
+        x: Math.round(c.x),
+        y: Math.round(c.y),
+      }));
 
-  // const fetchFormationSave = async () => {
-  //   if (!numericTeamId) return;
-  //   try {
-  //     await apiClient.post(`/api/team-strategy/save/formation`, {
-  //       teamId: numericTeamId,
-  //       formationName: formationName,
-  //       formationDetailRequestDtos : JSON.stringify(formationDetailRequestDtos),
-  //     });
-  //   } catch (error) {
-  //     console.error("Failed to save formation:", error);
-  //   }
-  // };
-const fetchFormationSave = async () => {
-    if (!numericTeamId) return;
+    const fetchFormationSave = async () => {
+      if (!numericTeamId) return;
+      try {
+        await apiClient.post(
+          "/api/team-strategy/save/formation",
+          formationDetailRequestDtos,
+          {
+            headers: { "Content-Type": "application/json" },
+            params: {
+              formationName,
+              teamId: numericTeamId,
+            },
+          }
+        );
+      } catch (error) {
+        console.error("Failed to save formation:", error);
+      }
+    };
 
-    try {
-      await apiClient.post(
-        "/api/team-strategy/save/formation",
-        // ⭐ body: formationDetailRequestDtos (배열 자체를 body로 보냄)
-
-        formationDetailRequestDtos,
-        {
-           headers: { "Content-Type": "application/json" },
-          // ⭐ query: formationName, teamId
-          params: {
-            formationName,
-            teamId: numericTeamId,
-          },
-        }
-      );
-    } catch (error) {
-      console.error("Failed to save formation:", error);
-    }
+    fetchFormationSave();
+    onSave(circles, formationName);
+    onClose();
   };
-
-
-  fetchFormationSave();
-  onSave(circles, formationName);
-  onClose();
-};
-
 
   return (
-    <ModalOverlay onClick={onClose}>
-      <ScrollableTeamListContainer>
-        <ModalContent onClick={(e) => e.stopPropagation()}>
-          <CloseButton aria-label="닫기" onClick={onClose}>
-            ×
+    <Overlay onClick={onClose}>
+      <ModalContainer onClick={(e) => e.stopPropagation()}>
+        <Header>
+          <Title>포메이션 구성</Title>
+          <CloseButton onClick={onClose}>
+            <IoClose size={22} />
           </CloseButton>
+        </Header>
 
-          <FomationTitle>
-            <h3>포메이션 추가하기</h3>
-            <MiniButton onClick={onReset}>초기화</MiniButton>
-          </FomationTitle>
-
-          <FomationTitle>
-            <div style={{ minWidth: 90 }}>포메이션 이름</div>
+        <Body>
+          <InputGroup>
+            <InputLabel>이름</InputLabel>
             <NameInput
               ref={nameInputRef}
               hasError={nameError}
               value={formationName}
               onChange={handleFormationNameChange}
-              placeholder="포메이션 이름을 입력해주세요"
+              placeholder="예: 공격형 4-3-3"
             />
-          </FomationTitle>
-          {nameError && (
-            <ErrorText>포메이션 이름을 입력해주세요.</ErrorText>
-          )}
+          </InputGroup>
+          {nameError && <ErrorText>포메이션 이름을 입력해주세요.</ErrorText>}
 
-          <FormationImageContainer ref={containerRef}>
-            <FormationImage
+          <FormationField ref={containerRef}>
+            <FieldImage
               src={`${process.env.PUBLIC_URL}/formation.png`}
               alt="Formation Field"
               draggable={false}
               onLoad={() => {
                 const rect = containerRef.current?.getBoundingClientRect();
-                if (rect)
-                  lastWHRef.current = { w: rect.width, h: rect.height };
+                if (rect) lastWHRef.current = { w: rect.width, h: rect.height };
               }}
             />
+
+            <ResetButton onClick={onReset} title="초기화">
+              <HiArrowPath size={16} />
+            </ResetButton>
 
             {circles.map((c) => (
               <DraggableCircle
@@ -404,128 +336,207 @@ const fetchFormationSave = async () => {
                 onPointerDown={handlePointerDown(c.id)}
               >
                 <div className="label">
-                  {c.detail_position && <div>{c.detail_position}</div>}
-                  {c.name && <div>{c.name}</div>}
+                  {c.detail_position && <span className="pos">{c.detail_position}</span>}
+                  {c.name && <span className="name">{c.name}</span>}
                 </div>
               </DraggableCircle>
             ))}
-          </FormationImageContainer>
+          </FormationField>
 
           {availablePlayers.length > 0 && (
-            <TeamList3
-              players={availablePlayers}
-              onPlayerSelect={handlePlayerSelect}
-            />
+            <PlayerListWrapper>
+              <SectionLabel>대기 선수</SectionLabel>
+              <TeamList3
+                players={availablePlayers}
+                onPlayerSelect={handlePlayerSelect}
+              />
+            </PlayerListWrapper>
           )}
 
-          <ColorSelectionContainer aria-label="색상 선택">
-            {["red", "blue", "green", "yellow", "gray"].map((color) => (
-              <CircleButton
-                key={color}
-                color={color}
-                onClick={() => handleColorCircleAdd(color)}
-              >
-                <ColorCircle color={color} />
-              </CircleButton>
-            ))}
-          </ColorSelectionContainer>
+          <ColorSection>
+            <SectionLabel>추가 마커</SectionLabel>
+            <ColorPalette>
+              {["#ef5350", "#42a5f5", "#66bb6a", "#fbc02d", "#78909c"].map((color) => (
+                <ColorBtn
+                  key={color}
+                  color={color}
+                  onClick={() => handleColorCircleAdd(color)}
+                />
+              ))}
+            </ColorPalette>
+          </ColorSection>
+        </Body>
 
-          <SaveButton onClick={handleSave}>적용하기</SaveButton>
-        </ModalContent>
-      </ScrollableTeamListContainer>
-    </ModalOverlay>
+        <Footer>
+          <SaveButton onClick={handleSave}>저장하기</SaveButton>
+        </Footer>
+      </ModalContainer>
+    </Overlay>
   );
 };
 
 export default FormationModal;
 
-/* ===================== styled ===================== */
+/* ===================== Styled Components ===================== */
 
-const ModalOverlay = styled.div`
+// 애니메이션
+const fadeIn = keyframes`
+  from { opacity: 0; }
+  to { opacity: 1; }
+`;
+
+const popIn = keyframes`
+  0% { transform: scale(0.95); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+`;
+
+// [Overlay] 화면 중앙 정렬을 위한 Flex 설정
+const Overlay = styled.div`
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.6);
+  background-color: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(5px);
+  z-index: 2000;
   display: flex;
   justify-content: center;
-  align-items: center;
-  z-index: 1000;
-`;
-
-const ScrollableTeamListContainer = styled.div`
-  max-height: 80%;
-  overflow-x: auto;
-  border-radius: 10px;
-`;
-
-const ModalContent = styled.div`
-  background: #fff;
+  align-items: center; /* 수직 중앙 정렬의 핵심 */
   padding: 20px;
-  width: 89%;
-  max-width: 500px;
-  max-height: 90%;
-  border-radius: 10px;
-  position: relative;
+  animation: ${fadeIn} 0.25s ease-out;
+  overflow-y: auto; /* 화면이 모달보다 작을 때 스크롤 허용 */
+`;
+
+// [Modal Container] 크기 축소 및 모던 디자인 적용
+const ModalContainer = styled.div`
+  width: 100%;
+  max-width: 400px; /* 컴팩트한 사이즈 */
+  background: #fff;
+  border-radius: 28px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
+  animation: ${popIn} 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  margin: auto; /* 화면 높이가 좁아 스크롤이 생길 때도 중앙 정렬 유지 */
+  max-height: 90vh; /* 화면 꽉 차지 않게 */
+`;
+
+const Header = styled.div`
+  padding: 20px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #f0f2f5;
+  background: #fff;
+`;
+
+const Title = styled.h2`
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #1f2937;
 `;
 
 const CloseButton = styled.button`
-  position: absolute;
-  top: 10px; right: 10px;
-  background: none; border: none;
-  font-size: 20px; cursor: pointer;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #9ca3af;
+  padding: 4px;
+  border-radius: 50%;
+  transition: all 0.2s;
+  display: flex;
+
+  &:hover {
+    background: #f3f4f6;
+    color: #4b5563;
+  }
 `;
 
-const FomationTitle = styled.div`
-  display: flex; 
-  align-items: center; 
-  gap: 10px;
-  margin-bottom: 10px;
+const Body = styled.div`
+  padding: 24px;
+  overflow-y: auto;
+  
+  /* 스크롤바 숨김 (깔끔하게) */
+  scrollbar-width: none; 
+  &::-webkit-scrollbar { display: none; }
+`;
 
-  & > h3 { 
-    padding-right: 10px; 
-    margin: 0; 
-  }
+const InputGroup = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+`;
+
+const InputLabel = styled.span`
+  font-size: 14px;
+  font-weight: 600;
+  color: #4b5563;
+  width: 32px;
 `;
 
 const NameInput = styled.input<{ hasError: boolean }>`
   flex: 1;
-  padding: 6px 10px;
-  border-radius: 6px;
-  border: 1px solid ${({ hasError }) => (hasError ? "#e53935" : "#ccc")};
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid ${({ hasError }) => (hasError ? "#ef4444" : "#e5e7eb")};
+  background-color: #f9fafb;
   font-size: 14px;
-  box-sizing: border-box;
+  transition: all 0.2s;
 
   &:focus {
     outline: none;
-    border-color: ${({ hasError }) => (hasError ? "#e53935" : "#4caf50")};
-    box-shadow: ${({ hasError }) =>
-      hasError
-        ? "0 0 0 1px rgba(229, 57, 53, 0.3)"
-        : "0 0 0 1px rgba(76, 175, 80, 0.3)"};
-  }
-
-  &::placeholder {
-    color: #b0b0b0;
+    border-color: #3b82f6;
+    background-color: #fff;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
   }
 `;
 
 const ErrorText = styled.div`
-  margin: 2px 0 8px 90px;
   font-size: 12px;
-  color: #e53935;
+  color: #ef4444;
+  margin: -4px 0 16px 44px;
 `;
 
-const FormationImageContainer = styled.div`
+const FormationField = styled.div`
   position: relative;
   width: 100%;
-  margin-bottom: 20px;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  margin-bottom: 24px;
+  background-color: #e8f5e9; /* 이미지 로드 전 배경색 */
+`;
+
+const FieldImage = styled.img`
+  width: 100%;
+  display: block;
   user-select: none;
 `;
 
-const FormationImage = styled.img`
-  width: 100%;
-  display: block;
-  pointer-events: none;
+const ResetButton = styled.button`
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(4px);
+  border: none;
+  color: #4b5563;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  transition: all 0.2s;
+  z-index: 10;
+
+  &:hover {
+    background: #fff;
+    transform: scale(1.05);
+  }
 `;
 
 const DraggableCircle = styled.div`
@@ -534,55 +545,99 @@ const DraggableCircle = styled.div`
   height: ${CIRCLE_SIZE}px;
   border-radius: 50%;
   color: #fff;
-  font-size: 12px;
-  line-height: 1.1;
-  display: flex; 
-  justify-content: center; 
+  display: flex;
+  justify-content: center;
   align-items: center;
   text-align: center;
   cursor: grab;
   touch-action: none;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2), inset 0 1px 1px rgba(255,255,255,0.3);
+  border: 2px solid #fff; /* 흰색 테두리로 가시성 확보 */
+  transition: transform 0.1s;
 
-  .label { 
-    pointer-events: none; 
+  &:active {
+    cursor: grabbing;
+    transform: scale(1.1);
+    z-index: 100;
+  }
+
+  .label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    line-height: 1;
+    pointer-events: none;
+    
+    .pos {
+      font-size: 10px;
+      font-weight: 700;
+      opacity: 0.9;
+    }
+    .name {
+      font-size: 9px;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 40px;
+    }
   }
 `;
 
-const ColorSelectionContainer = styled.div`
+const PlayerListWrapper = styled.div`
+  margin-bottom: 20px;
+`;
+
+const SectionLabel = styled.div`
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+  margin-bottom: 8px;
+`;
+
+const ColorSection = styled.div`
+  margin-bottom: 8px;
+`;
+
+const ColorPalette = styled.div`
   display: flex;
-  justify-content: space-around;
-  margin-bottom: 15px;
+  gap: 12px;
 `;
 
-const CircleButton = styled.button<{ color: string }>`
-  display: flex; 
-  align-items: center; 
-  justify-content: center;
-  width: 32px; 
-  height: 32px; 
+const ColorBtn = styled.button<{ color: string }>`
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
-  border: 1px solid var(--color-dark2, #666);
-  background: #fff; 
+  background-color: ${(props) => props.color};
+  border: 2px solid white;
+  box-shadow: 0 0 0 1px #e5e7eb;
   cursor: pointer;
+  transition: transform 0.2s;
+
+  &:hover {
+    transform: scale(1.15);
+  }
 `;
 
-const ColorCircle = styled.div<{ color: string }>`
-  width: 20px; 
-  height: 20px; 
-  border-radius: 50%;
-  background-color: ${(p) => p.color};
+const Footer = styled.div`
+  padding: 16px 24px 24px;
+  border-top: 1px solid #f0f2f5;
+  background: #fff;
 `;
 
 const SaveButton = styled.button`
   width: 100%;
-  background-color: #4caf50; 
-  color: #fff;
-  border: none; 
-  border-radius: 8px;
-  padding: 10px 20px;
-  margin-top: 20px;
-  font-family: Pretendard-Medium, system-ui, -apple-system, Segoe UI, Roboto,
-    "Helvetica Neue", Arial;
-  font-size: 18px;
+  padding: 14px;
+  border-radius: 16px;
+  border: none;
+  background: #3b82f6; /* Modern Blue */
+  color: white;
+  font-size: 16px;
+  font-weight: 600;
   cursor: pointer;
+  transition: background 0.2s;
+
+  &:hover {
+    background: #2563eb;
+  }
 `;

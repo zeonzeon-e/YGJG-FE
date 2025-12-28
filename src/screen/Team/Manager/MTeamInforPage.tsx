@@ -77,7 +77,7 @@ const TeamInfoPage: React.FC = () => {
         setSelectedTeam({ teamId: 1, teamName: "FC 개발자들" });
       } else {
         try {
-          const response = await apiClient.get("api/myPage/teams"); // Check API Path
+          const response = await apiClient.get("/api/myPage/teams"); // Check API Path
           setTeamList(response.data);
           if (response.data.length > 0) {
             setSelectedTeam(response.data[0]);
@@ -105,7 +105,7 @@ const TeamInfoPage: React.FC = () => {
         try {
           // Team Detail
           const teamRes = await apiClient.get(
-            `api/team/${selectedTeam.teamId}`
+            `/api/team/${selectedTeam.teamId}`
           );
           setTeamData(teamRes.data);
 
