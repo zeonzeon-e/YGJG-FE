@@ -16,7 +16,7 @@ module.exports = function (app) {
   app.use(
     ["/api", "/auth"],
     createProxyMiddleware({
-      target: "http://54.180.123.45:8080",
+      target: "http://13.125.250.163:8080",
       changeOrigin: true,
       cookieDomainRewrite: "localhost",
     })
