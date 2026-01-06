@@ -15,7 +15,7 @@ interface CirclePosition {
 
 interface FormationModal2Props {
   onClose: () => void;
-  onSave: (circles: CirclePosition[], formationName?: string) => void;
+  onSave: (circles: CirclePosition[], formationName?: string, id?: number) => void;
 }
 
 interface FormationItem {
@@ -23,6 +23,15 @@ interface FormationItem {
   name: string;
   favorites: boolean;
 }
+
+const getColorByPosition = (pos: string): string => {
+  const position = pos.toUpperCase().trim() || "";
+  if (["ST", "CF", "LW", "RW", "SS", "LF", "RF", "공격수"].includes(position)) return "#e74c3c";
+  if (["CM", "CAM", "CDM", "LM", "RM", "AM", "DM", "미드필더"].includes(position)) return "#2ecc71";
+  if (["CB", "LB", "RB", "LWB", "RWB", "WB", "SW", "WD", "수비수"].includes(position)) return "#3498db";
+  if (["GK", "골키퍼"].includes(position)) return "#f1c40f";
+  return "#95a5a6";
+};
 
 const FormationListModal: React.FC<FormationModal2Props> = ({
   onClose,
@@ -89,13 +98,35 @@ const FormationListModal: React.FC<FormationModal2Props> = ({
 
   const handleSelect = async (item: FormationItem) => {
      try {
-        console.log("Selected Formation:", item.name);
-        // const response = await apiClient.get(...)
-        // onSave(response.data.circles, item.name);
-        alert(`'${item.name}' 포메이션을 불러옵니다.`);
-        onClose();
+        const response = await apiClient.get(
+          `/api/team-strategy/get/formation`,
+          {
+            params: {
+              formationId: item.id,
+              teamId: Number(teamId),
+            },
+          }
+        );
+
+        const data = response.data;
+        if (data && data.formationDetailResponseDtoList) {
+          const mappedCircles: CirclePosition[] = data.formationDetailResponseDtoList.map(
+            (detail: any) => ({
+              id: detail.id,
+              x: detail.x,
+              y: detail.y,
+              color: getColorByPosition(detail.detailPosition || ""),
+              detail_position: detail.detailPosition,
+              name: detail.playerName,
+            })
+          );
+          
+          onSave(mappedCircles, item.name, item.id);
+          onClose();
+        }
      } catch (error) {
          console.error("Failed to load details", error);
+         alert("포메이션 정보를 불러오는 데 실패했습니다.");
      }
   };
 

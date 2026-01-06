@@ -12,6 +12,8 @@ import Input2 from "../../../../components/Input/Input2";
 import KakaoMapModal from "../../../../components/Modal/KakaoAddress";
 import FormationModal from "../../../../components/Modal/FormationModal";
 import FormationListModal from "../../../../components/Modal/FormationListModal";
+import { useParams, useNavigate } from "react-router-dom";
+import apiClient from "../../../../api/apiClient";
 
 interface CirclePosition {
   id: number;
@@ -26,6 +28,9 @@ interface CirclePosition {
 const CIRCLE_SIZE = 44;
 
 const GameStrategy: React.FC = () => {
+  const { teamId } = useParams<{ teamId: string }>();
+  const navigate = useNavigate();
+
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [startTime, setStartTime] = useState<string | null>(null);
   const [endTime, setEndTime] = useState<string | null>(null);
@@ -38,6 +43,12 @@ const GameStrategy: React.FC = () => {
   const [formationName, setFormationName] = useState<string>("");
   const [showFormationModal2, setShowFormationModal2] = useState(false);
 
+  // New States
+  const [opposingTeam, setOpposingTeam] = useState("");
+  const [matchStrategy, setMatchStrategy] = useState("");
+  const [detailAddress, setDetailAddress] = useState("");
+  const [formationId, setFormationId] = useState<number>(10);
+
   const [formationCircles, setFormationCircles] = useState<CirclePosition[]>([]);
   const previewRef = useRef<HTMLDivElement | null>(null);
   const lastPreviewWH = useRef<{ w: number; h: number }>({ w: 0, h: 0 });
@@ -46,14 +57,47 @@ const GameStrategy: React.FC = () => {
     setSelectedAddress(address);
   };
 
-  const handleFormationSave = (circles: CirclePosition[], name?: string) => {
+  const handleFormationSave = (circles: CirclePosition[], name?: string, id?: number) => {
     setFormationCircles(circles);
     if (name) setFormationName(name);
+    if (id) setFormationId(id);
   };
 
-  const handleFormationSave2 = (circles: CirclePosition[], name?: string) => {
+  const handleFormationSave2 = (circles: CirclePosition[], name?: string, id?: number) => {
     setFormationCircles(circles);
     if (name) setFormationName(name);
+    if (id) setFormationId(id);
+  };
+
+  const handlePostStrategy = async () => {
+    if (!selectedDate || !startTime || !endTime || !opposingTeam || !selectedAddress) {
+      alert("모든 필수 정보를 입력해주세요.");
+      return;
+    }
+
+    try {
+      const payload = {
+        address: String(`${selectedAddress} ${detailAddress}`).trim(),
+        formationId: Number(formationId),
+        matchDay: String(format(selectedDate, "yyyy-MM-dd")),
+        matchEndTime: String(endTime),
+        matchStartTime: String(startTime),
+        matchStrategy: String(matchStrategy),
+        opposingTeam: String(opposingTeam),
+        teamId: Number(teamId),
+      };
+
+      await apiClient.post("/api/team-strategy/save/team-strategy", payload, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      alert("전략이 성공적으로 게시되었습니다.");
+      navigate(-1);
+    } catch (error) {
+      console.error("전략 게시 실패:", error);
+      alert("전략 게시에 실패했습니다.");
+    }
   };
 
   useEffect(() => {
@@ -137,7 +181,12 @@ const GameStrategy: React.FC = () => {
                 준비 중인 경기의 상대 팀을 입력해주세요.
               </SectionDescription>
             </SectionHeader>
-            <StyledInput type="text" placeholder="상대팀명을 입력해주세요" />
+            <StyledInput 
+              type="text" 
+              placeholder="상대팀명을 입력해주세요" 
+              value={opposingTeam}
+              onChange={(e) => setOpposingTeam(e.target.value)}
+            />
           </SectionCard>
 
           <SectionCard>
@@ -158,6 +207,8 @@ const GameStrategy: React.FC = () => {
                 <StyledInput
                   type="string"
                   placeholder="상세주소를 입력해주세요(선택)"
+                  value={detailAddress}
+                  onChange={(e) => setDetailAddress(e.target.value)}
                 />
               )}
             </AddressStack>
@@ -179,6 +230,8 @@ const GameStrategy: React.FC = () => {
             <StrategyTextarea
               placeholder="경기 전술을 작성해주세요"
               title="경기전술을 작성해주세요"
+              value={matchStrategy}
+              onChange={(e) => setMatchStrategy(e.target.value)}
             />
           </SectionCard>
 
@@ -230,7 +283,7 @@ const GameStrategy: React.FC = () => {
           </SectionCard>
 
           <PrimaryAction>
-            <MainButton>전략 게시하기</MainButton>
+            <MainButton onClick={handlePostStrategy}>전략 게시하기</MainButton>
           </PrimaryAction>
         </ContentWrapper>
       </PageWrapper>
@@ -256,7 +309,7 @@ const GameStrategy: React.FC = () => {
             setShowSTimePicker(false);
           }}
           onTimeEnd={(time: string) => setEndTime(time)}
-          onClose={() => setShowSTimePicker(false)}
+          onClose={() => {setShowSTimePicker(false); console.log(startTime)}}
         />
       )}
 

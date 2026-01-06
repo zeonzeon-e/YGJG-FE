@@ -144,11 +144,11 @@ const TeamCalendarPage: React.FC = () => {
         });
       } else {
         const response = await apiClient.get<ScheduleApiData[]>(
-          `/api/team-strategy/get-strategy/monthly`,
+          `/api/team-strategy/get-strategy/monthly-day`,
           {
             params: {
-              teamId,
               date: selectedDate,
+              teamId, 
             },
           }
         );

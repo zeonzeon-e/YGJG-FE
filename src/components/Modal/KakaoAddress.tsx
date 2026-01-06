@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect } from "react";
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
+import { IoClose } from "react-icons/io5"; // 아이콘 사용을 위해 추가
 
 // DaumAddressModalProps 인터페이스 정의
 interface DaumAddressModalProps {
@@ -72,47 +73,111 @@ const DaumAddressModal: React.FC<DaumAddressModalProps> = ({
   }, [initializePostcode]);
 
   return (
-    <ModalOverlay onClick={onClose}>
-      <ModalContent onClick={(e) => e.stopPropagation()}>
-        <CloseButton onClick={onClose}>X</CloseButton>
-        <div id="address-search" style={{ width: "100%", height: "100%" }} />
-      </ModalContent>
-    </ModalOverlay>
+    <Overlay onClick={onClose}>
+      <ModalContainer onClick={(e) => e.stopPropagation()}>
+        <Header>
+          <Title>주소 검색</Title>
+          <CloseButton onClick={onClose}>
+            <IoClose size={24} />
+          </CloseButton>
+        </Header>
+        <Body>
+          {/* 로직에서 사용하는 ID 유지 */}
+          <div id="address-search" style={{ width: "100%", height: "100%" }} />
+        </Body>
+      </ModalContainer>
+    </Overlay>
   );
 };
 
 export default DaumAddressModal;
 
-// 스타일 컴포넌트 정의
-const ModalOverlay = styled.div`
+/* ===================== 스타일 컴포넌트 (변경됨) ===================== */
+
+const fadeIn = keyframes`
+  from { opacity: 0; }
+  to { opacity: 1; }
+`;
+
+const popIn = keyframes`
+  0% { transform: scale(0.95); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+`;
+
+const Overlay = styled.div`
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.6); // 반투명 배경
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(5px);
+  z-index: 2000;
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000;
+  padding: 20px;
+  animation: ${fadeIn} 0.2s ease-out;
 `;
 
-const ModalContent = styled.div`
-  background: white;
-  padding: 20px;
-  border-radius: 10px;
-  width: 500px;
-  max-width: 90%;
-  height: 600px;
-  position: relative;
+const ModalContainer = styled.div`
+  width: 100%;
+  max-width: 400px;
+  height: 500px;
+  max-height: 80vh; 
+  max-height: 80dvh; /* 모바일 대응 */
+  
+  background: #fff;
+  border-radius: 28px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: ${popIn} 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  margin: auto;
+`;
+
+const Header = styled.div`
+  padding: 20px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #f0f2f5;
+  background: #fff;
+  flex-shrink: 0;
+`;
+
+const Title = styled.h3`
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #1f2937;
 `;
 
 const CloseButton = styled.button`
-  position: absolute;
-  top: 10px;
-  right: 10px;
   background: none;
   border: none;
-  font-size: 16px;
   cursor: pointer;
+  color: #9ca3af;
+  padding: 4px;
+  border-radius: 50%;
+  transition: all 0.2s;
+  display: flex;
+
+  &:hover {
+    background: #f3f4f6;
+    color: #4b5563;
+  }
+`;
+
+const Body = styled.div`
+  flex: 1;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-bottom-left-radius: 28px;
+  border-bottom-right-radius: 28px;
+
+  /* iframe 강제 스타일링 (모서리 둥글게) */
+  & > div > iframe {
+    border-bottom-left-radius: 28px !important;
+    border-bottom-right-radius: 28px !important;
+  }
 `;
