@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import styled from "styled-components";
+import { format } from "date-fns";
 import Header2 from "../../components/Header/Header2/Header2";
 import Calendar from "../../components/Calendar/Calendar";
 import apiClient from "../../api/apiClient";
 import { getAccessToken } from "../../utils/authUtils";
 import { useUserStore } from "../../stores/userStore";
 import { HiPlus, HiXMark } from "react-icons/hi2";
-import GameStrategy from "./Manager/GameStrategy/GameStrategy";
 
 // --- Types ---
 interface ScheduleApiData {
@@ -69,30 +69,23 @@ const DEV_MOCK_SCHEDULES: ScheduleApiData[] = [
 
 const TeamCalendarPage: React.FC = () => {
   const { teamId } = useParams<{ teamId: string }>();
+  const navigate = useNavigate();
 
   const getRoleByTeamId = useUserStore((state) => state.getRoleByTeamId);
-  const [events, setEvents] = useState<CalendarEvent[]>([]);
+  const [monthlyEvents, setMonthlyEvents] = useState<CalendarEvent[]>([]); // For Calendar dots
+  const [dailyEvents, setDailyEvents] = useState<CalendarEvent[]>([]); // For List below
   const [loading, setLoading] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string>(
     new Date().toISOString().split("T")[0]
   );
+  const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
 
   // Modals
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(
     null
   );
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [canEdit, setCanEdit] = useState(false);
-
-  // Add Form
-  const [newSchedule, setNewSchedule] = useState({
-    opposingTeam: "",
-    startTime: "10:00",
-    endTime: "12:00",
-    location: "",
-    strategy: "",
-  });
 
   const userRole = teamId ? getRoleByTeamId(Number(teamId)) : undefined;
   const isManager =
@@ -104,7 +97,7 @@ const TeamCalendarPage: React.FC = () => {
   }, [isManager, isDevMode]);
   useEffect(() => {
     const originalOverflow = document.body.style.overflow;
-    if (isDetailModalOpen || isAddModalOpen) {
+    if (isDetailModalOpen) {
       document.body.style.overflow = "hidden";
     } else {
       document.body.style.overflow = originalOverflow || "";
@@ -112,9 +105,74 @@ const TeamCalendarPage: React.FC = () => {
     return () => {
       document.body.style.overflow = originalOverflow || "";
     };
-  }, [isDetailModalOpen, isAddModalOpen]);
+  }, [isDetailModalOpen]);
 
-  const fetchSchedules = async () => {
+  // 1. Fetch Monthly Schedules (For Calendar Dots)
+  const fetchMonthlySchedules = async () => {
+    if (!teamId) return;
+
+    try {
+      const token = getAccessToken();
+      let rawData: ScheduleApiData[] = [];
+
+      if (token?.startsWith("dev-")) {
+         // ... (Dev mock logic if needed, skipping for brevity or keeping same as before but for month)
+         // For now, let's just reuse the same mock logic or rely on real API
+         // To match previous dev logic:
+        await new Promise((resolve) => setTimeout(resolve, 300));
+        const today = new Date();
+        const currentMonthNum = today.getMonth() + 1;
+        const currentYear = today.getFullYear();
+        rawData = DEV_MOCK_SCHEDULES.map((item, idx) => {
+          const day = 15 + idx * 5;
+          return {
+             ...item,
+            matchStartTime: `${currentYear}-${String(currentMonthNum).padStart(2,"0")}-${day} ${item.matchStartTime.split(" ")[1]}`,
+            matchEndTime: `${currentYear}-${String(currentMonthNum).padStart(2,"0")}-${day} ${item.matchEndTime.split(" ")[1]}`,
+          };
+        });
+      } else {
+        const response = await apiClient.get<ScheduleApiData[]>(
+          `/api/team-strategy/get-strategy/monthly`,
+          {
+            params: {
+              date: format(currentMonth, "yyyy-MM"),
+              teamId,
+            },
+          }
+        );
+        rawData = response.data;
+      }
+      console.log('월 데이터',rawData)
+      const mappedEvents: CalendarEvent[] = rawData.map((item) => {
+        const start = new Date(item.matchStartTime.replace(" ", "T"));
+        const end = new Date(item.matchEndTime.replace(" ", "T"));
+        // For monthly view, we need the actual date of the event
+        const dateStr = start.toISOString().split("T")[0];
+        
+        return {
+          id: item.id,
+          date: dateStr,
+          title: `vs ${item.opposingTeam}`,
+          startTime: "", // Not needed for dots
+          endTime: "",
+          location: "",
+          teamId: Number(teamId),
+          color: "#0e6244",
+          opposingTeam: item.opposingTeam,
+          matchStrategy: "",
+          participation: "NONE",
+        };
+      });
+
+      setMonthlyEvents(mappedEvents);
+    } catch (error) {
+      console.error("월간 일정 로드 실패:", error);
+    }
+  };
+
+  // 2. Fetch Daily Schedules (For List)
+  const fetchDailySchedules = async () => {
     if (!teamId) return;
     setLoading(true);
 
@@ -123,32 +181,29 @@ const TeamCalendarPage: React.FC = () => {
       let rawData: ScheduleApiData[] = [];
 
       if (token?.startsWith("dev-")) {
+        // ... (Dev mock logic)
         await new Promise((resolve) => setTimeout(resolve, 300));
-        const today = new Date();
-        const currentMonth = today.getMonth() + 1;
+        // Return same mock data for simplicity in dev mode
+         const today = new Date();
+        const currentMonthNum = today.getMonth() + 1;
         const currentYear = today.getFullYear();
-
         rawData = DEV_MOCK_SCHEDULES.map((item, idx) => {
-          const day = 15 + idx * 5;
+             const day = 15 + idx * 5;
           return {
-            ...item,
-            matchStartTime: `${currentYear}-${String(currentMonth).padStart(
-              2,
-              "0"
-            )}-${day} ${item.matchStartTime.split(" ")[1]}`,
-            matchEndTime: `${currentYear}-${String(currentMonth).padStart(
-              2,
-              "0"
-            )}-${day} ${item.matchEndTime.split(" ")[1]}`,
+             ...item,
+            matchStartTime: `${currentYear}-${String(currentMonthNum).padStart(2,"0")}-${day} ${item.matchStartTime.split(" ")[1]}`,
+            matchEndTime: `${currentYear}-${String(currentMonthNum).padStart(2,"0")}-${day} ${item.matchEndTime.split(" ")[1]}`,
           };
         });
+        // Filter manually for dev mock
+        // rawData = rawData.filter(...) 
       } else {
         const response = await apiClient.get<ScheduleApiData[]>(
           `/api/team-strategy/get-strategy/monthly-day`,
           {
             params: {
               date: selectedDate,
-              teamId, 
+              teamId,
             },
           }
         );
@@ -156,9 +211,9 @@ const TeamCalendarPage: React.FC = () => {
       }
 
       const mappedEvents: CalendarEvent[] = rawData.map((item) => {
-        const start = new Date(item.matchStartTime);
-        const end = new Date(item.matchEndTime);
-        const dateStr = start.toISOString().split("T")[0];
+        const start = new Date(item.matchStartTime.replace(" ", "T"));
+        const end = new Date(item.matchEndTime.replace(" ", "T"));
+        const dateStr = selectedDate;
         const startTimeStr = `${String(start.getHours()).padStart(
           2,
           "0"
@@ -181,81 +236,27 @@ const TeamCalendarPage: React.FC = () => {
           participation: "NONE", // Default value
         };
       });
-
-      setEvents(mappedEvents);
+      setDailyEvents(mappedEvents);
     } catch (error) {
-      console.error("일정 로드 실패:", error);
+      console.error("일간 일정 로드 실패:", error);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchSchedules();
+    fetchMonthlySchedules();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [teamId, currentMonth]);
+
+  useEffect(() => {
+    fetchDailySchedules();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [teamId, selectedDate]);
 
-  const filteredEvents = events.filter((e) => e.date === selectedDate);
-
-  const handleCreateSchedule = async () => {
-    if (!newSchedule.opposingTeam) {
-      alert("상대팀 이름을 입력해주세요.");
-      return;
-    }
-    const startDateTime = `${selectedDate} ${newSchedule.startTime}:00`;
-    const endDateTime = `${selectedDate} ${newSchedule.endTime}:00`;
-
-    try {
-      const token = getAccessToken();
-      if (token?.startsWith("dev-")) {
-        alert("[Dev] 일정 추가됨 (새로고침 시 초기화)");
-        setEvents((prev) => [
-          ...prev,
-          {
-            id: Date.now(),
-            date: selectedDate,
-            title: `vs ${newSchedule.opposingTeam}`,
-            startTime: newSchedule.startTime,
-            endTime: newSchedule.endTime,
-            location: newSchedule.location,
-            teamId: Number(teamId),
-            color: "#0e6244",
-            opposingTeam: newSchedule.opposingTeam,
-            matchStrategy: newSchedule.strategy,
-            participation: "NONE",
-          },
-        ]);
-      } else {
-        await apiClient.post(`/api/team-strategy/save/team-strategy`, {
-          teamId: Number(teamId),
-          matchStrategy: newSchedule.strategy,
-          matchStartTime: startDateTime,
-          matchEndTime: endDateTime,
-          matchDay: selectedDate,
-          opposingTeam: newSchedule.opposingTeam,
-          address: newSchedule.location,
-          formationId: 0,
-        });
-        alert("일정이 추가되었습니다!");
-        fetchSchedules();
-      }
-      setIsAddModalOpen(false);
-      setNewSchedule({
-        opposingTeam: "",
-        startTime: "10:00",
-        endTime: "12:00",
-        location: "",
-        strategy: "",
-      });
-    } catch (error) {
-      console.error("일정 추가 실패:", error);
-      alert("일정 추가에 실패했습니다.");
-    }
-  };
-
   const toggleParticipation = (e: React.MouseEvent, eventId: number) => {
     e.stopPropagation();
-    setEvents((prev) =>
+    setDailyEvents((prev) =>
       prev.map((ev) => {
         if (ev.id === eventId) {
           const nextStatus =
@@ -266,13 +267,17 @@ const TeamCalendarPage: React.FC = () => {
       })
     );
   };
-
+console.log("monthlyEvents",monthlyEvents)
   return (
     <PageWrapper>
       <Header2 text="팀 일정" />
 
       <CalendarContainer>
-        <Calendar events={events} onDateSelect={setSelectedDate} />
+        <Calendar 
+          events={monthlyEvents} 
+          onDateSelect={setSelectedDate}
+          onMonthChange={setCurrentMonth}
+        />
       </CalendarContainer>
 
       <ScheduleSection>
@@ -286,9 +291,9 @@ const TeamCalendarPage: React.FC = () => {
 
         {loading ? (
           <EmptyState>일정을 불러오는 중...</EmptyState>
-        ) : filteredEvents.length > 0 ? (
+        ) : dailyEvents.length > 0 ? (
           <EventList>
-            {filteredEvents.map((event) => (
+            {dailyEvents.map((event) => (
               <CustomEventCard
                 key={event.id}
                 onClick={() => {
@@ -342,7 +347,13 @@ const TeamCalendarPage: React.FC = () => {
       </ScheduleSection>
 
       {canEdit && (
-        <FloatingActionButton onClick={() => setIsAddModalOpen(true)}>
+        <FloatingActionButton
+          onClick={() =>
+            navigate(`/manager/${teamId}/team-strategy/create`, {
+              state: { selectedDate },
+            })
+          }
+        >
           <HiPlus />
         </FloatingActionButton>
       )}
@@ -388,94 +399,6 @@ const TeamCalendarPage: React.FC = () => {
               )}
             </DetailBody>
           </DetailModalContent>
-        </ModalOverlay>
-      )}
-
-      {isAddModalOpen && (
-        <ModalOverlay
-          onClick={() => setIsAddModalOpen(false)}
-          role="presentation"
-        >
-          <AddModalContent
-            onClick={(e) => e.stopPropagation()}
-            role="dialog"
-            aria-modal="true"
-          >
-            {/* <ModalHeader>
-              <ModalTitle>새 일정 추가</ModalTitle>
-              <CloseBtn onClick={() => setIsAddModalOpen(false)}>
-                <HiXMark />
-              </CloseBtn>
-            </ModalHeader>
-            <AddFormBody>
-              <FormRow>
-                <FormGroup>
-                  <FormLabel>시작</FormLabel>
-                  <FormInput
-                    type="time"
-                    value={newSchedule.startTime}
-                    onChange={(e) =>
-                      setNewSchedule({
-                        ...newSchedule,
-                        startTime: e.target.value,
-                      })
-                    }
-                  />
-                </FormGroup>
-                <FormGroup>
-                  <FormLabel>종료</FormLabel>
-                  <FormInput
-                    type="time"
-                    value={newSchedule.endTime}
-                    onChange={(e) =>
-                      setNewSchedule({
-                        ...newSchedule,
-                        endTime: e.target.value,
-                      })
-                    }
-                  />
-                </FormGroup>
-              </FormRow>
-              <FormGroup>
-                <FormLabel>상대팀</FormLabel>
-                <FormInput
-                  placeholder="상대팀 입력"
-                  value={newSchedule.opposingTeam}
-                  onChange={(e) =>
-                    setNewSchedule({
-                      ...newSchedule,
-                      opposingTeam: e.target.value,
-                    })
-                  }
-                />
-              </FormGroup>
-              <FormGroup>
-                <FormLabel>장소</FormLabel>
-                <FormInput
-                  placeholder="경기 장소"
-                  value={newSchedule.location}
-                  onChange={(e) =>
-                    setNewSchedule({ ...newSchedule, location: e.target.value })
-                  }
-                />
-              </FormGroup>
-              <FormGroup>
-                <FormLabel>전략 메모</FormLabel>
-                <FormTextArea
-                  rows={3}
-                  placeholder="내용 입력"
-                  value={newSchedule.strategy}
-                  onChange={(e) =>
-                    setNewSchedule({ ...newSchedule, strategy: e.target.value })
-                  }
-                />
-              </FormGroup>
-              <SubmitButton onClick={handleCreateSchedule}>
-                일정 등록
-              </SubmitButton>
-            </AddFormBody> */}
-            <GameStrategy />
-          </AddModalContent>
         </ModalOverlay>
       )}
     </PageWrapper>
@@ -672,10 +595,6 @@ const DetailModalContent = styled(ModalBase)`
   max-height: 90vh;
   overflow-y: auto;
 `;
-const AddModalContent = styled(ModalBase)`
-  max-height: 80vh;
-  overflow-y: auto;
-`;
 const ModalHeader = styled.div`
   display: flex;
   align-items: center;
@@ -721,51 +640,4 @@ const StrategyBox = styled.div`
   border-radius: 8px;
   font-size: 14px;
   color: #555;
-`;
-const AddFormBody = styled.div`
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-`;
-const FormGroup = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-`;
-const FormRow = styled.div`
-  display: flex;
-  gap: 12px;
-  & > div {
-    flex: 1;
-  }
-`;
-const FormLabel = styled.label`
-  font-size: 13px;
-  color: #666;
-  font-weight: 500;
-`;
-const FormInput = styled.input`
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  font-size: 15px;
-`;
-const FormTextArea = styled.textarea`
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  font-size: 15px;
-  resize: none;
-`;
-const SubmitButton = styled.button`
-  background: var(--color-main);
-  color: white;
-  border: none;
-  padding: 14px;
-  border-radius: 12px;
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  margin-top: 8px;
 `;

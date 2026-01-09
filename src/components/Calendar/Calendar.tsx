@@ -24,9 +24,10 @@ interface CalendarEvent {
 interface CalendarProps {
   events: CalendarEvent[];
   onDateSelect: (date: string) => void;
+  onMonthChange?: (date: Date) => void;
 }
 
-const Calendar: React.FC<CalendarProps> = ({ events, onDateSelect }) => {
+const Calendar: React.FC<CalendarProps> = ({ events, onDateSelect, onMonthChange }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
 
@@ -38,8 +39,17 @@ const Calendar: React.FC<CalendarProps> = ({ events, onDateSelect }) => {
     onDateSelect(format(day, "yyyy-MM-dd"));
   };
 
-  const nextMonth = () => setCurrentDate(addMonths(currentDate, 1));
-  const prevMonth = () => setCurrentDate(subMonths(currentDate, 1));
+  const nextMonth = () => {
+    const newDate = addMonths(currentDate, 1);
+    setCurrentDate(newDate);
+    if (onMonthChange) onMonthChange(newDate);
+  };
+
+  const prevMonth = () => {
+    const newDate = subMonths(currentDate, 1);
+    setCurrentDate(newDate);
+    if (onMonthChange) onMonthChange(newDate);
+  };
 
   const renderHeader = () => (
     <HeaderRow>

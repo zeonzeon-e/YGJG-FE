@@ -146,7 +146,7 @@ root.render(
         <Route path="/manager/:id" element={<MTeaminforpage />} />
         {/* [관리자] 팀 멤버 목록 페이지 */}
         <Route
-          path="/manager/:teamId/memberList"
+          path="/manager/:teamId/member"
           element={<MTeamMemberListPage />}
         />
         {/* 마이페이지 */}

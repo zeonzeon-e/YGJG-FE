@@ -97,10 +97,17 @@ const TeamInfoEdit: React.FC = () => {
     }
 
     try {
-      await apiClient.put(`api/myPage/teamMember/${teamId}`, {
-        position: newPosition,
-        teamColor: selectedColor,
-      });
+      await apiClient.put(`/api/myPage/teamMember/${teamId}`, {
+        requestDto: {
+          position: newPosition,
+          teamColor: selectedColor,
+        },
+        teamId: teamId,
+      },{
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
       showAlert("성공", "팀 설정이 변경되었습니다.", () => navigate("/my"));
     } catch (err) {
       console.error("Error updating team info:", err);

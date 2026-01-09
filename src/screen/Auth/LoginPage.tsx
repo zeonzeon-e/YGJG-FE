@@ -30,7 +30,7 @@ const DEV_MOCK_TEAMS = [
   {
     teamId: 1,
     teamName: "FC 개발자들",
-    role: "MANAGER" as const,
+    role: "ROLE_MANAGER" as const,
     position: "MF" as const,
     teamColor: "#0e6244",
     teamImageUrl: "",
@@ -39,7 +39,7 @@ const DEV_MOCK_TEAMS = [
   {
     teamId: 2,
     teamName: "테스트 유나이티드",
-    role: "MEMBER" as const,
+    role: "ROLE_MEMBER" as const,
     position: "FW" as const,
     teamColor: "#3b82f6",
     teamImageUrl: "",

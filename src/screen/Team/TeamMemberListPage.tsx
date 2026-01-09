@@ -117,7 +117,7 @@ const TeamMemberListPage: React.FC = () => {
       case "미드필더":
         return ["CM", "CAM", "CDM", "LM", "RM", "MF"].includes(p);
       case "수비수":
-        return ["CB", "LB", "RB", "DF"].includes(p);
+        return ["CB", "LB", "RB", "DF","WD"].includes(p);
       case "골키퍼":
         return ["GK"].includes(p);
       default:
@@ -134,19 +134,19 @@ const TeamMemberListPage: React.FC = () => {
   });
 
   const getRoleBadge = (role?: string) => {
-    if (role === "MANAGER") return <RoleBadge type="manager">운영진</RoleBadge>;
-    if (role === "SUB_MANAGER") return <RoleBadge type="sub">매니저</RoleBadge>;
+    if (role === "ROLE_MANAGER") return <RoleBadge type="manager">운영진</RoleBadge>;
+    if (role === "ROLE_SUBMANAGER") return <RoleBadge type="sub">매니저</RoleBadge>;
     return null;
   };
 
   const getColorByPosition = (pos: string): string => {
     const position = pos.toUpperCase();
     if (["ST", "CF", "LW", "RW", "SS", "FW"].includes(position))
-      return "var(--color-error)";
+      return "#ff383b"; // var(--color-error)
     if (["CM", "CAM", "CDM", "LM", "RM", "MF"].includes(position))
-      return "var(--color-success)";
-    if (["CB", "LB", "RB", "DF"].includes(position)) return "var(--color-info)";
-    if (position === "GK") return "var(--color-warning)";
+      return "#06c270"; // var(--color-success)
+    if (["CB", "LB", "RB", "DF", "WD"].includes(position)) return "#0063f7"; // var(--color-info)
+    if (position === "GK") return "#ffcc00"; // var(--color-warning)
     return "#95a5a6";
   };
 
