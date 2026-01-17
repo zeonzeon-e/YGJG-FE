@@ -7,7 +7,14 @@ import Calendar from "../../components/Calendar/Calendar";
 import apiClient from "../../api/apiClient";
 import { getAccessToken } from "../../utils/authUtils";
 import { useUserStore } from "../../stores/userStore";
-import { HiPlus, HiXMark } from "react-icons/hi2";
+import {
+  HiPlus,
+  HiXMark,
+  HiCalendar,
+  HiMapPin,
+  HiUserGroup,
+  HiClipboardDocumentList,
+} from "react-icons/hi2";
 
 // --- Types ---
 interface ScheduleApiData {
@@ -376,26 +383,59 @@ const TeamCalendarPage: React.FC = () => {
               </CloseBtn>
             </ModalHeader>
             <DetailBody>
-              <DetailRow>
-                <Label>일시</Label>
-                <Value>
-                  {selectedEvent.date} {selectedEvent.startTime} ~{" "}
-                  {selectedEvent.endTime}
-                </Value>
-              </DetailRow>
-              <DetailRow>
-                <Label>매치업</Label>
-                <Value>우리 팀 vs {selectedEvent.opposingTeam}</Value>
-              </DetailRow>
-              <DetailRow>
-                <Label>장소</Label>
-                <Value>{selectedEvent.location}</Value>
-              </DetailRow>
+              <DetailSection>
+                <DetailItem>
+                  <DetailIconWrapper $variant="calendar">
+                    <HiCalendar />
+                  </DetailIconWrapper>
+                  <DetailContent>
+                    <DetailLabel>일시</DetailLabel>
+                    <DetailValue>
+                      {selectedEvent.date}
+                      {selectedEvent.startTime && selectedEvent.endTime
+                        ? ` ${selectedEvent.startTime} ~ ${selectedEvent.endTime}`
+                        : " 시간 미정"}
+                    </DetailValue>
+                  </DetailContent>
+                </DetailItem>
+
+                <DetailItem>
+                  <DetailIconWrapper $variant="team">
+                    <HiUserGroup />
+                  </DetailIconWrapper>
+                  <DetailContent>
+                    <DetailLabel>매치업</DetailLabel>
+                    <MatchupValue>
+                      <TeamName>우리 팀</TeamName>
+                      <VsText>VS</VsText>
+                      <TeamName $isOpponent>
+                        #{selectedEvent.opposingTeam}
+                      </TeamName>
+                    </MatchupValue>
+                  </DetailContent>
+                </DetailItem>
+
+                <DetailItem>
+                  <DetailIconWrapper $variant="location">
+                    <HiMapPin />
+                  </DetailIconWrapper>
+                  <DetailContent>
+                    <DetailLabel>장소</DetailLabel>
+                    <DetailValue>
+                      {selectedEvent.location || "장소 미정"}
+                    </DetailValue>
+                  </DetailContent>
+                </DetailItem>
+              </DetailSection>
+
               {selectedEvent.matchStrategy && (
-                <DetailRow>
-                  <Label>전략 메모</Label>
+                <StrategySection>
+                  <StrategyHeader>
+                    <HiClipboardDocumentList />
+                    <span>전략 메모</span>
+                  </StrategyHeader>
                   <StrategyBox>{selectedEvent.matchStrategy}</StrategyBox>
-                </DetailRow>
+                </StrategySection>
               )}
             </DetailBody>
           </DetailModalContent>
@@ -599,45 +639,162 @@ const ModalHeader = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  // padding: 16px 20px;
-  border-bottom: 1px solid #eee;
+  padding: 20px 24px;
+  border-bottom: 1px solid #f0f0f0;
+  background: linear-gradient(135deg, #0e6244 0%, #0a4d35 100%);
 `;
 const ModalTitle = styled.h4`
   font-size: 18px;
   font-family: "Pretendard-Bold";
   margin: 0;
+  color: white;
 `;
 const CloseBtn = styled.button`
-  background: none;
+  background: rgba(255, 255, 255, 0.2);
   border: none;
-  font-size: 24px;
-  color: #999;
+  font-size: 20px;
+  color: white;
   cursor: pointer;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.3);
+  }
 `;
 const DetailBody = styled.div`
-  padding: 20px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+`;
+
+const DetailSection = styled.div`
   display: flex;
   flex-direction: column;
   gap: 16px;
 `;
-const DetailRow = styled.div`
+
+const DetailItem = styled.div`
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+`;
+
+const DetailIconWrapper = styled.div<{
+  $variant: "calendar" | "team" | "location";
+}>`
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 18px;
+
+  ${({ $variant }) => {
+    switch ($variant) {
+      case "calendar":
+        return `
+          background: #e8f5e9;
+          color: #2e7d32;
+        `;
+      case "team":
+        return `
+          background: #e3f2fd;
+          color: #1565c0;
+        `;
+      case "location":
+        return `
+          background: #fff3e0;
+          color: #ef6c00;
+        `;
+      default:
+        return `
+          background: #f5f5f5;
+          color: #666;
+        `;
+    }
+  }}
+`;
+
+const DetailContent = styled.div`
   display: flex;
   flex-direction: column;
   gap: 4px;
+  flex: 1;
+  min-width: 0;
 `;
-const Label = styled.div`
-  font-size: 13px;
+
+const DetailLabel = styled.span`
+  font-size: 12px;
   color: #888;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 `;
-const Value = styled.div`
-  font-size: 16px;
+
+const DetailValue = styled.span`
+  font-size: 15px;
   color: #333;
   font-weight: 500;
+  line-height: 1.4;
 `;
-const StrategyBox = styled.div`
-  background: #f8f9fa;
-  padding: 12px;
-  border-radius: 8px;
+
+const MatchupValue = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+`;
+
+const TeamName = styled.span<{ $isOpponent?: boolean }>`
+  font-size: 15px;
+  font-family: "Pretendard-Bold";
+  color: ${({ $isOpponent }) => ($isOpponent ? "#d32f2f" : "#0e6244")};
+`;
+
+const VsText = styled.span`
+  font-size: 12px;
+  font-weight: 700;
+  color: #999;
+  background: #f5f5f5;
+  padding: 2px 8px;
+  border-radius: 4px;
+`;
+
+const StrategySection = styled.div`
+  margin-top: 4px;
+  padding-top: 20px;
+  border-top: 1px dashed #e0e0e0;
+`;
+
+const StrategyHeader = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
   font-size: 14px;
-  color: #555;
+  font-weight: 600;
+  color: #0e6244;
+
+  svg {
+    font-size: 18px;
+  }
+`;
+
+const StrategyBox = styled.div`
+  background: linear-gradient(135deg, #f8faf9 0%, #f0f4f2 100%);
+  padding: 16px;
+  border-radius: 12px;
+  font-size: 14px;
+  color: #444;
+  line-height: 1.6;
+  border-left: 3px solid #0e6244;
 `;
