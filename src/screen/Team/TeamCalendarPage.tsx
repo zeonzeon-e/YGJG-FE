@@ -585,6 +585,7 @@ export default TeamCalendarPage;
 // --- Styled Components ---
 
 const PageWrapper = styled.div`
+  width: 100%;
   min-height: 100vh;
   background-color: #f8fafb;
   position: relative;
@@ -855,6 +856,7 @@ const EmptyState = styled.div`
   padding: 60px 0;
   gap: 12px;
 `;
+
 const EmptyIcon = styled.div`
   font-size: 40px;
 `;
@@ -865,7 +867,6 @@ const EmptyText = styled.p`
 const FloatingActionButton = styled.button`
   position: fixed;
   bottom: 100px;
-  right: 25px;
   width: 56px;
   height: 56px;
   border-radius: 50%;
@@ -879,6 +880,19 @@ const FloatingActionButton = styled.button`
   font-size: 24px;
   cursor: pointer;
   z-index: 100;
+
+  /* 기본값(모바일): 화면 우측에서 25px */
+  right: 25px;
+
+  /* 데스크톱: 컨텐츠 영역(600px) 기준 우측 정렬 */
+  /* 화면 너비의 50% 지점에서 300px(컨텐츠 절반) 이동한 지점이 컨텐츠 우측 끝 */
+  /* 거기서 25px 안쪽으로 들어오게 설정 */
+  /* right 값은 화면 우측 끝에서의 거리이므로: */
+  /* 50vw - 300px = 좌우 여백의 한쪽 크기 */
+  /* 여백 크기 + 25px = 화면 우측 끝에서 버튼까지의 거리 */
+  @media (min-width: 650px) {
+    right: calc(50% - 300px + 25px);
+  }
 `;
 
 const ModalOverlay = styled.div`
