@@ -76,20 +76,21 @@ const TeamCalendarPage: React.FC = () => {
   const [dailyEvents, setDailyEvents] = useState<CalendarEvent[]>([]); // For List below
   const [loading, setLoading] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string>(
-    new Date().toISOString().split("T")[0]
+    new Date().toISOString().split("T")[0],
   );
   const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
 
   // Modals
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(
-    null
+    null,
   );
   const [canEdit, setCanEdit] = useState(false);
 
   const userRole = teamId ? getRoleByTeamId(Number(teamId)) : undefined;
   const isManager =
-    userRole && ["ROLE_MANAGER","MANAGER", "SUB_MANAGER"].includes(userRole.role);
+    userRole &&
+    ["ROLE_MANAGER", "MANAGER", "SUB_MANAGER"].includes(userRole.role);
   const isDevMode = getAccessToken()?.startsWith("dev-");
 
   useEffect(() => {
@@ -116,9 +117,9 @@ const TeamCalendarPage: React.FC = () => {
       let rawData: ScheduleApiData[] = [];
 
       if (token?.startsWith("dev-")) {
-         // ... (Dev mock logic if needed, skipping for brevity or keeping same as before but for month)
-         // For now, let's just reuse the same mock logic or rely on real API
-         // To match previous dev logic:
+        // ... (Dev mock logic if needed, skipping for brevity or keeping same as before but for month)
+        // For now, let's just reuse the same mock logic or rely on real API
+        // To match previous dev logic:
         await new Promise((resolve) => setTimeout(resolve, 300));
         const today = new Date();
         const currentMonthNum = today.getMonth() + 1;
@@ -126,9 +127,9 @@ const TeamCalendarPage: React.FC = () => {
         rawData = DEV_MOCK_SCHEDULES.map((item, idx) => {
           const day = 15 + idx * 5;
           return {
-             ...item,
-            matchStartTime: `${currentYear}-${String(currentMonthNum).padStart(2,"0")}-${day} ${item.matchStartTime.split(" ")[1]}`,
-            matchEndTime: `${currentYear}-${String(currentMonthNum).padStart(2,"0")}-${day} ${item.matchEndTime.split(" ")[1]}`,
+            ...item,
+            matchStartTime: `${currentYear}-${String(currentMonthNum).padStart(2, "0")}-${day} ${item.matchStartTime.split(" ")[1]}`,
+            matchEndTime: `${currentYear}-${String(currentMonthNum).padStart(2, "0")}-${day} ${item.matchEndTime.split(" ")[1]}`,
           };
         });
       } else {
@@ -139,17 +140,16 @@ const TeamCalendarPage: React.FC = () => {
               date: format(currentMonth, "yyyy-MM"),
               teamId,
             },
-          }
+          },
         );
         rawData = response.data;
       }
-      console.log('월 데이터',rawData)
+      console.log("월 데이터", rawData);
       const mappedEvents: CalendarEvent[] = rawData.map((item) => {
         const start = new Date(item.matchStartTime.replace(" ", "T"));
-        const end = new Date(item.matchEndTime.replace(" ", "T"));
         // For monthly view, we need the actual date of the event
         const dateStr = start.toISOString().split("T")[0];
-        
+
         return {
           id: item.id,
           date: dateStr,
@@ -184,19 +184,19 @@ const TeamCalendarPage: React.FC = () => {
         // ... (Dev mock logic)
         await new Promise((resolve) => setTimeout(resolve, 300));
         // Return same mock data for simplicity in dev mode
-         const today = new Date();
+        const today = new Date();
         const currentMonthNum = today.getMonth() + 1;
         const currentYear = today.getFullYear();
         rawData = DEV_MOCK_SCHEDULES.map((item, idx) => {
-             const day = 15 + idx * 5;
+          const day = 15 + idx * 5;
           return {
-             ...item,
-            matchStartTime: `${currentYear}-${String(currentMonthNum).padStart(2,"0")}-${day} ${item.matchStartTime.split(" ")[1]}`,
-            matchEndTime: `${currentYear}-${String(currentMonthNum).padStart(2,"0")}-${day} ${item.matchEndTime.split(" ")[1]}`,
+            ...item,
+            matchStartTime: `${currentYear}-${String(currentMonthNum).padStart(2, "0")}-${day} ${item.matchStartTime.split(" ")[1]}`,
+            matchEndTime: `${currentYear}-${String(currentMonthNum).padStart(2, "0")}-${day} ${item.matchEndTime.split(" ")[1]}`,
           };
         });
         // Filter manually for dev mock
-        // rawData = rawData.filter(...) 
+        // rawData = rawData.filter(...)
       } else {
         const response = await apiClient.get<ScheduleApiData[]>(
           `/api/team-strategy/get-strategy/monthly-day`,
@@ -205,7 +205,7 @@ const TeamCalendarPage: React.FC = () => {
               date: selectedDate,
               teamId,
             },
-          }
+          },
         );
         rawData = response.data;
       }
@@ -216,10 +216,10 @@ const TeamCalendarPage: React.FC = () => {
         const dateStr = selectedDate;
         const startTimeStr = `${String(start.getHours()).padStart(
           2,
-          "0"
+          "0",
         )}:${String(start.getMinutes()).padStart(2, "0")}`;
         const endTimeStr = `${String(end.getHours()).padStart(2, "0")}:${String(
-          end.getMinutes()
+          end.getMinutes(),
         ).padStart(2, "0")}`;
 
         return {
@@ -264,17 +264,17 @@ const TeamCalendarPage: React.FC = () => {
           return { ...ev, participation: nextStatus };
         }
         return ev;
-      })
+      }),
     );
   };
-console.log("monthlyEvents",monthlyEvents)
+  console.log("monthlyEvents", monthlyEvents);
   return (
     <PageWrapper>
       <Header2 text="팀 일정" />
 
       <CalendarContainer>
-        <Calendar 
-          events={monthlyEvents} 
+        <Calendar
+          events={monthlyEvents}
           onDateSelect={setSelectedDate}
           onMonthChange={setCurrentMonth}
         />
@@ -552,7 +552,7 @@ const EmptyText = styled.p`
 `;
 const FloatingActionButton = styled.button`
   position: fixed;
-  bottom:100px;
+  bottom: 100px;
   right: 25px;
   width: 56px;
   height: 56px;
@@ -599,7 +599,7 @@ const ModalHeader = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
- // padding: 16px 20px;
+  // padding: 16px 20px;
   border-bottom: 1px solid #eee;
 `;
 const ModalTitle = styled.h4`

@@ -4,7 +4,7 @@ import CheckBox from "../../components/CheckBox/CheckBox";
 import Input from "../../components/Input/Input";
 import ScrollProgress from "../../components/ScrollProgress/ScrollProgress";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { HiArrowLeft, HiCheck, HiCheckCircle } from "react-icons/hi2";
+import { HiArrowLeft, HiCheckCircle } from "react-icons/hi2";
 import RadioButton from "../../components/Button/RadioButton";
 import KakaoMapModal from "../../components/Modal/KakaoAddress";
 import apiClient from "../../api/apiClient";
@@ -42,14 +42,7 @@ const float = keyframes`
   }
 `;
 
-const pulse = keyframes`
-  0%, 100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.05);
-  }
-`;
+// pulse keyframe removed - unused
 
 const spin = keyframes`
   from { transform: rotate(0deg); }
@@ -1129,7 +1122,7 @@ const SignupPage: React.FC = () => {
   const navigate = useNavigate();
 
   const totalSteps = isSocialLogin ? 3 : 6;
-  const currentStep = isSocialLogin ? step - 3 : step;
+  // currentStep calculation removed - currently unused
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -1311,13 +1304,7 @@ const CustomInputWrapper = styled.div`
   }
 `;
 
-const CustomInputIcon = styled.div`
-  color: #adb5bd;
-  font-size: 20px;
-  margin-right: 10px;
-  display: flex;
-  align-items: center;
-`;
+// CustomInputIcon removed - unused
 
 const CustomInput = styled.input`
   flex: 1;
