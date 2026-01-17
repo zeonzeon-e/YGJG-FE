@@ -18,10 +18,7 @@ const fadeIn = keyframes`
   }
 `;
 
-const spin = keyframes`
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-`;
+// spin keyframe removed - unused
 
 /* ========== Page Layout ========== */
 const PageWrapper = styled.div`
@@ -230,14 +227,7 @@ const ResendLink = styled.button`
   }
 `;
 
-const LoadingSpinner = styled.div`
-  width: 20px;
-  height: 20px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-top-color: white;
-  border-radius: 50%;
-  animation: ${spin} 0.8s linear infinite;
-`;
+// LoadingSpinner removed - unused
 
 /* ========== Messages ========== */
 const ErrorMessage = styled.div`
