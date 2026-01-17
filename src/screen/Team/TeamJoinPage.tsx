@@ -66,7 +66,7 @@ const TeamJoinPage: React.FC = () => {
     const fetchProfile = async () => {
       setLoading(true);
       try {
-        const response = await apiClient.get("api/member/getUser");
+        const response = await apiClient.get("/api/member/getUser");
         setProfile({
           address: response.data.address,
           gender: response.data.gender,
@@ -143,9 +143,9 @@ const TeamJoinPage: React.FC = () => {
 
     try {
       const response = await apiClient.post(
-        `api/joinTeam/${teamId}`,
+        `/api/joinTeam/${teamId}`,
         requestDto,
-        { headers: { "Content-Type": "application/json" } }
+        { headers: { "Content-Type": "application/json" } },
       );
       if (response.status === 200) {
         setComplete(true);
@@ -154,7 +154,7 @@ const TeamJoinPage: React.FC = () => {
       console.error("Failed to join team:", error);
       showAlert(
         "오류",
-        "가입 신청 중 오류가 발생했습니다.\n다시 시도해주세요."
+        "가입 신청 중 오류가 발생했습니다.\n다시 시도해주세요.",
       );
     }
   };
