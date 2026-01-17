@@ -14,6 +14,7 @@ import CheckButton from "../../components/Button/CheckButton";
 import ScrollProgress from "../../components/ScrollProgress/ScrollProgress";
 import { useToastStore } from "../../stores/toastStore";
 import apiClient from "../../api/apiClient";
+import { useUserStore } from "../../stores/userStore";
 import KakaoMapModal from "../../components/Modal/KakaoAddress";
 
 /* ========== Animations ========== */
@@ -730,6 +731,7 @@ const TeamCreationPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [final, setFinal] = useState({ teamId: 0, inviteCode: "" });
   const navigate = useNavigate();
+  const fetchUserData = useUserStore((state) => state.fetchUserData);
 
   const handleNext = async (d: any = {}) => {
     const updated = { ...data, ...d };
@@ -772,6 +774,10 @@ const TeamCreationPage: React.FC = () => {
         });
         if (res.status === 200 || res.status === 201) {
           const { teamId, inviteCode } = res.data;
+
+          // 팀 생성 성공 즉시 유저 정보(팀 목록) 갱신
+          await fetchUserData();
+
           setFinal({ teamId, inviteCode });
           if (updated.profileImageFile) {
             const fd = new FormData();
