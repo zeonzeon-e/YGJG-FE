@@ -52,12 +52,36 @@ function subscribeTokenRefresh(cb: (token: string) => void): void {
 }
 
 /**
+ * 인증이 필요 없는 API 경로 목록
+ * 이 경로들은 토큰 헤더를 포함하지 않음
+ */
+const AUTH_WHITELIST = [
+  "/api/sign/signin/sign-in",
+  "/api/sign/signup",
+  "/api/sign/reissue",
+  "/api/sms/",
+  "/auth/",
+];
+
+/**
+ * 주어진 URL이 인증 화이트리스트에 해당하는지 확인
+ * @param {string | undefined} url - 확인할 URL
+ * @returns {boolean} 화이트리스트에 해당하면 true
+ */
+function isAuthWhitelisted(url: string | undefined): boolean {
+  if (!url) return false;
+  return AUTH_WHITELIST.some((path) => url.includes(path));
+}
+
+/**
  * 요청 전에 액세스 토큰을 헤더에 추가하는 인터셉터
+ * 인증이 필요 없는 API는 토큰 헤더를 포함하지 않음
  */
 apiClient.interceptors.request.use(
   (config) => {
     const token = getAccessToken();
-    if (token) {
+    // 인증이 필요 없는 API는 토큰 헤더 제외
+    if (token && !isAuthWhitelisted(config.url)) {
       // 헤더가 정의되어 있지 않을 경우 초기화
       config.headers = config.headers || {};
       config.headers["X-AUTH-TOKEN"] = `${token}`;
