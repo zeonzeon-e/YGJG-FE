@@ -277,6 +277,12 @@ const MainPage: React.FC = () => {
                   <InfoLabel>
                     내 포지션:{" "}
                     <PositionBadge>{currentTeamInfo?.position}</PositionBadge>
+                    {(currentTeamInfo.role === "ROLE_MANAGER") && (
+                      <RoleBadge type="manager">매니저</RoleBadge>
+                    )}
+                    {(currentTeamInfo.role === "ROLE_SUBMANAGER") && (
+                      <RoleBadge type="sub">부매니저</RoleBadge>
+                    )}
                   </InfoLabel>
                 </TeamInfoRow>
               </TeamBasicInfo>
@@ -291,7 +297,10 @@ const MainPage: React.FC = () => {
           {/* 빠른 통계 */}
           <QuickStatsGrid>
             <StatCard
-              onClick={() => navigate(`/team/${currentTeamInfo.teamId}/member`)}
+              onClick={() => {
+                (selectedTeam.role === "ROLE_MANAGER" ||
+                  selectedTeam.role === "ROLE_SUBMANAGER") ? navigate(`/manager/${currentTeamInfo.teamId}/member`):
+                navigate(`/team/${currentTeamInfo.teamId}/member`)}}
             >
               <StatIconWrapper color="var(--color-info)">
                 <HiUserCircle size={24} />
@@ -344,6 +353,22 @@ const MainPage: React.FC = () => {
                 <HiMegaphone color="var(--color-error)" />
                 공지사항
               </SectionTitleWithIcon>
+              <HeaderActionGroup>
+              {(selectedTeam.role === "ROLE_MANAGER" ||
+                  selectedTeam.role === "ROLE_SUBMANAGER") && (
+                  <MoreButton
+                    onClick={() =>
+                      navigate(
+                        `/team/${currentTeamInfo.teamId}/notice/create`,
+                        {
+                          state: { teamName: teamData.teamName },
+                        }
+                      )
+                    }
+                  >
+                    공지 작성하기
+                  </MoreButton>
+                )}
               <MoreButton
                 onClick={() =>
                   navigate(`/team/${currentTeamInfo.teamId}/notice`)
@@ -351,6 +376,7 @@ const MainPage: React.FC = () => {
               >
                 더보기 <HiChevronRight size={16} />
               </MoreButton>
+              </HeaderActionGroup>
             </SectionHeader>
             <NoticeList>
               {noticeList?.length > 0 ? (
@@ -387,8 +413,7 @@ const MainPage: React.FC = () => {
               </SectionTitleWithIcon>
               <HeaderActionGroup>
                 {(selectedTeam.role === "ROLE_MANAGER" ||
-                  selectedTeam.role === "MANAGER" ||
-                  selectedTeam.role === "SUB_MANAGER") && (
+                  selectedTeam.role === "ROLE_SUBMANAGER") && (
                   <MoreButton
                     onClick={() =>
                       navigate(
@@ -569,6 +594,17 @@ const PositionBadge = styled.span`
   font-family: "Pretendard-Bold";
   padding: 2px 8px;
   border-radius: 4px;
+`;
+
+const RoleBadge = styled.span<{ type: "manager" | "sub" }>`
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: ${(props) => (props.type === "manager" ? "#fff0f0" : "#f0f7ff")};
+  color: ${(props) =>
+    props.type === "manager" ? "var(--color-error)" : "var(--color-info)"};
+  font-family: "Pretendard-Bold";
+  margin-left: 8px;
 `;
 
 const SettingsButton = styled.button`

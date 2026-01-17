@@ -12,7 +12,7 @@ import Input2 from "../../../../components/Input/Input2";
 import KakaoMapModal from "../../../../components/Modal/KakaoAddress";
 import FormationModal from "../../../../components/Modal/FormationModal";
 import FormationListModal from "../../../../components/Modal/FormationListModal";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import apiClient from "../../../../api/apiClient";
 
 interface CirclePosition {
@@ -30,8 +30,17 @@ const CIRCLE_SIZE = 44;
 const GameStrategy: React.FC = () => {
   const { teamId } = useParams<{ teamId: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+
+  useEffect(() => {
+    const state = location.state as { selectedDate?: string };
+    if (state?.selectedDate) {
+      const [year, month, day] = state.selectedDate.split("-").map(Number);
+      setSelectedDate(new Date(year, month - 1, day));
+    }
+  }, [location.state]);
   const [startTime, setStartTime] = useState<string | null>(null);
   const [endTime, setEndTime] = useState<string | null>(null);
   const [showDatePicker, setShowDatePicker] = useState(false);

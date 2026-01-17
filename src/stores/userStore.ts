@@ -27,7 +27,7 @@ interface MemberResponseDto {
 interface MyPageTeamResponseDto {
   teamId: number;
   teamName: string;
-  role: "ROLE_MANAGER" | "MANAGER" | "SUB_MANAGER" | "MEMBER";
+  role: "ROLE_MANAGER" | "MANAGER" | "ROLE_SUBMANAGER" | "ROLE_MEMBER" | "SUB_MANAGER" | "MEMBER";
   position: "FW" | "MF" | "DF" | "GK";
   teamColor: string;
   teamImageUrl: string;
@@ -52,7 +52,7 @@ export interface UserProfile {
 export interface TeamRole {
   teamId: number;
   teamName: string;
-  role: "ROLE_MANAGER" | "MANAGER" | "SUB_MANAGER" | "MEMBER";
+  role: "ROLE_MANAGER" | "MANAGER" | "ROLE_SUBMANAGER" | "ROLE_MEMBER" | "SUB_MANAGER" | "MEMBER";
   position: "FW" | "MF" | "DF" | "GK";
   teamColor: string;
   teamImageUrl: string;
