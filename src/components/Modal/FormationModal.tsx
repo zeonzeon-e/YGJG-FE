@@ -60,7 +60,7 @@ const FormationModal: React.FC<FormationModalProps> = ({ onClose, onSave }) => {
           `/api/team/${numericTeamId}/memberList`,
           {
             params: { position: "전체", teamId: numericTeamId },
-          }
+          },
         );
         setAvailablePlayers(response.data ?? []);
         setInitialPlayers(response.data ?? []);
@@ -100,7 +100,7 @@ const FormationModal: React.FC<FormationModalProps> = ({ onClose, onSave }) => {
             ...c,
             x: Math.max(0, Math.min(c.x * sx, rect.width - CIRCLE_SIZE)),
             y: Math.max(0, Math.min(c.y * sy, rect.height - CIRCLE_SIZE)),
-          }))
+          })),
         );
         lastWHRef.current = { w: rect.width, h: rect.height };
       }
@@ -134,9 +134,20 @@ const FormationModal: React.FC<FormationModalProps> = ({ onClose, onSave }) => {
   // 포지션별 색상
   const getColorByPosition = (pos: string): string => {
     const position = pos.toUpperCase().trim() || "";
-    if (["ST", "CF", "LW", "RW", "SS", "LF", "RF", "공격수"].includes(position)) return "var(--color-sk, #e74c3c)";
-    if (["CM", "CAM", "CDM", "LM", "RM", "AM", "DM", "미드필더"].includes(position)) return "var(--color-mf, #2ecc71)";
-    if (["CB", "LB", "RB", "LWB", "RWB", "WB", "SW", "WD", "수비수"].includes(position)) return "var(--color-dp, #3498db)";
+    if (["ST", "CF", "LW", "RW", "SS", "LF", "RF", "공격수"].includes(position))
+      return "var(--color-sk, #e74c3c)";
+    if (
+      ["CM", "CAM", "CDM", "LM", "RM", "AM", "DM", "미드필더"].includes(
+        position,
+      )
+    )
+      return "var(--color-mf, #2ecc71)";
+    if (
+      ["CB", "LB", "RB", "LWB", "RWB", "WB", "SW", "WD", "수비수"].includes(
+        position,
+      )
+    )
+      return "var(--color-dp, #3498db)";
     if (["GK", "골키퍼"].includes(position)) return "var(--color-gk, #f1c40f)";
     return "#95a5a6";
   };
@@ -192,8 +203,8 @@ const FormationModal: React.FC<FormationModalProps> = ({ onClose, onSave }) => {
           !(
             p.name === player.name &&
             (p.detail_position || "") === (player.detail_position || "")
-          )
-      )
+          ),
+      ),
     );
   };
 
@@ -220,7 +231,7 @@ const FormationModal: React.FC<FormationModalProps> = ({ onClose, onSave }) => {
       x = Math.max(0, Math.min(x, rect.width - CIRCLE_SIZE));
       y = Math.max(0, Math.min(y, rect.height - CIRCLE_SIZE));
       setCircles((prev) =>
-        prev.map((c) => (c.id === draggingId ? { ...c, x, y } : c))
+        prev.map((c) => (c.id === draggingId ? { ...c, x, y } : c)),
       );
     };
     const up = () => setDraggingId(null);
@@ -239,7 +250,9 @@ const FormationModal: React.FC<FormationModalProps> = ({ onClose, onSave }) => {
     setNameError(false);
   };
 
-  const handleFormationNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFormationNameChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const value = e.target.value;
     setFormationName(value);
     if (nameError && value.trim()) setNameError(false);
@@ -250,7 +263,10 @@ const FormationModal: React.FC<FormationModalProps> = ({ onClose, onSave }) => {
       setNameError(true);
       if (nameInputRef.current) {
         nameInputRef.current.focus();
-        nameInputRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+        nameInputRef.current.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        });
       }
       return;
     }
@@ -275,7 +291,7 @@ const FormationModal: React.FC<FormationModalProps> = ({ onClose, onSave }) => {
               formationName,
               teamId: numericTeamId,
             },
-          }
+          },
         );
       } catch (error) {
         console.error("Failed to save formation:", error);
@@ -336,7 +352,9 @@ const FormationModal: React.FC<FormationModalProps> = ({ onClose, onSave }) => {
                 onPointerDown={handlePointerDown(c.id)}
               >
                 <div className="label">
-                  {c.detail_position && <span className="pos">{c.detail_position}</span>}
+                  {c.detail_position && (
+                    <span className="pos">{c.detail_position}</span>
+                  )}
                   {c.name && <span className="name">{c.name}</span>}
                 </div>
               </DraggableCircle>
@@ -356,13 +374,15 @@ const FormationModal: React.FC<FormationModalProps> = ({ onClose, onSave }) => {
           <ColorSection>
             <SectionLabel>추가 마커</SectionLabel>
             <ColorPalette>
-              {["#ef5350", "#42a5f5", "#66bb6a", "#fbc02d", "#78909c"].map((color) => (
-                <ColorBtn
-                  key={color}
-                  color={color}
-                  onClick={() => handleColorCircleAdd(color)}
-                />
-              ))}
+              {["#ef5350", "#42a5f5", "#66bb6a", "#fbc02d", "#78909c"].map(
+                (color) => (
+                  <ColorBtn
+                    key={color}
+                    color={color}
+                    onClick={() => handleColorCircleAdd(color)}
+                  />
+                ),
+              )}
             </ColorPalette>
           </ColorSection>
         </Body>
@@ -455,10 +475,12 @@ const CloseButton = styled.button`
 const Body = styled.div`
   padding: 24px;
   overflow-y: auto;
-  
+
   /* 스크롤바 숨김 (깔끔하게) */
-  scrollbar-width: none; 
-  &::-webkit-scrollbar { display: none; }
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
 `;
 
 const InputGroup = styled.div`
@@ -486,9 +508,9 @@ const NameInput = styled.input<{ hasError: boolean }>`
 
   &:focus {
     outline: none;
-    border-color: #3b82f6;
+    border-color: var(--color-main);
     background-color: #fff;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    box-shadow: 0 0 0 3px rgba(14, 98, 68, 0.1);
   }
 `;
 
@@ -529,7 +551,7 @@ const ResetButton = styled.button`
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
   transition: all 0.2s;
   z-index: 10;
 
@@ -551,7 +573,9 @@ const DraggableCircle = styled.div`
   text-align: center;
   cursor: grab;
   touch-action: none;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2), inset 0 1px 1px rgba(255,255,255,0.3);
+  box-shadow:
+    0 4px 8px rgba(0, 0, 0, 0.2),
+    inset 0 1px 1px rgba(255, 255, 255, 0.3);
   border: 2px solid #fff; /* 흰색 테두리로 가시성 확보 */
   transition: transform 0.1s;
 
@@ -567,7 +591,7 @@ const DraggableCircle = styled.div`
     align-items: center;
     line-height: 1;
     pointer-events: none;
-    
+
     .pos {
       font-size: 10px;
       font-weight: 700;
