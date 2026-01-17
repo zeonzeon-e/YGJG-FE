@@ -78,26 +78,32 @@ interface GameScheduleItem {
 
 // --- Helper Functions ---
 const calculateDday = (dateString: string): string => {
-  const today = new Date();
+  if (!dateString) return "D-?";
   const targetDate = new Date(dateString);
+  if (isNaN(targetDate.getTime())) return "D-?";
+
+  const today = new Date();
   today.setHours(0, 0, 0, 0);
   targetDate.setHours(0, 0, 0, 0);
+
   const diffTime = targetDate.getTime() - today.getTime();
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
   if (diffDays === 0) return "D-DAY";
   if (diffDays > 0) return `D-${diffDays}`;
   return `D+${Math.abs(diffDays)}`;
 };
 
 const formatDate = (dateString: string): string => {
+  if (!dateString) return "날짜 미정";
   const date = new Date(dateString);
+  if (isNaN(date.getTime())) return "날짜 미정";
+
   const month = date.getMonth() + 1;
   const day = date.getDate();
   const dayOfWeek = ["일", "월", "화", "수", "목", "금", "토"][date.getDay()];
-  return `${String(month).padStart(2, "0")}/${String(day).padStart(
-    2,
-    "0"
-  )} ${dayOfWeek}`;
+
+  return `${String(month).padStart(2, "0")}/${String(day).padStart(2, "0")} ${dayOfWeek}`;
 };
 
 const parseActivitySchedule = (schedule: string[][]): GameScheduleItem[] => {
@@ -115,7 +121,7 @@ const MainPage: React.FC = () => {
   const [teamData, setTeamData] = useState<TeamDetailResponse | null>(null);
   const [noticeList, setNoticeList] = useState<AnnouncementListItem[]>([]);
   const [gameScheduleList, setGameScheduleList] = useState<GameScheduleItem[]>(
-    []
+    [],
   );
   const [isPageLoading, setIsPageLoading] = useState<boolean>(true);
   const navigate = useNavigate();
@@ -146,37 +152,66 @@ const MainPage: React.FC = () => {
     const fetchPageData = async () => {
       setIsPageLoading(true);
       try {
+        const teamId = selectedTeam.teamId;
+
         // 🔧 개발 모드 체크
         const token = getAccessToken();
         if (token?.startsWith("dev-")) {
           console.warn("[DEV MODE] Using mock data for MyTeam page");
-          await new Promise((resolve) => setTimeout(resolve, 500)); // 로딩 시뮬레이션
+          await new Promise((resolve) => setTimeout(resolve, 500));
 
           setTeamData(DEV_MOCK_TEAM_DETAIL as any);
           setNoticeList(DEV_MOCK_NOTICES);
           const parsedGameSchedule = parseActivitySchedule(
-            DEV_MOCK_TEAM_DETAIL.activitySchedule
+            DEV_MOCK_TEAM_DETAIL.activitySchedule,
           );
           setGameScheduleList(parsedGameSchedule);
           setIsPageLoading(false);
           return;
         }
 
-        const teamId = selectedTeam.teamId;
-        const teamDetailsRes = await apiClient.get<TeamDetailResponse>(
-          `/api/team/${teamId}`
-        );
-        const noticesRes = await apiClient.get<AnnouncementListItem[]>(
-          "/api/announcement/member/get-all",
-          { params: { teamId } }
-        );
-        const parsedGameSchedule = parseActivitySchedule(
-          teamDetailsRes.data.activitySchedule
-        );
+        // 1. 팀 기본 정보 및 공지사항 로드
+        const [teamDetailsRes, noticesRes] = await Promise.all([
+          apiClient.get<TeamDetailResponse>(`/api/team/${teamId}`),
+          apiClient.get<AnnouncementListItem[]>(
+            "/api/announcement/member/get-all",
+            { params: { teamId } },
+          ),
+        ]);
 
         setTeamData(teamDetailsRes.data);
         setNoticeList(noticesRes.data);
-        setGameScheduleList(parsedGameSchedule);
+
+        // 2. 별도의 경기 일정 API 호출 (이번 달 일정)
+        // 정기 활동 일정(activitySchedule)과 실제 경기 일정은 분리되어야 함
+        try {
+          const matchRes = await apiClient.get<any[]>(
+            `/api/team-strategy/get-strategy/monthly`,
+            {
+              params: {
+                date: new Date().toISOString().slice(0, 7), // YYYY-MM
+                teamId,
+              },
+            },
+          );
+
+          if (matchRes.data && Array.isArray(matchRes.data)) {
+            const parsedMatches: GameScheduleItem[] = matchRes.data.map(
+              (item: any) => ({
+                id: item.id,
+                date: item.matchStartTime?.split(" ")[0] || "",
+                opponent: item.opposingTeam || "미정",
+                location: item.address || item.matchLocation || "미정",
+              }),
+            );
+            setGameScheduleList(parsedMatches);
+          } else {
+            setGameScheduleList([]);
+          }
+        } catch (matchErr) {
+          console.error("Failed to fetch match schedules:", matchErr);
+          setGameScheduleList([]); // 오류 시 빈 배열 처리
+        }
       } catch (error) {
         console.error("Failed to fetch page data:", error);
       } finally {
@@ -277,10 +312,10 @@ const MainPage: React.FC = () => {
                   <InfoLabel>
                     내 포지션:{" "}
                     <PositionBadge>{currentTeamInfo?.position}</PositionBadge>
-                    {(currentTeamInfo.role === "ROLE_MANAGER") && (
+                    {currentTeamInfo.role === "ROLE_MANAGER" && (
                       <RoleBadge type="manager">매니저</RoleBadge>
                     )}
-                    {(currentTeamInfo.role === "ROLE_SUBMANAGER") && (
+                    {currentTeamInfo.role === "ROLE_SUBMANAGER" && (
                       <RoleBadge type="sub">부매니저</RoleBadge>
                     )}
                   </InfoLabel>
@@ -298,9 +333,11 @@ const MainPage: React.FC = () => {
           <QuickStatsGrid>
             <StatCard
               onClick={() => {
-                (selectedTeam.role === "ROLE_MANAGER" ||
-                  selectedTeam.role === "ROLE_SUBMANAGER") ? navigate(`/manager/${currentTeamInfo.teamId}/member`):
-                navigate(`/team/${currentTeamInfo.teamId}/member`)}}
+                selectedTeam.role === "ROLE_MANAGER" ||
+                selectedTeam.role === "ROLE_SUBMANAGER"
+                  ? navigate(`/manager/${currentTeamInfo.teamId}/member`)
+                  : navigate(`/team/${currentTeamInfo.teamId}/member`);
+              }}
             >
               <StatIconWrapper color="var(--color-info)">
                 <HiUserCircle size={24} />
@@ -333,12 +370,22 @@ const MainPage: React.FC = () => {
           {/* 활동 일정 */}
           <Section>
             <SectionTitle>주요 활동 일정</SectionTitle>
-            {teamData?.activitySchedule?.length > 0 ? (
+            {teamData?.activitySchedule?.some((dayArr) => dayArr.length > 0) ? (
               <ActivityCard>
-                <ActivityDay>{teamData.activitySchedule[0][0]}</ActivityDay>
+                <ActivityDay>
+                  {(() => {
+                    const idx = teamData.activitySchedule.findIndex(
+                      (dayArr) => dayArr.length > 0,
+                    );
+                    return idx !== -1
+                      ? ["월", "화", "수", "목", "금", "토", "일"][idx] + "요일"
+                      : "요일 미상";
+                  })()}
+                </ActivityDay>
                 <ActivityTime>
-                  {teamData.activitySchedule[0][1] || "미정"} -{" "}
-                  {teamData.activitySchedule[0][2] || "미정"}
+                  {teamData.activitySchedule
+                    .find((dayArr) => dayArr.length > 0)
+                    ?.join(", ") || "시간 미상"}
                 </ActivityTime>
               </ActivityCard>
             ) : (
@@ -354,7 +401,7 @@ const MainPage: React.FC = () => {
                 공지사항
               </SectionTitleWithIcon>
               <HeaderActionGroup>
-              {(selectedTeam.role === "ROLE_MANAGER" ||
+                {(selectedTeam.role === "ROLE_MANAGER" ||
                   selectedTeam.role === "ROLE_SUBMANAGER") && (
                   <MoreButton
                     onClick={() =>
@@ -362,20 +409,20 @@ const MainPage: React.FC = () => {
                         `/team/${currentTeamInfo.teamId}/notice/create`,
                         {
                           state: { teamName: teamData.teamName },
-                        }
+                        },
                       )
                     }
                   >
                     공지 작성하기
                   </MoreButton>
                 )}
-              <MoreButton
-                onClick={() =>
-                  navigate(`/team/${currentTeamInfo.teamId}/notice`)
-                }
-              >
-                더보기 <HiChevronRight size={16} />
-              </MoreButton>
+                <MoreButton
+                  onClick={() =>
+                    navigate(`/team/${currentTeamInfo.teamId}/notice`)
+                  }
+                >
+                  더보기 <HiChevronRight size={16} />
+                </MoreButton>
               </HeaderActionGroup>
             </SectionHeader>
             <NoticeList>
@@ -420,7 +467,7 @@ const MainPage: React.FC = () => {
                         `/manager/${currentTeamInfo.teamId}/team-strategy/1`,
                         {
                           state: { teamName: teamData.teamName },
-                        }
+                        },
                       )
                     }
                   >
@@ -846,14 +893,14 @@ const DdayBadge = styled.span<{ dday: string }>`
     props.dday === "D-DAY"
       ? "var(--color-error)"
       : props.dday.startsWith("D-")
-      ? "#fff0f0"
-      : "#f0f0f0"};
+        ? "#fff0f0"
+        : "#f0f0f0"};
   color: ${(props) =>
     props.dday === "D-DAY"
       ? "white"
       : props.dday.startsWith("D-")
-      ? "var(--color-error)"
-      : "var(--color-dark1)"};
+        ? "var(--color-error)"
+        : "var(--color-dark1)"};
 `;
 
 const GameDetails = styled.div`
