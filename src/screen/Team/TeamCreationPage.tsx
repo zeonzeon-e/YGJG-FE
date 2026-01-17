@@ -12,6 +12,7 @@ import {
 } from "react-icons/hi2";
 import CheckButton from "../../components/Button/CheckButton";
 import ScrollProgress from "../../components/ScrollProgress/ScrollProgress";
+import { useToastStore } from "../../stores/toastStore";
 import apiClient from "../../api/apiClient";
 import KakaoMapModal from "../../components/Modal/KakaoAddress";
 
@@ -452,7 +453,7 @@ const TeamDetailOne: React.FC<{ onNext: (data: any) => void }> = ({
   onNext,
 }) => {
   const [schedule, setSchedule] = useState(
-    Array.from({ length: 7 }, () => Array(6).fill(false))
+    Array.from({ length: 7 }, () => Array(6).fill(false)),
   );
   const [region, setRegion] = useState("");
   const [address, setAddress] = useState("");
@@ -692,11 +693,12 @@ const TeamCreationComplete: React.FC<{ inviteCode: string }> = ({
   inviteCode,
 }) => {
   const navigate = useNavigate();
+  const { addToast } = useToastStore();
 
   const copy = () => {
     navigator.clipboard
       ?.writeText(inviteCode)
-      .then(() => alert("초대코드가 복사되었습니다!"));
+      .then(() => addToast("초대코드가 복사되었습니다!", "success"));
   };
 
   return (
