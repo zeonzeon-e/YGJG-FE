@@ -4,6 +4,7 @@ import Header2 from "../../components/Header/Header2/Header2";
 import { useNavigate, useParams } from "react-router-dom";
 import apiClient from "../../api/apiClient";
 import { useToastStore } from "../../stores/toastStore";
+import { useUserStore } from "../../stores/userStore";
 import { HiExclamationTriangle, HiArrowLeft } from "react-icons/hi2";
 
 const fadeIn = keyframes`
@@ -16,6 +17,7 @@ const TeamOutPage: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const { addToast } = useToastStore();
+  const fetchUserData = useUserStore((state) => state.fetchUserData);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleReasonChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -46,6 +48,7 @@ const TeamOutPage: React.FC = () => {
       });
 
       if (response.status === 200) {
+        await fetchUserData();
         addToast("팀을 성공적으로 탈퇴했습니다.", "success");
         navigate("/my");
       }
