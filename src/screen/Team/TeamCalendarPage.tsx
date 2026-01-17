@@ -188,26 +188,39 @@ const TeamCalendarPage: React.FC = () => {
         rawData = response.data;
       }
       console.log("월 데이터", rawData);
-      const mappedEvents: CalendarEvent[] = rawData.map((item) => {
-        const start = new Date(item.matchStartTime.replace(" ", "T"));
-        // For monthly view, we need the actual date of the event
-        const dateStr = start.toISOString().split("T")[0];
+      const mappedEvents = rawData
+        .map((item) => {
+          // 날짜 파싱 이슈 해결: UTC 변환 없이 로컬 시간대 기준 날짜 사용
+          // item.matchStartTime 형식: "YYYY-MM-DD HH:mm:ss" 또는 "YYYY-MM-DD"
+          const datePart = item.matchStartTime.split(" ")[0]; // "YYYY-MM-DD" 추출 가능성
 
-        return {
-          id: item.id,
-          date: dateStr,
-          title: `vs ${item.opposingTeam}`,
-          startTime: "", // Not needed for dots
-          endTime: "",
-          location: "",
-          teamId: Number(teamId),
-          color: "#0e6244",
-          opposingTeam: item.opposingTeam,
-          matchStrategy: "",
-          participation: "NONE",
-        };
-      });
+          // 간단한 유효성 검사: YYYY-MM-DD 형식인지 확인 (regex)
+          const isValidDate = /^\d{4}-\d{2}-\d{2}$/.test(datePart);
 
+          if (!isValidDate) {
+            console.warn(
+              `[Calendar] 유효하지 않은 날짜 형식 무시됨: id=${item.id}, time=${item.matchStartTime}`,
+            );
+            return null;
+          }
+
+          return {
+            id: item.id,
+            date: datePart,
+            title: `vs ${item.opposingTeam}`,
+            startTime: "", // Not needed for dots
+            endTime: "",
+            location: "",
+            teamId: Number(teamId),
+            color: "#0e6244", // 기본 테마 색상 사용
+            opposingTeam: item.opposingTeam,
+            matchStrategy: "",
+            participation: "NONE",
+          } as CalendarEvent;
+        })
+        .filter((event): event is CalendarEvent => event !== null);
+
+      console.log("매핑된 캘린더 이벤트:", mappedEvents);
       setMonthlyEvents(mappedEvents);
     } catch (error) {
       console.error("월간 일정 로드 실패:", error);
