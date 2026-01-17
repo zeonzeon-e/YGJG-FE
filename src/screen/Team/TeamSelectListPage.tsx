@@ -264,6 +264,7 @@ const TeamSelectListPage: React.FC = () => {
   /**
    * 빠른 필터 적용 (클릭 시 바로 API 호출)
    */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleQuickFilter = (type: "gender" | "level", value: string) => {
     if (!getAccessToken()) {
       setLoginModalOpen(true);
