@@ -218,16 +218,34 @@ const TeamCalendarPage: React.FC = () => {
       }
 
       const mappedEvents: CalendarEvent[] = rawData.map((item) => {
-        const start = new Date(item.matchStartTime.replace(" ", "T"));
-        const end = new Date(item.matchEndTime.replace(" ", "T"));
         const dateStr = selectedDate;
-        const startTimeStr = `${String(start.getHours()).padStart(
-          2,
-          "0",
-        )}:${String(start.getMinutes()).padStart(2, "0")}`;
-        const endTimeStr = `${String(end.getHours()).padStart(2, "0")}:${String(
-          end.getMinutes(),
-        ).padStart(2, "0")}`;
+
+        // 시간 파싱 헬퍼 함수: 다양한 형식 지원
+        const parseTimeString = (timeValue: string): string => {
+          if (!timeValue) return "";
+
+          // 이미 "HH:MM" 형식인지 확인
+          const timeOnlyRegex = /^(\d{1,2}):(\d{2})$/;
+          const timeMatch = timeValue.match(timeOnlyRegex);
+          if (timeMatch) {
+            const hours = timeMatch[1].padStart(2, "0");
+            const minutes = timeMatch[2];
+            return `${hours}:${minutes}`;
+          }
+
+          // "YYYY-MM-DD HH:MM:SS" 또는 ISO 형식 시도
+          const dateTimeStr = timeValue.replace(" ", "T");
+          const date = new Date(dateTimeStr);
+          if (!isNaN(date.getTime())) {
+            return `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
+          }
+
+          // 파싱 실패 시 빈 문자열 반환
+          return "";
+        };
+
+        const startTimeStr = parseTimeString(item.matchStartTime);
+        const endTimeStr = parseTimeString(item.matchEndTime);
 
         return {
           id: item.id,
@@ -312,7 +330,9 @@ const TeamCalendarPage: React.FC = () => {
                   <TimeRow>
                     <StatusDot status={event.participation || "NONE"} />
                     <TimeText>
-                      {event.startTime}-{event.endTime}
+                      {event.startTime && event.endTime
+                        ? `${event.startTime} - ${event.endTime}`
+                        : "시간 미정"}
                     </TimeText>
                   </TimeRow>
                   <TitleText>
@@ -393,7 +413,7 @@ const TeamCalendarPage: React.FC = () => {
                     <DetailValue>
                       {selectedEvent.date}
                       {selectedEvent.startTime && selectedEvent.endTime
-                        ? ` ${selectedEvent.startTime} ~ ${selectedEvent.endTime}`
+                        ? ` / ${selectedEvent.startTime} - ${selectedEvent.endTime}`
                         : " 시간 미정"}
                     </DetailValue>
                   </DetailContent>
