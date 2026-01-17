@@ -18,8 +18,6 @@ const fadeIn = keyframes`
   }
 `;
 
-// spin keyframe removed - unused
-
 /* ========== Page Layout ========== */
 const PageWrapper = styled.div`
   min-height: 100vh;
@@ -226,8 +224,6 @@ const ResendLink = styled.button`
     cursor: not-allowed;
   }
 `;
-
-// LoadingSpinner removed - unused
 
 /* ========== Messages ========== */
 const ErrorMessage = styled.div`
