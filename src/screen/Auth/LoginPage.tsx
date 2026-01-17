@@ -110,16 +110,16 @@ const LoginPage: React.FC = () => {
     setIsLoading(true);
     try {
       const response = await apiClient.post(
-        "api/sign/signin/sign-in",
+        "/api/sign/signin/sign-in",
         {
-          email: email, 
+          email: email,
           password: password,
         },
         {
           headers: {
             "Content-Type": "application/json",
           },
-        }
+        },
       );
 
       if (response.status === 200) {

@@ -27,6 +27,7 @@ const UnsubscribePage: React.FC = () => {
   const [step, setStep] = useState(1); // 1: Info, 2: Reason, 3: Confirm
   const [selectedReason, setSelectedReason] = useState("");
   const [customReason, setCustomReason] = useState("");
+  const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   const finalReason =
@@ -38,9 +39,14 @@ const UnsubscribePage: React.FC = () => {
       return;
     }
 
+    if (!password) {
+      alert("비밀번호를 입력해주세요.");
+      return;
+    }
+
     if (
       !window.confirm(
-        "정말 탈퇴하시겠습니까? 모든 데이터가 영구 삭제되며 복구할 수 없습니다."
+        "정말 탈퇴하시겠습니까? 모든 데이터가 영구 삭제되며 복구할 수 없습니다.",
       )
     ) {
       return;
@@ -58,17 +64,23 @@ const UnsubscribePage: React.FC = () => {
       }
 
       // 실제 API 호출 (API 명세에 따라 수정 필요)
-      await apiClient.delete("/api/member", {
-        data: { reason: finalReason },
-        headers: { "X-AUTH-TOKEN": token },
-      });
+      await apiClient.post(
+        "/api/sign/delete-user",
+        {
+          password: password,
+          passwordCheck: password,
+        },
+        {
+          headers: { "X-AUTH-TOKEN": token },
+        },
+      );
 
       alert("서비스 탈퇴가 완료되었습니다. 그동안 이용해주셔서 감사합니다.");
       navigate("/login");
     } catch (error: any) {
       console.error("Unsubscribe failed", error);
       alert(
-        error.response?.data?.message || "탈퇴 처리 중 오류가 발생했습니다."
+        error.response?.data?.message || "탈퇴 처리 중 오류가 발생했습니다.",
       );
     } finally {
       setIsLoading(false);
@@ -185,8 +197,17 @@ const UnsubscribePage: React.FC = () => {
                 모든 데이터는 영구적으로 복구할 수 없습니다.
               </FinalDesc>
               <ReasonPreview>
-                <strong>탈퇴 사유:</strong> {finalReason}
+                <div className="label">탈퇴 사유</div>
+                <div className="content">{finalReason}</div>
               </ReasonPreview>
+              <PasswordInputWrapper>
+                <PasswordInput
+                  type="password"
+                  placeholder="비밀번호를 입력해주세요"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+              </PasswordInputWrapper>
             </FinalWarningCard>
 
             <ButtonRow>
@@ -318,6 +339,7 @@ const ActionButton = styled.button<{ disabled?: boolean }>`
   justify-content: center;
   gap: 8px;
   transition: all 0.2s;
+  flex: 2;
 
   &:not(:disabled):hover {
     background: #343a40;
@@ -403,6 +425,7 @@ const CustomInput = styled.textarea`
   border-radius: 12px;
   font-size: 14px;
   resize: none;
+  box-sizing: border-box;
 
   &:focus {
     outline: none;
@@ -458,13 +481,29 @@ const FinalDesc = styled.p`
 
 const ReasonPreview = styled.div`
   background: white;
-  padding: 12px 16px;
-  border-radius: 8px;
-  font-size: 13px;
-  color: #555;
+  padding: 14px 16px;
+  border: 1px solid #e9ecef;
+  border-radius: 12px;
+  font-size: 14px;
+  color: #333;
   width: 100%;
   text-align: left;
   margin-top: 8px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  .label {
+    font-size: 12px;
+    color: #888;
+    font-weight: 600;
+  }
+
+  .content {
+    line-height: 1.4;
+    color: #444;
+  }
 `;
 
 const DangerButton = styled.button`
@@ -486,5 +525,25 @@ const DangerButton = styled.button`
 
   &:not(:disabled):hover {
     background: #e03131;
+  }
+`;
+
+const PasswordInputWrapper = styled.div`
+  width: 100%;
+  margin-top: 8px;
+`;
+
+const PasswordInput = styled.input`
+  width: 100%;
+  height: 48px;
+  border: 1px solid #e9ecef;
+  border-radius: 12px;
+  padding: 0 16px;
+  font-size: 14px;
+  box-sizing: border-box;
+
+  &:focus {
+    outline: none;
+    border-color: #fa5252;
   }
 `;

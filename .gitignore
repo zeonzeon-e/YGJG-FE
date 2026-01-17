@@ -21,3 +21,22 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# Capacitor - Web Assets in Native Projects
+/ios/App/App/public
+/android/app/src/main/assets/public
+
+# Capacitor - Native Builds & Dependencies
+/ios/DerivedData
+/ios/App/Pods
+/android/.gradle
+/android/app/build
+/android/captain.db
+/android/build
+
+# IDE & Misc
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db

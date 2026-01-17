@@ -14,11 +14,10 @@ const { createProxyMiddleware } = require("http-proxy-middleware");
 
 module.exports = function (app) {
   app.use(
-    ["/api", "/auth"],
-    createProxyMiddleware({
+    createProxyMiddleware(["/api", "/auth"], {
       target: "http://13.125.250.163:8080",
       changeOrigin: true,
-      cookieDomainRewrite: "localhost",
-    })
+      secure: false, // development self-signed certs
+    }),
   );
 };

@@ -14,9 +14,10 @@ import {
 const apiClient: AxiosInstance = axios.create({
   baseURL: "", // 프록시 사용으로 빈 문자열 (setupProxy.js에서 처리)
   headers: {
-    "Content-Type": "application/x-www-form-urlencoded",
+    "Content-Type": "application/json",
   },
   withCredentials: true,
+  timeout: 15000, // 15초 타임아웃 (모바일 네트워크 대비)
 });
 
 /**
@@ -63,7 +64,7 @@ apiClient.interceptors.request.use(
     }
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => Promise.reject(error),
 );
 
 /**
@@ -110,10 +111,13 @@ apiClient.interceptors.response.use(
 
       try {
         const response = await axios.post(
-          "/auth/token/refresh", // 프록시를 통해 요청
+          "/api/sign/reissue", // 프록시를 통해 요청
+          null,
           {
-            refreshToken: refreshToken,
-          }
+            params: {
+              refreshToken: refreshToken,
+            },
+          },
         );
 
         const newAccessToken = response.data.accessToken;
@@ -138,7 +142,7 @@ apiClient.interceptors.response.use(
       }
     }
     return Promise.reject(error);
-  }
+  },
 );
 
 export default apiClient;

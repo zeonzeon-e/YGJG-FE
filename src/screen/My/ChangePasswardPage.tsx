@@ -72,7 +72,7 @@ const ChangePasswordPage: React.FC = () => {
     title: string,
     message: string,
     variant: "success" | "danger" | "info" = "info",
-    onConfirm?: () => void
+    onConfirm?: () => void,
   ) => {
     setAlertState({
       isOpen: true,
@@ -87,7 +87,7 @@ const ChangePasswordPage: React.FC = () => {
   const showConfirm = (
     title: string,
     message: string,
-    onConfirm: () => void
+    onConfirm: () => void,
   ) => {
     setAlertState({
       isOpen: true,
@@ -111,7 +111,7 @@ const ChangePasswordPage: React.FC = () => {
       "정말로 비밀번호를 변경하시겠습니까?",
       async () => {
         await executeChangePassword();
-      }
+      },
     );
   };
 
@@ -126,7 +126,7 @@ const ChangePasswordPage: React.FC = () => {
           "변경 완료",
           "비밀번호가 성공적으로 변경되었습니다. (Dev Mode)",
           "success",
-          () => navigate("/my")
+          () => navigate("/my"),
         );
         return;
       }
@@ -134,12 +134,12 @@ const ChangePasswordPage: React.FC = () => {
       // 2. Verify current password first by trying to Login
       if (!userEmail) {
         throw new Error(
-          "사용자 정보를 불러오지 못했습니다. 다시 시도해주세요."
+          "사용자 정보를 불러오지 못했습니다. 다시 시도해주세요.",
         );
       }
 
       try {
-        await apiClient.post("api/sign/sign-in", {
+        await apiClient.post("api/sign/signin/sign-in", {
           email: userEmail,
           password: currentPassword,
         });
@@ -150,16 +150,19 @@ const ChangePasswordPage: React.FC = () => {
       }
 
       // 3. Password verified, now change it
-      await apiClient.put("/api/my/password", {
-        currentPassword,
-        newPassword,
+      await apiClient.post("/api/sign/change-password", null, {
+        params: {
+          oldPassword: currentPassword,
+          newPassword: newPassword,
+          oldPasswordCk: currentPassword, // Assuming this is confirmed old password or check
+        },
       });
 
       showAlert(
         "변경 완료",
         "비밀번호가 성공적으로 변경되었습니다.",
         "success",
-        () => navigate("/my")
+        () => navigate("/my"),
       );
     } catch (error: any) {
       console.error("Password change failed", error);
