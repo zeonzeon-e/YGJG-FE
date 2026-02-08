@@ -86,11 +86,11 @@ const CalendarModal: React.FC<CalendarProps> = ({
 
   const isPrevDisabled = isBefore(
     startOfMonth(subMonths(currentMonth, 1)),
-    minMonth
+    minMonth,
   );
 
   // ⭐️ [수정된 부분] 날짜 형식을 "yyyy년"으로 변경
-  const yearLabel = format(currentMonth, "yyyy년"); 
+  const yearLabel = format(currentMonth, "yyyy년");
   const monthLabel = format(currentMonth, "M월");
 
   const renderWeekDays = () => {
@@ -121,7 +121,8 @@ const CalendarModal: React.FC<CalendarProps> = ({
 
     while (day <= endDate) {
       const cloneDay = new Date(day);
-      const isCurrentMonth = format(currentMonth, "M") === format(cloneDay, "M");
+      const isCurrentMonth =
+        format(currentMonth, "M") === format(cloneDay, "M");
       const isDisabled =
         isBefore(cloneDay, today) && !isSameDay(cloneDay, today);
       const isSelected =
@@ -139,11 +140,11 @@ const CalendarModal: React.FC<CalendarProps> = ({
           >
             {format(cloneDay, "d")}
           </Day>
-        </DayWrapper>
+        </DayWrapper>,
       );
       day = addDays(day, 1);
     }
-    
+
     return <DaysGrid key={currentMonth.toString()}>{days}</DaysGrid>;
   };
 
@@ -210,7 +211,9 @@ const Modal = styled.div`
   padding: 24px;
   border-radius: 24px;
   width: 340px;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1), 0 4px 12px rgba(0,0,0,0.05);
+  box-shadow:
+    0 20px 50px rgba(0, 0, 0, 0.1),
+    0 4px 12px rgba(0, 0, 0, 0.05);
   z-index: 1001;
   user-select: none;
   animation: ${popIn} 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -234,7 +237,8 @@ const MonthDisplay = styled.div`
     font-size: 18px;
     font-weight: 700;
     color: #111;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-family:
+      -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   }
 `;
 
@@ -336,21 +340,19 @@ const Day = styled.div<DayProps>`
   position: relative;
 
   color: ${({ isDisabled, isCurrentMonth }) =>
-    isDisabled
-      ? "#d1d5db"
-      : !isCurrentMonth
-      ? "#9ca3af"
-      : "#1f2937"};
+    isDisabled ? "#d1d5db" : !isCurrentMonth ? "#9ca3af" : "#1f2937"};
 
   background-color: ${({ isSelected }) =>
-    isSelected ? "#3b82f6" : "transparent"};
+    isSelected ? "var(--color-main)" : "transparent"};
 
   color: ${({ isSelected, isDisabled }) =>
     isSelected && !isDisabled ? "#ffffff" : undefined};
 
   border: ${({ isToday, isSelected }) =>
-    isToday && !isSelected ? "1.5px solid #3b82f6" : "1.5px solid transparent"};
-  
+    isToday && !isSelected
+      ? "1.5px solid var(--color-main)"
+      : "1.5px solid transparent"};
+
   ${({ isDisabled }) =>
     isDisabled &&
     css`
@@ -360,9 +362,9 @@ const Day = styled.div<DayProps>`
 
   &:hover {
     background-color: ${({ isSelected, isDisabled }) =>
-      !isDisabled && !isSelected ? "#eff6ff" : undefined};
+      !isDisabled && !isSelected ? "#f0fdf4" : undefined};
     color: ${({ isSelected, isDisabled }) =>
-      !isDisabled && !isSelected ? "#3b82f6" : undefined};
+      !isDisabled && !isSelected ? "var(--color-main)" : undefined};
   }
 
   &:active {

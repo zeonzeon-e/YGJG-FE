@@ -5,7 +5,6 @@ import {
   HiMapPin,
   HiUserGroup,
   HiTrophy,
-  HiClock,
   HiChevronLeft,
   HiShare,
   HiCheckBadge,
@@ -204,10 +203,10 @@ const TeamInfoPage: React.FC = () => {
                     {pos === "GK"
                       ? "골키퍼"
                       : pos === "FW"
-                      ? "공격수"
-                      : pos === "MF"
-                      ? "미드필더"
-                      : "수비수"}
+                        ? "공격수"
+                        : pos === "MF"
+                          ? "미드필더"
+                          : "수비수"}
                   </PositionLabel>
                   <HiCheckBadge color="var(--color-main)" />
                 </PositionCard>

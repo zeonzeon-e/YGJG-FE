@@ -1,17 +1,13 @@
-import React, { useState, useEffect } from "react";
-import styled, { keyframes, css } from "styled-components";
+import React, { useState } from "react";
+import styled, { keyframes } from "styled-components";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
 import {
   HiArrowLeft,
   HiCheckCircle,
   HiTicket,
-  HiUserGroup,
   HiMapPin,
-  HiSparkles,
 } from "react-icons/hi2";
 import { FaRunning, FaHandPaper, FaFutbol, FaChild } from "react-icons/fa"; // Icons for positions (example)
-import apiClient from "../../api/apiClient";
 
 // Types
 interface TeamInfo {

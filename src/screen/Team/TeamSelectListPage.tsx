@@ -13,7 +13,6 @@ import { useNavigate } from "react-router-dom";
 
 import apiClient from "../../api/apiClient";
 import { getAccessToken, removeTokens } from "../../utils/authUtils";
-import CheckButton from "../../components/Button/CheckButton";
 import MainButton from "../../components/Button/MainButton";
 import Modal1 from "../../components/Modal/Modal1";
 
@@ -68,13 +67,13 @@ const TeamSelectListPage: React.FC = () => {
     false,
   ]);
   const [selectedAge, setSelectedAge] = useState<boolean[]>(
-    Array(6).fill(false)
+    Array(6).fill(false),
   ); // 10대~60대
   const [selectedDays, setSelectedDays] = useState<boolean[]>(
-    Array(7).fill(false)
+    Array(7).fill(false),
   ); // 월~일
   const [selectedLevel, setSelectedLevel] = useState<boolean[]>(
-    Array(5).fill(false)
+    Array(5).fill(false),
   ); // 하, 중하, 중, 중상, 상
 
   // 페이지 진입 시(필터 없이) 팀 목록 요청
@@ -124,7 +123,7 @@ const TeamSelectListPage: React.FC = () => {
     sLevel: boolean[],
     sRegion: boolean[],
     sAge: boolean[],
-    sDays: boolean[]
+    sDays: boolean[],
   ) => {
     // 1. 상세 필터 상태 업데이트 (퀵필터에서 호출했을 때를 위해)
     setSelectedGender(sGender);
@@ -169,13 +168,13 @@ const TeamSelectListPage: React.FC = () => {
     try {
       const regionValues = sRegion
         .map((selected, idx) =>
-          selected ? ["내 위치 중심", "내 활동 지역 중심", "찾기"][idx] : null
+          selected ? ["내 위치 중심", "내 활동 지역 중심", "찾기"][idx] : null,
         )
         .filter(Boolean) as string[];
 
       const genderValues = sGender
         .map((selected, idx) =>
-          selected ? ["여성", "남성", "혼성"][idx] : null
+          selected ? ["여성", "남성", "혼성"][idx] : null,
         )
         .filter(Boolean) as string[];
 
@@ -183,13 +182,13 @@ const TeamSelectListPage: React.FC = () => {
         .map((selected, idx) =>
           selected
             ? ["10대", "20대", "30대", "40대", "50대", "60대"][idx]
-            : null
+            : null,
         )
         .filter(Boolean) as string[];
 
       const daysValues = sDays
         .map((selected, idx) =>
-          selected ? ["월", "화", "수", "목", "금", "토", "일"][idx] : null
+          selected ? ["월", "화", "수", "목", "금", "토", "일"][idx] : null,
         )
         .filter(Boolean) as string[];
 
@@ -229,7 +228,7 @@ const TeamSelectListPage: React.FC = () => {
       selectedLevel,
       selectedRegion,
       selectedAge,
-      selectedDays
+      selectedDays,
     );
     setFilterOpen(false);
   };
@@ -265,6 +264,7 @@ const TeamSelectListPage: React.FC = () => {
   /**
    * 빠른 필터 적용 (클릭 시 바로 API 호출)
    */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleQuickFilter = (type: "gender" | "level", value: string) => {
     if (!getAccessToken()) {
       setLoginModalOpen(true);
@@ -272,6 +272,7 @@ const TeamSelectListPage: React.FC = () => {
     }
 
     const isSame = quickFilters[type] === value;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const nextValue = isSame ? "" : value;
 
     // 상세필터 상태 계산
@@ -311,7 +312,7 @@ const TeamSelectListPage: React.FC = () => {
       nextLevel,
       selectedRegion,
       selectedAge,
-      selectedDays
+      selectedDays,
     );
   };
 
@@ -381,7 +382,7 @@ const TeamSelectListPage: React.FC = () => {
       nextLevels.level,
       nextLevels.region,
       nextLevels.age,
-      nextLevels.days
+      nextLevels.days,
     );
   };
 
@@ -636,13 +637,13 @@ const TeamSelectListPage: React.FC = () => {
                         selected={selectedRegion[idx]}
                         onClick={() =>
                           setSelectedRegion((prev) =>
-                            prev.map((v, i) => (i === idx ? !v : v))
+                            prev.map((v, i) => (i === idx ? !v : v)),
                           )
                         }
                       >
                         {label}
                       </Chip>
-                    )
+                    ),
                   )}
                 </ChipGroup>
               </FilterSection>
@@ -659,7 +660,7 @@ const TeamSelectListPage: React.FC = () => {
                       selected={selectedGender[idx]}
                       onClick={() =>
                         setSelectedGender((prev) =>
-                          prev.map((v, i) => (i === idx ? !v : v))
+                          prev.map((v, i) => (i === idx ? !v : v)),
                         )
                       }
                     >
@@ -682,13 +683,13 @@ const TeamSelectListPage: React.FC = () => {
                         selected={selectedAge[idx]}
                         onClick={() =>
                           setSelectedAge((prev) =>
-                            prev.map((v, i) => (i === idx ? !v : v))
+                            prev.map((v, i) => (i === idx ? !v : v)),
                           )
                         }
                       >
                         {label}
                       </Chip>
-                    )
+                    ),
                   )}
                 </ChipGroup>
               </FilterSection>
@@ -706,14 +707,14 @@ const TeamSelectListPage: React.FC = () => {
                         selected={selectedDays[idx]}
                         onClick={() =>
                           setSelectedDays((prev) =>
-                            prev.map((v, i) => (i === idx ? !v : v))
+                            prev.map((v, i) => (i === idx ? !v : v)),
                           )
                         }
                         circle
                       >
                         {label}
                       </Chip>
-                    )
+                    ),
                   )}
                 </ChipGroup>
               </FilterSection>
@@ -730,7 +731,7 @@ const TeamSelectListPage: React.FC = () => {
                       selected={selectedLevel[idx]}
                       onClick={() =>
                         setSelectedLevel((prev) =>
-                          prev.map((v, i) => (i === idx ? !v : v))
+                          prev.map((v, i) => (i === idx ? !v : v)),
                         )
                       }
                     >

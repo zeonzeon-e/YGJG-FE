@@ -18,11 +18,6 @@ const fadeIn = keyframes`
   }
 `;
 
-const spin = keyframes`
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-`;
-
 /* ========== Page Layout ========== */
 const PageWrapper = styled.div`
   min-height: 100vh;
@@ -230,15 +225,6 @@ const ResendLink = styled.button`
   }
 `;
 
-const LoadingSpinner = styled.div`
-  width: 20px;
-  height: 20px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-top-color: white;
-  border-radius: 50%;
-  animation: ${spin} 0.8s linear infinite;
-`;
-
 /* ========== Messages ========== */
 const ErrorMessage = styled.div`
   display: flex;
@@ -313,7 +299,7 @@ const FindPasswordPhonePage: React.FC = () => {
     if (resendCooldown > 0) {
       resendCooldownRef.current = setInterval(
         () => setResendCooldown((t) => t - 1),
-        1000
+        1000,
       );
     }
     return () => {
@@ -329,7 +315,7 @@ const FindPasswordPhonePage: React.FC = () => {
     } else if (numbersOnly.length > 7) {
       formatted = `${numbersOnly.slice(0, 3)}-${numbersOnly.slice(
         3,
-        7
+        7,
       )}-${numbersOnly.slice(7, 11)}`;
     } else {
       formatted = numbersOnly;
@@ -352,8 +338,10 @@ const FindPasswordPhonePage: React.FC = () => {
     setSuccessMessage(null);
 
     try {
-      const phoneNum = phone.replace(/\D/g, "");
-      await apiClient.post(`/api/sign/send-sms?phoneNum=${phoneNum}`);
+      // const phoneNum = phone.replace(/\D/g, ""); // SignUpPage sends dashed, so we follow that if sharing endpoint
+      await apiClient.post("/api/sign/signup/send-sms", null, {
+        params: { phoneNum: phone },
+      });
       setIsCodeSent(true);
       setTimer(180);
       setResendCooldown(60);
@@ -373,9 +361,10 @@ const FindPasswordPhonePage: React.FC = () => {
     }
     setIsVerifying(true);
     try {
-      await apiClient.post(
-        `/api/sign/verify?certificationNumber=${verificationCode}`
-      );
+      await apiClient.post("/api/sign/signup/verify", {
+        certificationNumber: verificationCode,
+        phoneNumber: phone,
+      });
       setIsVerified(true);
       setSuccessMessage("휴대폰 인증이 완료되었습니다.");
       setOtpError(null);

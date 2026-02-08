@@ -12,6 +12,7 @@ import {
 import Header2 from "../../components/Header/Header2/Header2";
 import apiClient from "../../api/apiClient";
 import { getAccessToken } from "../../utils/authUtils";
+import AlertModal from "../../components/Modal/AlertModal";
 
 const UNSUBSCRIBE_REASONS = [
   "다른 서비스를 사용하게 되었어요",
@@ -27,52 +28,113 @@ const UnsubscribePage: React.FC = () => {
   const [step, setStep] = useState(1); // 1: Info, 2: Reason, 3: Confirm
   const [selectedReason, setSelectedReason] = useState("");
   const [customReason, setCustomReason] = useState("");
+  const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+
+  // 모달 상태 관리
+  const [modal, setModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    type: "alert" | "confirm";
+    variant: "info" | "success" | "danger";
+    onConfirm?: () => void;
+  }>({
+    isOpen: false,
+    title: "",
+    message: "",
+    type: "alert",
+    variant: "info",
+  });
+
+  const closeModal = () => setModal((prev) => ({ ...prev, isOpen: false }));
+  const openAlert = (
+    title: string,
+    message: string,
+    variant: "info" | "success" | "danger" = "info",
+  ) => {
+    setModal({ isOpen: true, title, message, type: "alert", variant });
+  };
+  const openConfirm = (
+    title: string,
+    message: string,
+    onConfirm: () => void,
+  ) => {
+    setModal({
+      isOpen: true,
+      title,
+      message,
+      type: "confirm",
+      variant: "danger",
+      onConfirm,
+    });
+  };
 
   const finalReason =
     selectedReason === "기타 (직접 입력)" ? customReason : selectedReason;
 
-  const handleUnsubscribe = async () => {
-    if (!finalReason) {
-      alert("탈퇴 사유를 선택해주세요.");
-      return;
-    }
-
-    if (
-      !window.confirm(
-        "정말 탈퇴하시겠습니까? 모든 데이터가 영구 삭제되며 복구할 수 없습니다."
-      )
-    ) {
-      return;
-    }
-
+  const executeUnsubscribe = async () => {
     setIsLoading(true);
     const token = getAccessToken();
 
     try {
       if (token?.startsWith("dev-")) {
         await new Promise((r) => setTimeout(r, 1000));
-        alert("서비스 탈퇴가 완료되었습니다. (Dev Mode)");
-        navigate("/login");
+        openAlert(
+          "알림",
+          "서비스 탈퇴가 완료되었습니다. (Dev Mode)",
+          "success",
+        );
+        setTimeout(() => navigate("/login"), 1500);
         return;
       }
 
-      // 실제 API 호출 (API 명세에 따라 수정 필요)
-      await apiClient.delete("/api/member", {
-        data: { reason: finalReason },
-        headers: { "X-AUTH-TOKEN": token },
-      });
+      await apiClient.post(
+        "/api/sign/delete-user",
+        {
+          password: password,
+          passwordCheck: password,
+        },
+        {
+          headers: { "X-AUTH-TOKEN": token },
+        },
+      );
 
-      alert("서비스 탈퇴가 완료되었습니다. 그동안 이용해주셔서 감사합니다.");
-      navigate("/login");
+      openAlert(
+        "탈퇴 완료",
+        "그동안 이용해주셔서 감사합니다. 서비스 탈퇴가 정상적으로 처리되었습니다.",
+        "success",
+      );
+      setTimeout(() => navigate("/login"), 2000);
     } catch (error: any) {
       console.error("Unsubscribe failed", error);
-      alert(
-        error.response?.data?.message || "탈퇴 처리 중 오류가 발생했습니다."
+      openAlert(
+        "오류 발생",
+        error.response?.data?.message ||
+          "탈퇴 처리 중 오류가 발생했습니다. 비밀번호를 다시 확인해주세요.",
+        "danger",
       );
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleUnsubscribe = () => {
+    if (!finalReason) {
+      openAlert("알림", "탈퇴 사유를 선택해주세요.");
+      return;
+    }
+
+    if (!password) {
+      openAlert("알림", "비밀번호를 입력해주세요.");
+      return;
+    }
+
+    openConfirm(
+      "정말 탈퇴하시겠습니까?",
+      "탈퇴 시 모든 데이터가 영구 삭제되며,\n어떠한 경우에도 복구할 수 없습니다.",
+      executeUnsubscribe,
+    );
   };
 
   return (
@@ -185,8 +247,17 @@ const UnsubscribePage: React.FC = () => {
                 모든 데이터는 영구적으로 복구할 수 없습니다.
               </FinalDesc>
               <ReasonPreview>
-                <strong>탈퇴 사유:</strong> {finalReason}
+                <div className="label">탈퇴 사유</div>
+                <div className="content">{finalReason}</div>
               </ReasonPreview>
+              <PasswordInputWrapper>
+                <PasswordInput
+                  type="password"
+                  placeholder="비밀번호를 입력해주세요"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+              </PasswordInputWrapper>
             </FinalWarningCard>
 
             <ButtonRow>
@@ -198,6 +269,17 @@ const UnsubscribePage: React.FC = () => {
           </StepContent>
         )}
       </Container>
+      <AlertModal
+        isOpen={modal.isOpen}
+        onClose={closeModal}
+        onConfirm={modal.onConfirm}
+        title={modal.title}
+        message={modal.message}
+        type={modal.type}
+        variant={modal.variant}
+        confirmText={modal.type === "confirm" ? "탈퇴하기" : "확인"}
+        cancelText="취소"
+      />
     </PageWrapper>
   );
 };
@@ -403,6 +485,7 @@ const CustomInput = styled.textarea`
   border-radius: 12px;
   font-size: 14px;
   resize: none;
+  box-sizing: border-box;
 
   &:focus {
     outline: none;
@@ -418,6 +501,10 @@ const ButtonRow = styled.div`
   display: flex;
   gap: 12px;
   margin-top: 20px;
+
+  ${ActionButton} {
+    flex: 2;
+  }
 `;
 
 const BackButton = styled.button`
@@ -458,13 +545,29 @@ const FinalDesc = styled.p`
 
 const ReasonPreview = styled.div`
   background: white;
-  padding: 12px 16px;
-  border-radius: 8px;
-  font-size: 13px;
-  color: #555;
+  padding: 14px 16px;
+  border: 1px solid #e9ecef;
+  border-radius: 12px;
+  font-size: 14px;
+  color: #333;
   width: 100%;
   text-align: left;
   margin-top: 8px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  .label {
+    font-size: 12px;
+    color: #888;
+    font-weight: 600;
+  }
+
+  .content {
+    line-height: 1.4;
+    color: #444;
+  }
 `;
 
 const DangerButton = styled.button`
@@ -486,5 +589,25 @@ const DangerButton = styled.button`
 
   &:not(:disabled):hover {
     background: #e03131;
+  }
+`;
+
+const PasswordInputWrapper = styled.div`
+  width: 100%;
+  margin-top: 8px;
+`;
+
+const PasswordInput = styled.input`
+  width: 100%;
+  height: 48px;
+  border: 1px solid #e9ecef;
+  border-radius: 12px;
+  padding: 0 16px;
+  font-size: 14px;
+  box-sizing: border-box;
+
+  &:focus {
+    outline: none;
+    border-color: #fa5252;
   }
 `;

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, MouseEvent } from "react";
-import styled, { keyframes } from "styled-components";
+import styled, { keyframes, css } from "styled-components";
 
 // --- Types & Constants ---
 const ITEM_HEIGHT = 40; // 아이템 하나의 높이 (px)
@@ -52,7 +52,7 @@ const WheelPicker: React.FC<WheelPickerProps> = ({
       // 드래그 중이 아닐 때만 계산 (성능 최적화 및 떨림 방지)
       const scrollTop = listRef.current.scrollTop;
       const index = Math.round(scrollTop / ITEM_HEIGHT);
-      
+
       // 범위 내에 있는지 확인 후 업데이트
       if (index >= 0 && index < items.length) {
         if (items[index] !== value) {
@@ -156,7 +156,6 @@ const TimePickerModal: React.FC<TimePickerModalProps> = ({
 
         <PickerWrapper>
           <HighlightBar /> {/* 중앙 선택선 */}
-          
           <Column>
             <Label>시</Label>
             <WheelPicker
@@ -165,9 +164,7 @@ const TimePickerModal: React.FC<TimePickerModalProps> = ({
               onChange={setSelectedHour}
             />
           </Column>
-
           <Colon>:</Colon>
-
           <Column>
             <Label>분</Label>
             <WheelPicker
@@ -176,15 +173,18 @@ const TimePickerModal: React.FC<TimePickerModalProps> = ({
               onChange={setSelectedMinute}
             />
           </Column>
-          
           {/* 그라데이션 오버레이 */}
           <GradientTop />
           <GradientBottom />
         </PickerWrapper>
 
         <ButtonGroup>
-          <CancelButton onClick={onClose}>취소</CancelButton>
-          <ConfirmButton onClick={handleConfirm}>확인</ConfirmButton>
+          <Button variant="secondary" onClick={onClose}>
+            취소
+          </Button>
+          <Button variant="primary" onClick={handleConfirm}>
+            확인
+          </Button>
         </ButtonGroup>
       </ModalContent>
     </Overlay>
@@ -225,7 +225,7 @@ const ModalContent = styled.div`
   width: 320px;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
   animation: ${slideUp} 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 `;
 
@@ -289,7 +289,7 @@ const HighlightBar = styled.div`
   margin-top: -${ITEM_HEIGHT / 2}px; /* 정확히 중앙 정렬 */
   background-color: white;
   border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   z-index: 1;
 `;
 
@@ -299,7 +299,11 @@ const GradientTop = styled.div`
   left: 0;
   right: 0;
   height: 60px;
-  background: linear-gradient(to bottom, rgba(249, 250, 251, 1), rgba(249, 250, 251, 0));
+  background: linear-gradient(
+    to bottom,
+    rgba(249, 250, 251, 1),
+    rgba(249, 250, 251, 0)
+  );
   pointer-events: none;
   z-index: 3;
 `;
@@ -310,7 +314,11 @@ const GradientBottom = styled.div`
   left: 0;
   right: 0;
   height: 60px;
-  background: linear-gradient(to top, rgba(249, 250, 251, 1), rgba(249, 250, 251, 0));
+  background: linear-gradient(
+    to top,
+    rgba(249, 250, 251, 1),
+    rgba(249, 250, 251, 0)
+  );
   pointer-events: none;
   z-index: 3;
 `;
@@ -320,27 +328,35 @@ const ButtonGroup = styled.div`
   gap: 12px;
 `;
 
-const BaseButton = styled.button`
+const Button = styled.button<{ variant: "primary" | "secondary" }>`
   flex: 1;
-  padding: 12px;
-  border-radius: 12px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
+  padding: 14px;
+  border-radius: 14px;
   border: none;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
   transition: all 0.2s;
-`;
 
-const CancelButton = styled(BaseButton)`
-  background-color: #f3f4f6;
-  color: #4b5563;
-  &:hover { background-color: #e5e7eb; }
-`;
+  ${(p) =>
+    p.variant === "primary" &&
+    css`
+      background: var(--color-main);
+      color: white;
+      &:active {
+        transform: scale(0.98);
+      }
+    `}
 
-const ConfirmButton = styled(BaseButton)`
-  background-color: #3b82f6;
-  color: white;
-  &:hover { background-color: #2563eb; }
+  ${(p) =>
+    p.variant === "secondary" &&
+    css`
+      background: #f1f3f5;
+      color: #495057;
+      &:active {
+        transform: scale(0.98);
+      }
+    `}
 `;
 
 /* --- Wheel Picker Styles --- */
@@ -350,7 +366,7 @@ const WheelContainer = styled.div`
   height: 100%;
   overflow: hidden; /* 스크롤바 숨김 */
   cursor: grab;
-  
+
   &:active {
     cursor: grabbing;
   }
@@ -363,10 +379,12 @@ const WheelList = styled.ul`
   width: 100%;
   height: 100%;
   overflow-y: scroll;
-  
+
   /* 스크롤바 숨기기 */
   scrollbar-width: none;
-  &::-webkit-scrollbar { display: none; }
+  &::-webkit-scrollbar {
+    display: none;
+  }
 
   /* ⭐️ 핵심: CSS Scroll Snap 적용 */
   scroll-snap-type: y mandatory;
@@ -385,10 +403,10 @@ const WheelItem = styled.li<{ isActive: boolean }>`
   justify-content: center;
   font-size: ${({ isActive }) => (isActive ? "18px" : "15px")};
   font-weight: ${({ isActive }) => (isActive ? "700" : "400")};
-  color: ${({ isActive }) => (isActive ? "#3b82f6" : "#9ca3af")};
+  color: ${({ isActive }) => (isActive ? "var(--color-main)" : "#9ca3af")};
   transition: all 0.2s ease;
-  
+
   /* ⭐️ 핵심: 아이템 하나하나가 스냅 포인트가 됨 */
-  scroll-snap-align: center; 
+  scroll-snap-align: center;
   cursor: pointer;
 `;

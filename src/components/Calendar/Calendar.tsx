@@ -27,7 +27,11 @@ interface CalendarProps {
   onMonthChange?: (date: Date) => void;
 }
 
-const Calendar: React.FC<CalendarProps> = ({ events, onDateSelect, onMonthChange }) => {
+const Calendar: React.FC<CalendarProps> = ({
+  events,
+  onDateSelect,
+  onMonthChange,
+}) => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
 
@@ -73,7 +77,7 @@ const Calendar: React.FC<CalendarProps> = ({ events, onDateSelect, onMonthChange
       days.push(
         <DayOfWeek key={i}>
           {format(addDays(startDate, i), "E", { locale: ko })}
-        </DayOfWeek>
+        </DayOfWeek>,
       );
     }
     return <DaysRow>{days}</DaysRow>;
@@ -109,7 +113,7 @@ const Calendar: React.FC<CalendarProps> = ({ events, onDateSelect, onMonthChange
                 <Dot key={index} color={event.color} />
               ))}
             </DotsContainer>
-          </Cell>
+          </Cell>,
         );
         day = addDays(day, 1);
       }

@@ -1,13 +1,56 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import styled from "styled-components";
-import { format } from "date-fns";
+import {
+  format,
+  differenceInDays,
+  isToday,
+  isPast,
+  startOfDay,
+} from "date-fns";
 import Header2 from "../../components/Header/Header2/Header2";
 import Calendar from "../../components/Calendar/Calendar";
 import apiClient from "../../api/apiClient";
 import { getAccessToken } from "../../utils/authUtils";
 import { useUserStore } from "../../stores/userStore";
-import { HiPlus, HiXMark } from "react-icons/hi2";
+import {
+  HiPlus,
+  HiXMark,
+  HiCalendar,
+  HiMapPin,
+  HiUserGroup,
+  HiClipboardDocumentList,
+  HiClock,
+  HiChevronRight,
+} from "react-icons/hi2";
+
+// --- Utility Functions ---
+const getDDayText = (
+  dateStr: string,
+): { text: string; type: "today" | "upcoming" | "past" | "future" } => {
+  const eventDate = startOfDay(new Date(dateStr));
+  const today = startOfDay(new Date());
+  const diff = differenceInDays(eventDate, today);
+
+  if (isToday(eventDate)) {
+    return { text: "D-Day", type: "today" };
+  } else if (diff > 0 && diff <= 7) {
+    return { text: `D-${diff}`, type: "upcoming" };
+  } else if (diff > 7) {
+    return { text: `${diff}일 후`, type: "future" };
+  } else {
+    return { text: "완료", type: "past" };
+  }
+};
+
+const getEventStatus = (dateStr: string): "today" | "upcoming" | "past" => {
+  const eventDate = startOfDay(new Date(dateStr));
+  const today = startOfDay(new Date());
+
+  if (isToday(eventDate)) return "today";
+  if (isPast(eventDate)) return "past";
+  return "upcoming";
+};
 
 // --- Types ---
 interface ScheduleApiData {
@@ -76,14 +119,14 @@ const TeamCalendarPage: React.FC = () => {
   const [dailyEvents, setDailyEvents] = useState<CalendarEvent[]>([]); // For List below
   const [loading, setLoading] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string>(
-    new Date().toISOString().split("T")[0]
+    format(new Date(), "yyyy-MM-dd"),
   );
   const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
 
   // Modals
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(
-    null
+    null,
   );
   const [canEdit, setCanEdit] = useState(false);
 
@@ -119,9 +162,9 @@ const TeamCalendarPage: React.FC = () => {
       let rawData: ScheduleApiData[] = [];
 
       if (token?.startsWith("dev-")) {
-         // ... (Dev mock logic if needed, skipping for brevity or keeping same as before but for month)
-         // For now, let's just reuse the same mock logic or rely on real API
-         // To match previous dev logic:
+        // ... (Dev mock logic if needed, skipping for brevity or keeping same as before but for month)
+        // For now, let's just reuse the same mock logic or rely on real API
+        // To match previous dev logic:
         await new Promise((resolve) => setTimeout(resolve, 300));
         const today = new Date();
         const currentMonthNum = today.getMonth() + 1;
@@ -129,9 +172,9 @@ const TeamCalendarPage: React.FC = () => {
         rawData = DEV_MOCK_SCHEDULES.map((item, idx) => {
           const day = 15 + idx * 5;
           return {
-             ...item,
-            matchStartTime: `${currentYear}-${String(currentMonthNum).padStart(2,"0")}-${day} ${item.matchStartTime.split(" ")[1]}`,
-            matchEndTime: `${currentYear}-${String(currentMonthNum).padStart(2,"0")}-${day} ${item.matchEndTime.split(" ")[1]}`,
+            ...item,
+            matchStartTime: `${currentYear}-${String(currentMonthNum).padStart(2, "0")}-${day} ${item.matchStartTime.split(" ")[1]}`,
+            matchEndTime: `${currentYear}-${String(currentMonthNum).padStart(2, "0")}-${day} ${item.matchEndTime.split(" ")[1]}`,
           };
         });
       } else {
@@ -142,32 +185,44 @@ const TeamCalendarPage: React.FC = () => {
               date: format(currentMonth, "yyyy-MM"),
               teamId,
             },
-          }
+          },
         );
         rawData = response.data;
       }
-      console.log('월 데이터',rawData)
-      const mappedEvents: CalendarEvent[] = rawData.map((item) => {
-        const start = new Date(item.matchStartTime.replace(" ", "T"));
-        const end = new Date(item.matchEndTime.replace(" ", "T"));
-        // For monthly view, we need the actual date of the event
-        const dateStr = start.toISOString().split("T")[0];
-        
-        return {
-          id: item.id,
-          date: dateStr,
-          title: `vs ${item.opposingTeam}`,
-          startTime: "", // Not needed for dots
-          endTime: "",
-          location: "",
-          teamId: Number(teamId),
-          color: "#0e6244",
-          opposingTeam: item.opposingTeam,
-          matchStrategy: "",
-          participation: "NONE",
-        };
-      });
+      console.log("월 데이터", rawData);
+      const mappedEvents = rawData
+        .map((item) => {
+          // 날짜 파싱 이슈 해결: UTC 변환 없이 로컬 시간대 기준 날짜 사용
+          // item.matchStartTime 형식: "YYYY-MM-DD HH:mm:ss" 또는 "YYYY-MM-DD"
+          const datePart = item.matchStartTime.split(" ")[0]; // "YYYY-MM-DD" 추출 가능성
 
+          // 간단한 유효성 검사: YYYY-MM-DD 형식인지 확인 (regex)
+          const isValidDate = /^\d{4}-\d{2}-\d{2}$/.test(datePart);
+
+          if (!isValidDate) {
+            console.warn(
+              `[Calendar] 유효하지 않은 날짜 형식 무시됨: id=${item.id}, time=${item.matchStartTime}`,
+            );
+            return null;
+          }
+
+          return {
+            id: item.id,
+            date: datePart,
+            title: `vs ${item.opposingTeam}`,
+            startTime: "", // Not needed for dots
+            endTime: "",
+            location: "",
+            teamId: Number(teamId),
+            color: "#0e6244", // 기본 테마 색상 사용
+            opposingTeam: item.opposingTeam,
+            matchStrategy: "",
+            participation: "NONE",
+          } as CalendarEvent;
+        })
+        .filter((event): event is CalendarEvent => event !== null);
+
+      console.log("매핑된 캘린더 이벤트:", mappedEvents);
       setMonthlyEvents(mappedEvents);
     } catch (error) {
       console.error("월간 일정 로드 실패:", error);
@@ -187,19 +242,19 @@ const TeamCalendarPage: React.FC = () => {
         // ... (Dev mock logic)
         await new Promise((resolve) => setTimeout(resolve, 300));
         // Return same mock data for simplicity in dev mode
-         const today = new Date();
+        const today = new Date();
         const currentMonthNum = today.getMonth() + 1;
         const currentYear = today.getFullYear();
         rawData = DEV_MOCK_SCHEDULES.map((item, idx) => {
-             const day = 15 + idx * 5;
+          const day = 15 + idx * 5;
           return {
-             ...item,
-            matchStartTime: `${currentYear}-${String(currentMonthNum).padStart(2,"0")}-${day} ${item.matchStartTime.split(" ")[1]}`,
-            matchEndTime: `${currentYear}-${String(currentMonthNum).padStart(2,"0")}-${day} ${item.matchEndTime.split(" ")[1]}`,
+            ...item,
+            matchStartTime: `${currentYear}-${String(currentMonthNum).padStart(2, "0")}-${day} ${item.matchStartTime.split(" ")[1]}`,
+            matchEndTime: `${currentYear}-${String(currentMonthNum).padStart(2, "0")}-${day} ${item.matchEndTime.split(" ")[1]}`,
           };
         });
         // Filter manually for dev mock
-        // rawData = rawData.filter(...) 
+        // rawData = rawData.filter(...)
       } else {
         const response = await apiClient.get<ScheduleApiData[]>(
           `/api/team-strategy/get-strategy/monthly-day`,
@@ -208,22 +263,40 @@ const TeamCalendarPage: React.FC = () => {
               date: selectedDate,
               teamId,
             },
-          }
+          },
         );
         rawData = response.data;
       }
 
       const mappedEvents: CalendarEvent[] = rawData.map((item) => {
-        const start = new Date(item.matchStartTime.replace(" ", "T"));
-        const end = new Date(item.matchEndTime.replace(" ", "T"));
         const dateStr = selectedDate;
-        const startTimeStr = `${String(start.getHours()).padStart(
-          2,
-          "0"
-        )}:${String(start.getMinutes()).padStart(2, "0")}`;
-        const endTimeStr = `${String(end.getHours()).padStart(2, "0")}:${String(
-          end.getMinutes()
-        ).padStart(2, "0")}`;
+
+        // 시간 파싱 헬퍼 함수: 다양한 형식 지원
+        const parseTimeString = (timeValue: string): string => {
+          if (!timeValue) return "";
+
+          // 이미 "HH:MM" 형식인지 확인
+          const timeOnlyRegex = /^(\d{1,2}):(\d{2})$/;
+          const timeMatch = timeValue.match(timeOnlyRegex);
+          if (timeMatch) {
+            const hours = timeMatch[1].padStart(2, "0");
+            const minutes = timeMatch[2];
+            return `${hours}:${minutes}`;
+          }
+
+          // "YYYY-MM-DD HH:MM:SS" 또는 ISO 형식 시도
+          const dateTimeStr = timeValue.replace(" ", "T");
+          const date = new Date(dateTimeStr);
+          if (!isNaN(date.getTime())) {
+            return `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
+          }
+
+          // 파싱 실패 시 빈 문자열 반환
+          return "";
+        };
+
+        const startTimeStr = parseTimeString(item.matchStartTime);
+        const endTimeStr = parseTimeString(item.matchEndTime);
 
         return {
           id: item.id,
@@ -267,79 +340,160 @@ const TeamCalendarPage: React.FC = () => {
           return { ...ev, participation: nextStatus };
         }
         return ev;
-      })
+      }),
     );
   };
-console.log("monthlyEvents",monthlyEvents)
+
+  // 다가오는 경기 계산 (오늘 이후 가장 가까운 경기)
+  const upcomingMatch = useMemo(() => {
+    const today = startOfDay(new Date());
+    const futureEvents = monthlyEvents
+      .filter((event) => {
+        const eventDate = startOfDay(new Date(event.date));
+        return eventDate >= today;
+      })
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+    return futureEvents[0] || null;
+  }, [monthlyEvents]);
+
+  // 이번 달 경기 통계
+  const monthStats = useMemo(() => {
+    const today = startOfDay(new Date());
+    const total = monthlyEvents.length;
+    const remaining = monthlyEvents.filter((event) => {
+      const eventDate = startOfDay(new Date(event.date));
+      return eventDate >= today;
+    }).length;
+    const completed = total - remaining;
+
+    return { total, remaining, completed };
+  }, [monthlyEvents]);
+
+  console.log("monthlyEvents", monthlyEvents);
   return (
     <PageWrapper>
       <Header2 text="팀 일정" />
 
+      {/* 다가오는 경기 하이라이트 섹션 */}
+      {upcomingMatch && (
+        <UpcomingMatchSection
+          onClick={() => {
+            setSelectedDate(upcomingMatch.date);
+            setSelectedEvent(upcomingMatch);
+            setIsDetailModalOpen(true);
+          }}
+        >
+          <UpcomingMatchHeader>
+            <UpcomingLabel>
+              <HiClock />
+              <span>다음 경기</span>
+            </UpcomingLabel>
+            <UpcomingDDay $type={getDDayText(upcomingMatch.date).type}>
+              {getDDayText(upcomingMatch.date).text}
+            </UpcomingDDay>
+          </UpcomingMatchHeader>
+          <UpcomingMatchContent>
+            <UpcomingMatchInfo>
+              <UpcomingOpponent>
+                vs {upcomingMatch.opposingTeam}
+              </UpcomingOpponent>
+              <UpcomingDate>
+                {new Date(upcomingMatch.date).toLocaleDateString("ko-KR", {
+                  month: "long",
+                  day: "numeric",
+                  weekday: "short",
+                })}
+              </UpcomingDate>
+            </UpcomingMatchInfo>
+            <HiChevronRight style={{ color: "#0e6244", fontSize: "20px" }} />
+          </UpcomingMatchContent>
+        </UpcomingMatchSection>
+      )}
+
       <CalendarContainer>
-        <Calendar 
-          events={monthlyEvents} 
+        <Calendar
+          events={monthlyEvents}
           onDateSelect={setSelectedDate}
           onMonthChange={setCurrentMonth}
         />
       </CalendarContainer>
 
       <ScheduleSection>
-        <SectionHeader>
-          {new Date(selectedDate).toLocaleDateString("ko-KR", {
-            weekday: "long",
-            month: "long",
-            day: "numeric",
-          })}
-        </SectionHeader>
+        <SectionHeaderRow>
+          <SectionHeader>
+            {new Date(selectedDate).toLocaleDateString("ko-KR", {
+              weekday: "long",
+              month: "long",
+              day: "numeric",
+            })}
+          </SectionHeader>
+          {monthStats.total > 0 && (
+            <MonthStats>
+              이번 달 <strong>{monthStats.remaining}</strong>경기 남음
+            </MonthStats>
+          )}
+        </SectionHeaderRow>
 
         {loading ? (
           <EmptyState>일정을 불러오는 중...</EmptyState>
         ) : dailyEvents.length > 0 ? (
           <EventList>
-            {dailyEvents.map((event) => (
-              <CustomEventCard
-                key={event.id}
-                onClick={() => {
-                  setSelectedEvent(event);
-                  setIsDetailModalOpen(true);
-                }}
-              >
-                <CardLeft>
-                  <TimeRow>
-                    <StatusDot status={event.participation || "NONE"} />
-                    <TimeText>
-                      {event.startTime}-{event.endTime}
-                    </TimeText>
-                  </TimeRow>
-                  <TitleText>
-                    vs <OpponentName>{event.opposingTeam}</OpponentName>
-                  </TitleText>
-                </CardLeft>
+            {dailyEvents.map((event) => {
+              const eventStatus = getEventStatus(event.date);
+              const dDay = getDDayText(event.date);
 
-                <CardRight>
-                  <ActionButton
-                    className="secondary"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSelectedEvent(event);
-                      setIsDetailModalOpen(true);
-                    }}
-                  >
-                    전략 보기
-                  </ActionButton>
-                  <ActionButton
-                    className={
-                      event.participation === "ATTENDING" ? "active" : "primary"
-                    }
-                    onClick={(e) => toggleParticipation(e, event.id)}
-                  >
-                    {event.participation === "ATTENDING"
-                      ? "참여 완료"
-                      : "참여하기"}
-                  </ActionButton>
-                </CardRight>
-              </CustomEventCard>
-            ))}
+              return (
+                <CustomEventCard
+                  key={event.id}
+                  $status={eventStatus}
+                  onClick={() => {
+                    setSelectedEvent(event);
+                    setIsDetailModalOpen(true);
+                  }}
+                >
+                  <CardLeft>
+                    <TimeRow>
+                      <StatusDot status={event.participation || "NONE"} />
+                      <TimeText>
+                        {event.startTime && event.endTime
+                          ? `${event.startTime} - ${event.endTime}`
+                          : "시간 미정"}
+                      </TimeText>
+                      <DDayBadge $type={dDay.type}>{dDay.text}</DDayBadge>
+                    </TimeRow>
+                    <TitleText>
+                      vs <OpponentName>{event.opposingTeam}</OpponentName>
+                    </TitleText>
+                  </CardLeft>
+
+                  <CardRight>
+                    <ActionButton
+                      className="secondary"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedEvent(event);
+                        setIsDetailModalOpen(true);
+                      }}
+                    >
+                      전략 보기
+                    </ActionButton>
+                    <ActionButton
+                      className={
+                        event.participation === "ATTENDING"
+                          ? "active"
+                          : "primary"
+                      }
+                      onClick={(e) => toggleParticipation(e, event.id)}
+                    >
+                      {event.participation === "ATTENDING"
+                        ? "참여 완료"
+                        : "참여하기"}
+                    </ActionButton>
+                  </CardRight>
+                </CustomEventCard>
+              );
+            })}
           </EventList>
         ) : (
           <EmptyState>
@@ -379,26 +533,59 @@ console.log("monthlyEvents",monthlyEvents)
               </CloseBtn>
             </ModalHeader>
             <DetailBody>
-              <DetailRow>
-                <Label>일시</Label>
-                <Value>
-                  {selectedEvent.date} {selectedEvent.startTime} ~{" "}
-                  {selectedEvent.endTime}
-                </Value>
-              </DetailRow>
-              <DetailRow>
-                <Label>매치업</Label>
-                <Value>우리 팀 vs {selectedEvent.opposingTeam}</Value>
-              </DetailRow>
-              <DetailRow>
-                <Label>장소</Label>
-                <Value>{selectedEvent.location}</Value>
-              </DetailRow>
+              <DetailSection>
+                <DetailItem>
+                  <DetailIconWrapper $variant="calendar">
+                    <HiCalendar />
+                  </DetailIconWrapper>
+                  <DetailContent>
+                    <DetailLabel>일시</DetailLabel>
+                    <DetailValue>
+                      {selectedEvent.date}
+                      {selectedEvent.startTime && selectedEvent.endTime
+                        ? ` / ${selectedEvent.startTime} - ${selectedEvent.endTime}`
+                        : " 시간 미정"}
+                    </DetailValue>
+                  </DetailContent>
+                </DetailItem>
+
+                <DetailItem>
+                  <DetailIconWrapper $variant="team">
+                    <HiUserGroup />
+                  </DetailIconWrapper>
+                  <DetailContent>
+                    <DetailLabel>매치업</DetailLabel>
+                    <MatchupValue>
+                      <TeamName>우리 팀</TeamName>
+                      <VsText>VS</VsText>
+                      <TeamName $isOpponent>
+                        #{selectedEvent.opposingTeam}
+                      </TeamName>
+                    </MatchupValue>
+                  </DetailContent>
+                </DetailItem>
+
+                <DetailItem>
+                  <DetailIconWrapper $variant="location">
+                    <HiMapPin />
+                  </DetailIconWrapper>
+                  <DetailContent>
+                    <DetailLabel>장소</DetailLabel>
+                    <DetailValue>
+                      {selectedEvent.location || "장소 미정"}
+                    </DetailValue>
+                  </DetailContent>
+                </DetailItem>
+              </DetailSection>
+
               {selectedEvent.matchStrategy && (
-                <DetailRow>
-                  <Label>전략 메모</Label>
+                <StrategySection>
+                  <StrategyHeader>
+                    <HiClipboardDocumentList />
+                    <span>전략 메모</span>
+                  </StrategyHeader>
                   <StrategyBox>{selectedEvent.matchStrategy}</StrategyBox>
-                </DetailRow>
+                </StrategySection>
               )}
             </DetailBody>
           </DetailModalContent>
@@ -413,10 +600,107 @@ export default TeamCalendarPage;
 // --- Styled Components ---
 
 const PageWrapper = styled.div`
+  width: 100%;
   min-height: 100vh;
   background-color: #f8fafb;
   position: relative;
   padding-bottom: 80px;
+`;
+
+// 다가오는 경기 하이라이트 섹션
+const UpcomingMatchSection = styled.div`
+  margin: 16px;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 1px solid #a5d6a7;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(14, 98, 68, 0.15);
+  }
+`;
+
+const UpcomingMatchHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+`;
+
+const UpcomingLabel = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #2e7d32;
+`;
+
+const UpcomingDDay = styled.span<{
+  $type: "today" | "upcoming" | "past" | "future";
+}>`
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 12px;
+
+  ${({ $type }) => {
+    switch ($type) {
+      case "today":
+        return `background: #d32f2f; color: white;`;
+      case "upcoming":
+        return `background: #0e6244; color: white;`;
+      case "past":
+        return `background: #9e9e9e; color: white;`;
+      default:
+        return `background: #1565c0; color: white;`;
+    }
+  }}
+`;
+
+const UpcomingMatchContent = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+`;
+
+const UpcomingMatchInfo = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+`;
+
+const UpcomingOpponent = styled.span`
+  font-size: 17px;
+  font-family: "Pretendard-Bold";
+  color: #1b5e20;
+`;
+
+const UpcomingDate = styled.span`
+  font-size: 13px;
+  color: #388e3c;
+`;
+
+// 섹션 헤더
+const SectionHeaderRow = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding: 0 4px;
+`;
+
+const MonthStats = styled.span`
+  font-size: 13px;
+  color: #666;
+
+  strong {
+    color: #0e6244;
+    font-family: "Pretendard-Bold";
+  }
 `;
 
 const CalendarContainer = styled.div`
@@ -437,8 +721,7 @@ const SectionHeader = styled.h3`
   font-size: 18px;
   font-family: "Pretendard-Bold";
   color: #333;
-  margin-bottom: 16px;
-  padding-left: 4px;
+  margin: 0;
 `;
 
 const EventList = styled.div`
@@ -447,8 +730,32 @@ const EventList = styled.div`
   gap: 12px;
 `;
 
+// D-Day 배지
+const DDayBadge = styled.span<{
+  $type: "today" | "upcoming" | "past" | "future";
+}>`
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 10px;
+  margin-left: auto;
+
+  ${({ $type }) => {
+    switch ($type) {
+      case "today":
+        return `background: #ffebee; color: #c62828;`;
+      case "upcoming":
+        return `background: #e8f5e9; color: #2e7d32;`;
+      case "past":
+        return `background: #f5f5f5; color: #9e9e9e;`;
+      default:
+        return `background: #e3f2fd; color: #1565c0;`;
+    }
+  }}
+`;
+
 // NEW Custom Card Design based on User Image
-const CustomEventCard = styled.div`
+const CustomEventCard = styled.div<{ $status?: "today" | "upcoming" | "past" }>`
   background: white;
   border: 1px solid #e0e0e0;
   border-radius: 16px;
@@ -459,6 +766,24 @@ const CustomEventCard = styled.div`
   gap: 16px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
   transition: all 0.2s ease;
+
+  ${({ $status }) => {
+    switch ($status) {
+      case "today":
+        return `
+          border-color: #0e6244;
+          border-width: 2px;
+          background: linear-gradient(135deg, #ffffff 0%, #f0fdf5 100%);
+        `;
+      case "past":
+        return `
+          opacity: 0.6;
+          background: #fafafa;
+        `;
+      default:
+        return "";
+    }
+  }}
 
   &:hover {
     transform: translateY(-2px);
@@ -546,6 +871,7 @@ const EmptyState = styled.div`
   padding: 60px 0;
   gap: 12px;
 `;
+
 const EmptyIcon = styled.div`
   font-size: 40px;
 `;
@@ -555,8 +881,7 @@ const EmptyText = styled.p`
 `;
 const FloatingActionButton = styled.button`
   position: fixed;
-  bottom:100px;
-  right: 25px;
+  bottom: 100px;
   width: 56px;
   height: 56px;
   border-radius: 50%;
@@ -570,6 +895,19 @@ const FloatingActionButton = styled.button`
   font-size: 24px;
   cursor: pointer;
   z-index: 100;
+
+  /* 기본값(모바일): 화면 우측에서 25px */
+  right: 25px;
+
+  /* 데스크톱: 컨텐츠 영역(600px) 기준 우측 정렬 */
+  /* 화면 너비의 50% 지점에서 300px(컨텐츠 절반) 이동한 지점이 컨텐츠 우측 끝 */
+  /* 거기서 25px 안쪽으로 들어오게 설정 */
+  /* right 값은 화면 우측 끝에서의 거리이므로: */
+  /* 50vw - 300px = 좌우 여백의 한쪽 크기 */
+  /* 여백 크기 + 25px = 화면 우측 끝에서 버튼까지의 거리 */
+  @media (min-width: 650px) {
+    right: calc(50% - 300px + 25px);
+  }
 `;
 
 const ModalOverlay = styled.div`
@@ -602,45 +940,162 @@ const ModalHeader = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
- // padding: 16px 20px;
-  border-bottom: 1px solid #eee;
+  padding: 20px 24px;
+  border-bottom: 1px solid #f0f0f0;
+  background: linear-gradient(135deg, #0e6244 0%, #0a4d35 100%);
 `;
 const ModalTitle = styled.h4`
   font-size: 18px;
   font-family: "Pretendard-Bold";
   margin: 0;
+  color: white;
 `;
 const CloseBtn = styled.button`
-  background: none;
+  background: rgba(255, 255, 255, 0.2);
   border: none;
-  font-size: 24px;
-  color: #999;
+  font-size: 20px;
+  color: white;
   cursor: pointer;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.3);
+  }
 `;
 const DetailBody = styled.div`
-  padding: 20px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+`;
+
+const DetailSection = styled.div`
   display: flex;
   flex-direction: column;
   gap: 16px;
 `;
-const DetailRow = styled.div`
+
+const DetailItem = styled.div`
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+`;
+
+const DetailIconWrapper = styled.div<{
+  $variant: "calendar" | "team" | "location";
+}>`
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 18px;
+
+  ${({ $variant }) => {
+    switch ($variant) {
+      case "calendar":
+        return `
+          background: #e8f5e9;
+          color: #2e7d32;
+        `;
+      case "team":
+        return `
+          background: #e3f2fd;
+          color: #1565c0;
+        `;
+      case "location":
+        return `
+          background: #fff3e0;
+          color: #ef6c00;
+        `;
+      default:
+        return `
+          background: #f5f5f5;
+          color: #666;
+        `;
+    }
+  }}
+`;
+
+const DetailContent = styled.div`
   display: flex;
   flex-direction: column;
   gap: 4px;
+  flex: 1;
+  min-width: 0;
 `;
-const Label = styled.div`
-  font-size: 13px;
+
+const DetailLabel = styled.span`
+  font-size: 12px;
   color: #888;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 `;
-const Value = styled.div`
-  font-size: 16px;
+
+const DetailValue = styled.span`
+  font-size: 15px;
   color: #333;
   font-weight: 500;
+  line-height: 1.4;
 `;
-const StrategyBox = styled.div`
-  background: #f8f9fa;
-  padding: 12px;
-  border-radius: 8px;
+
+const MatchupValue = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+`;
+
+const TeamName = styled.span<{ $isOpponent?: boolean }>`
+  font-size: 15px;
+  font-family: "Pretendard-Bold";
+  color: ${({ $isOpponent }) => ($isOpponent ? "#d32f2f" : "#0e6244")};
+`;
+
+const VsText = styled.span`
+  font-size: 12px;
+  font-weight: 700;
+  color: #999;
+  background: #f5f5f5;
+  padding: 2px 8px;
+  border-radius: 4px;
+`;
+
+const StrategySection = styled.div`
+  margin-top: 4px;
+  padding-top: 20px;
+  border-top: 1px dashed #e0e0e0;
+`;
+
+const StrategyHeader = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
   font-size: 14px;
-  color: #555;
+  font-weight: 600;
+  color: #0e6244;
+
+  svg {
+    font-size: 18px;
+  }
+`;
+
+const StrategyBox = styled.div`
+  background: linear-gradient(135deg, #f8faf9 0%, #f0f4f2 100%);
+  padding: 16px;
+  border-radius: 12px;
+  font-size: 14px;
+  color: #444;
+  line-height: 1.6;
+  border-left: 3px solid #0e6244;
 `;

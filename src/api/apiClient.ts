@@ -14,9 +14,10 @@ import {
 const apiClient: AxiosInstance = axios.create({
   baseURL: "", // 프록시 사용으로 빈 문자열 (setupProxy.js에서 처리)
   headers: {
-    "Content-Type": "application/x-www-form-urlencoded",
+    "Content-Type": "application/json",
   },
   withCredentials: true,
+  timeout: 15000, // 15초 타임아웃 (모바일 네트워크 대비)
 });
 
 /**
@@ -51,19 +52,43 @@ function subscribeTokenRefresh(cb: (token: string) => void): void {
 }
 
 /**
+ * 인증이 필요 없는 API 경로 목록
+ * 이 경로들은 토큰 헤더를 포함하지 않음
+ */
+const AUTH_WHITELIST = [
+  "/api/sign/signin/sign-in",
+  "/api/sign/signup",
+  "/api/sign/reissue",
+  "/api/sms/",
+  "/auth/",
+];
+
+/**
+ * 주어진 URL이 인증 화이트리스트에 해당하는지 확인
+ * @param {string | undefined} url - 확인할 URL
+ * @returns {boolean} 화이트리스트에 해당하면 true
+ */
+function isAuthWhitelisted(url: string | undefined): boolean {
+  if (!url) return false;
+  return AUTH_WHITELIST.some((path) => url.includes(path));
+}
+
+/**
  * 요청 전에 액세스 토큰을 헤더에 추가하는 인터셉터
+ * 인증이 필요 없는 API는 토큰 헤더를 포함하지 않음
  */
 apiClient.interceptors.request.use(
   (config) => {
     const token = getAccessToken();
-    if (token) {
+    // 인증이 필요 없는 API는 토큰 헤더 제외
+    if (token && !isAuthWhitelisted(config.url)) {
       // 헤더가 정의되어 있지 않을 경우 초기화
       config.headers = config.headers || {};
       config.headers["X-AUTH-TOKEN"] = `${token}`;
     }
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => Promise.reject(error),
 );
 
 /**
@@ -110,10 +135,13 @@ apiClient.interceptors.response.use(
 
       try {
         const response = await axios.post(
-          "/auth/token/refresh", // 프록시를 통해 요청
+          "/api/sign/reissue", // 프록시를 통해 요청
+          null,
           {
-            refreshToken: refreshToken,
-          }
+            params: {
+              refreshToken: refreshToken,
+            },
+          },
         );
 
         const newAccessToken = response.data.accessToken;
@@ -138,7 +166,7 @@ apiClient.interceptors.response.use(
       }
     }
     return Promise.reject(error);
-  }
+  },
 );
 
 export default apiClient;

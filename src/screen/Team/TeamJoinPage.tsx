@@ -66,7 +66,7 @@ const TeamJoinPage: React.FC = () => {
     const fetchProfile = async () => {
       setLoading(true);
       try {
-        const response = await apiClient.get("api/member/getUser");
+        const response = await apiClient.get("/api/member/getUser");
         setProfile({
           address: response.data.address,
           gender: response.data.gender,
@@ -143,9 +143,9 @@ const TeamJoinPage: React.FC = () => {
 
     try {
       const response = await apiClient.post(
-        `api/joinTeam/${teamId}`,
+        `/api/joinTeam/${teamId}`,
         requestDto,
-        { headers: { "Content-Type": "application/json" } }
+        { headers: { "Content-Type": "application/json" } },
       );
       if (response.status === 200) {
         setComplete(true);
@@ -154,7 +154,7 @@ const TeamJoinPage: React.FC = () => {
       console.error("Failed to join team:", error);
       showAlert(
         "오류",
-        "가입 신청 중 오류가 발생했습니다.\n다시 시도해주세요."
+        "가입 신청 중 오류가 발생했습니다.\n다시 시도해주세요.",
       );
     }
   };
@@ -171,27 +171,46 @@ const TeamJoinPage: React.FC = () => {
   if (complete) {
     return (
       <CompletionPage>
-        <SuccessContent>
-          <SuccessIcon>
-            <HiCheckCircle size={64} />
-          </SuccessIcon>
-          <SuccessTitle>가입 신청 완료!</SuccessTitle>
-          <SuccessText>
-            팀 운영진에게 가입 신청서를 보냈습니다.
-            <br />
-            결과는 <strong>마이페이지 &gt; 가입 현황</strong>에서
-            <br />
-            확인하실 수 있습니다.
-          </SuccessText>
-        </SuccessContent>
-        <ActionButtons>
-          <PrimaryButton onClick={() => navigate("/my/joinstatus")}>
-            신청 현황 확인하기
-          </PrimaryButton>
-          <SecondaryButton onClick={() => navigate("/team/list")}>
-            다른 팀 더 둘러보기
-          </SecondaryButton>
-        </ActionButtons>
+        <NavHeader>
+          <NavButton onClick={() => navigate("/team/list")}>
+            <HiChevronLeft size={24} />
+          </NavButton>
+          <NavTitle>가입 신청 완료</NavTitle>
+          <div style={{ width: 40 }} />
+        </NavHeader>
+
+        <SuccessContentWrapper>
+          <SuccessCard>
+            <SuccessIconWrapper>
+              <HiCheckCircle size={80} />
+            </SuccessIconWrapper>
+            <SuccessTitle>가입 신청 완료!</SuccessTitle>
+            <SuccessDescription>
+              팀 운영진에게 신청서가 안전하게 전달되었습니다. 모임 참가 자격은
+              운영진 승인 후 부여됩니다.
+            </SuccessDescription>
+
+            <StatusInfoBox>
+              <InfoRow>
+                <InfoLabel>신청 상태</InfoLabel>
+                <InfoBadge>대기 중</InfoBadge>
+              </InfoRow>
+              <InfoRow>
+                <InfoLabel>확인 경로</InfoLabel>
+                <InfoValue>마이페이지 &gt; 가입 현황</InfoValue>
+              </InfoRow>
+            </StatusInfoBox>
+
+            <ActionButtons>
+              <PrimaryButton onClick={() => navigate("/my/joinstatus")}>
+                신청 현황 확인하기
+              </PrimaryButton>
+              <SecondaryButton onClick={() => navigate("/team/list")}>
+                다른 팀 더 둘러보기
+              </SecondaryButton>
+            </ActionButtons>
+          </SuccessCard>
+        </SuccessContentWrapper>
       </CompletionPage>
     );
   }
@@ -329,15 +348,17 @@ const TeamJoinPage: React.FC = () => {
         <MainButton onClick={handleSubmit}>가입 신청서 보내기</MainButton>
       </BottomAction>
 
-      {/* Confirmation Modal */}
-      <Modal2
+      {/* Confirmation Modal - Improved to SaaS Level using AlertModal */}
+      <AlertModal
         isOpen={completeOpen}
         onClose={() => setCompleteOpen(false)}
+        onConfirm={doApprove}
         title="가입 신청을 완료할까요?"
-        children="신청서는 팀 운영진에게 전달되며, 승인 완료 시 활동을 시작할 수 있습니다."
+        message="신청서는 팀 운영진에게 전달되며, 승인 완료 시 활동을 시작할 수 있습니다."
+        type="confirm"
+        variant="info"
         confirmText="신청하기"
         cancelText="취소"
-        onConfirm={doApprove}
       />
 
       {/* Alert Modal */}
@@ -371,6 +392,9 @@ const NavHeader = styled.div`
   padding: 12px 16px;
   background: white;
   border-bottom: 1px solid #f1f3f5;
+  position: sticky;
+  top: 0;
+  z-index: 100;
 `;
 
 const NavButton = styled.button`
@@ -533,8 +557,13 @@ const DropdownTrigger = styled.div<{ isOpen: boolean; isSelected: boolean }>`
   }
 `;
 
-const fadeIn = keyframes`
-  from { opacity: 0; transform: translateY(-10px); }
+const spin = keyframes`
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+`;
+
+const fadeInAnimation = keyframes`
+  from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: translateY(0); }
 `;
 
@@ -550,7 +579,7 @@ const DropdownMenu = styled.div`
   overflow: hidden;
   z-index: 100;
   padding: 6px;
-  animation: ${fadeIn} 0.2s ease-out;
+  animation: ${fadeInAnimation} 0.2s ease-out;
 `;
 
 const DropdownItem = styled.div<{ isActive: boolean }>`
@@ -620,65 +649,99 @@ const Spinner = styled.div`
   border: 3px solid #f3f3f3;
   border-top: 3px solid var(--color-main);
   border-radius: 50%;
-  animation: spin 1s linear infinite;
-
-  @keyframes spin {
-    0% {
-      transform: rotate(0deg);
-    }
-    100% {
-      transform: rotate(360deg);
-    }
-  }
+  animation: ${spin} 1s linear infinite;
 `;
 
-// Completion Page Styles
+// --- Completion Page Styles (SaaS Style) ---
 const CompletionPage = styled.div`
   display: flex;
   flex-direction: column;
   height: 100vh;
-  background: white;
-  padding: 20px;
+  background: #f8fafc;
 `;
 
-const SuccessContent = styled.div`
+const SuccessContentWrapper = styled.div`
   flex: 1;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  text-align: center;
-  margin-bottom: 60px;
+  padding: 20px;
+  animation: ${fadeInAnimation} 0.6s ease-out;
 `;
 
-const SuccessIcon = styled.div`
+const SuccessCard = styled.div`
+  background: white;
+  width: 100%;
+  max-width: 400px;
+  border-radius: 24px;
+  padding: 40px 24px 32px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+  text-align: center;
+  border: 1px solid #f1f5f9;
+`;
+
+const SuccessIconWrapper = styled.div`
   color: var(--color-main);
-  margin-bottom: 24px;
+  margin: 0 auto 24px;
+  background: rgba(14, 98, 68, 0.05);
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 `;
 
 const SuccessTitle = styled.h2`
   font-size: 24px;
   font-weight: 800;
-  color: #212529;
+  color: #0f172a;
   margin-bottom: 12px;
 `;
 
-const SuccessText = styled.p`
-  font-size: 16px;
-  color: #868e96;
+const SuccessDescription = styled.p`
+  font-size: 15px;
+  color: #64748b;
   line-height: 1.6;
+  margin-bottom: 32px;
+  word-break: keep-all;
+`;
 
-  strong {
-    color: #333;
-    font-weight: 600;
-  }
+const StatusInfoBox = styled.div`
+  background: #f8fafc;
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+`;
+
+const InfoLabel = styled.span`
+  font-size: 13px;
+  color: #94a3b8;
+  font-weight: 500;
+`;
+
+const InfoValue = styled.span`
+  font-size: 13px;
+  color: #334155;
+  font-weight: 600;
+`;
+
+const InfoBadge = styled.span`
+  background: #fff9db;
+  color: #f08c00;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
 `;
 
 const ActionButtons = styled.div`
   display: flex;
   flex-direction: column;
   gap: 12px;
-  margin-bottom: 40px;
 `;
 
 const PrimaryButton = styled.button`
@@ -687,20 +750,25 @@ const PrimaryButton = styled.button`
   background: var(--color-main);
   color: white;
   border: none;
-  border-radius: 12px;
+  border-radius: 14px;
   font-size: 16px;
   font-weight: 700;
   cursor: pointer;
+  transition: transform 0.2s;
+
+  &:active {
+    transform: scale(0.98);
+  }
 `;
 
 const SecondaryButton = styled.button`
   width: 100%;
   padding: 16px;
-  background: #f1f3f5;
-  color: #495057;
+  background: #f1f5f9;
+  color: #475569;
   border: none;
-  border-radius: 12px;
-  font-size: 16px;
-  font-weight: 700;
+  border-radius: 14px;
+  font-size: 15px;
+  font-weight: 600;
   cursor: pointer;
 `;

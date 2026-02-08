@@ -4,10 +4,11 @@ import CheckBox from "../../components/CheckBox/CheckBox";
 import Input from "../../components/Input/Input";
 import ScrollProgress from "../../components/ScrollProgress/ScrollProgress";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { HiArrowLeft, HiCheck, HiCheckCircle } from "react-icons/hi2";
+import { HiArrowLeft, HiCheckCircle } from "react-icons/hi2";
 import RadioButton from "../../components/Button/RadioButton";
 import KakaoMapModal from "../../components/Modal/KakaoAddress";
 import apiClient from "../../api/apiClient";
+import { useToastStore } from "../../stores/toastStore";
 
 /* ========== Animations ========== */
 const fadeIn = keyframes`
@@ -41,14 +42,7 @@ const float = keyframes`
   }
 `;
 
-const pulse = keyframes`
-  0%, 100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.05);
-  }
-`;
+// pulse keyframe removed - unused
 
 const spin = keyframes`
   from { transform: rotate(0deg); }
@@ -361,7 +355,7 @@ const TermsWrapper = styled.div`
 
 // Step 1: 휴대폰 인증 컴포넌트
 const PhoneVerification: React.FC<{
-  onNext: () => void;
+  onNext: (data?: any) => void;
   phone: string;
   setPhone: (value: string) => void;
 }> = ({ onNext, phone, setPhone }) => {
@@ -375,7 +369,7 @@ const PhoneVerification: React.FC<{
   const handleSMS = async (phone: string) => {
     setIsSending(true);
     try {
-      const response = await apiClient.post("/api/sign/send-sms", null, {
+      const response = await apiClient.post("/api/sign/signup/send-sms", null, {
         params: { phoneNum: phone },
       });
       if (response.data) {
@@ -394,13 +388,16 @@ const PhoneVerification: React.FC<{
   const handleVerify = async () => {
     setIsVerifying(true);
     try {
-      const response = await apiClient.post("/api/sign/verify", null, {
-        params: { certificationNumber: verificationCode },
+      const response = await apiClient.post("/api/sign/signup/verify", {
+        certificationNumber: verificationCode,
+        phoneNumber: phone,
       });
       if (response.data.success) {
         setIsVerified(true);
         setError(null);
         setSuccess("인증이 완료되었습니다.");
+        // Pass token to parent component
+        onNext && onNext({ verifyToken: response.data.verifyToken });
       } else {
         setError(response.data.msg || "인증에 실패했습니다.");
         setSuccess(null);
@@ -416,6 +413,13 @@ const PhoneVerification: React.FC<{
 
   const handleNext = () => {
     if (isVerified) {
+      // Token is already passed via onNext when verification succeeded,
+      // but we need to trigger next step here.
+      // Modifying onNext signature in parent to accept data for this step if needed.
+      // Actually, we should store token in state.
+      // Let's modify handleVerify to store it locally, and pass it here?
+      // Better: handleVerify calls setVerifyToken state in this component?
+      // No, PhoneVerification props definition: onNext: () => void; -> changing to (data?: any) => void
       onNext();
     } else {
       setError("휴대폰 인증을 완료해주세요.");
@@ -567,7 +571,7 @@ const TermsAgreement: React.FC<{
 
   const requiredIndexes = [0, 1, 2];
   const [checkedState, setCheckedState] = useState<boolean[]>(
-    Array(content.length).fill(false)
+    Array(content.length).fill(false),
   );
 
   const handleCheckboxClick = (index: number) => {
@@ -581,7 +585,7 @@ const TermsAgreement: React.FC<{
   };
 
   const isNextButtonEnabled = requiredIndexes.every(
-    (index) => checkedState[index]
+    (index) => checkedState[index],
   );
 
   const handleSubmit = () => {
@@ -851,13 +855,13 @@ const PersonalInfo2: React.FC<PersonalInfo2Props> = ({
   const [name, setName] = useState(signupData.name || "");
   const [birth, setBirth] = useState(signupData.birthDate || "");
   const [gender, setGender] = useState<string | null>(
-    signupData.gender || null
+    signupData.gender || null,
   );
   const [selectedAddress, setSelectedAddress] = useState<string>(
-    signupData.address || ""
+    signupData.address || "",
   );
   const [detailAddress, setDetailAddress] = useState<string>(
-    signupData.addressDetail || ""
+    signupData.addressDetail || "",
   );
   const [showMapModal, setShowMapModal] = useState(false);
   const [nameError, setNameError] = useState<string | null>(null);
@@ -1118,7 +1122,7 @@ const SignupPage: React.FC = () => {
   const navigate = useNavigate();
 
   const totalSteps = isSocialLogin ? 3 : 6;
-  const currentStep = isSocialLogin ? step - 3 : step;
+  // currentStep calculation removed - currently unused
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -1142,30 +1146,50 @@ const SignupPage: React.FC = () => {
           const { name, ...dataWithoutName } = dataToSend;
           const response = await apiClient.put(
             "/auth/add-info",
-            dataWithoutName
+            dataWithoutName,
           );
 
           if (response.status === 200 || response.status === 201) {
-            alert("회원가입에 성공했습니다. 로그인 해주세요.");
+            useToastStore
+              .getState()
+              .addToast("회원가입에 성공했습니다. 로그인 해주세요.", "success");
             setStep(step + 1);
           } else {
-            alert("회원가입에 실패했습니다. 다시 시도해주세요.");
+            useToastStore
+              .getState()
+              .addToast("회원가입에 실패했습니다. 다시 시도해주세요.", "error");
           }
         } else {
-          const response = await apiClient.post("api/sign/sign-up", null, {
-            params: dataToSend,
-          });
+          const response = await apiClient.post(
+            "/api/sign/signup/sign-up",
+            null,
+            {
+              params: dataToSend,
+              headers: {
+                "X-AUTH-TOKEN": dataToSend.verifyToken,
+              },
+            },
+          );
           console.log(response);
           if (response.status === 200 || response.status === 201) {
-            alert("회원가입에 성공했습니다. 로그인 해주세요.");
+            useToastStore
+              .getState()
+              .addToast("회원가입에 성공했습니다. 로그인 해주세요.", "success");
             setStep(step + 1);
           } else {
-            alert("회원가입에 실패했습니다. 다시 시도해주세요.");
+            useToastStore
+              .getState()
+              .addToast("회원가입에 실패했습니다. 다시 시도해주세요.", "error");
           }
         }
       } catch (error) {
         console.error("회원가입 오류:", error);
-        alert("서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+        useToastStore
+          .getState()
+          .addToast(
+            "서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
+            "error",
+          );
         navigate("/login");
       } finally {
         setIsLoading(false);
@@ -1280,13 +1304,7 @@ const CustomInputWrapper = styled.div`
   }
 `;
 
-const CustomInputIcon = styled.div`
-  color: #adb5bd;
-  font-size: 20px;
-  margin-right: 10px;
-  display: flex;
-  align-items: center;
-`;
+// CustomInputIcon removed - unused
 
 const CustomInput = styled.input`
   flex: 1;

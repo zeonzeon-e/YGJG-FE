@@ -2,7 +2,13 @@ import React, { useState, useEffect } from "react";
 import styled, { keyframes } from "styled-components";
 import apiClient from "../../api/apiClient";
 import { useParams } from "react-router-dom";
-import { IoClose, IoSearch, IoStar, IoStarOutline, IoTrashOutline } from "react-icons/io5";
+import {
+  IoClose,
+  IoSearch,
+  IoStar,
+  IoStarOutline,
+  IoTrashOutline,
+} from "react-icons/io5";
 
 interface CirclePosition {
   id: number;
@@ -15,7 +21,11 @@ interface CirclePosition {
 
 interface FormationModal2Props {
   onClose: () => void;
-  onSave: (circles: CirclePosition[], formationName?: string, id?: number) => void;
+  onSave: (
+    circles: CirclePosition[],
+    formationName?: string,
+    id?: number,
+  ) => void;
 }
 
 interface FormationItem {
@@ -26,9 +36,18 @@ interface FormationItem {
 
 const getColorByPosition = (pos: string): string => {
   const position = pos.toUpperCase().trim() || "";
-  if (["ST", "CF", "LW", "RW", "SS", "LF", "RF", "공격수"].includes(position)) return "#e74c3c";
-  if (["CM", "CAM", "CDM", "LM", "RM", "AM", "DM", "미드필더"].includes(position)) return "#2ecc71";
-  if (["CB", "LB", "RB", "LWB", "RWB", "WB", "SW", "WD", "수비수"].includes(position)) return "#3498db";
+  if (["ST", "CF", "LW", "RW", "SS", "LF", "RF", "공격수"].includes(position))
+    return "#e74c3c";
+  if (
+    ["CM", "CAM", "CDM", "LM", "RM", "AM", "DM", "미드필더"].includes(position)
+  )
+    return "#2ecc71";
+  if (
+    ["CB", "LB", "RB", "LWB", "RWB", "WB", "SW", "WD", "수비수"].includes(
+      position,
+    )
+  )
+    return "#3498db";
   if (["GK", "골키퍼"].includes(position)) return "#f1c40f";
   return "#95a5a6";
 };
@@ -46,12 +65,12 @@ const FormationListModal: React.FC<FormationModal2Props> = ({
       if (!teamId) return;
       try {
         const response = await apiClient.get<FormationItem[]>(
-          `/api/team/formation-list`, 
+          `/api/team/formation-list`,
           {
             params: { teamId: Number(teamId) },
-          }
+          },
         );
-        
+
         const data = response.data || [];
 
         const sortedData = data.sort((a, b) => {
@@ -71,14 +90,14 @@ const FormationListModal: React.FC<FormationModal2Props> = ({
   }, [teamId]);
 
   const filteredItems = items.filter((item) =>
-    item.name.toLowerCase().includes(searchTerm.toLowerCase())
+    item.name.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   const toggleStar = (e: React.MouseEvent, id: number) => {
     e.stopPropagation();
     setItems((prevItems) => {
       const newItems = prevItems.map((item) =>
-        item.id === id ? { ...item, favorites: !item.favorites } : item
+        item.id === id ? { ...item, favorites: !item.favorites } : item,
       );
       return newItems.sort((a, b) => {
         if (Number(b.favorites) !== Number(a.favorites)) {
@@ -91,43 +110,39 @@ const FormationListModal: React.FC<FormationModal2Props> = ({
 
   const handleDelete = (e: React.MouseEvent, id: number) => {
     e.stopPropagation();
-    if(window.confirm("정말 이 포메이션을 삭제하시겠습니까?")) {
-        setItems(prev => prev.filter(item => item.id !== id));
+    if (window.confirm("정말 이 포메이션을 삭제하시겠습니까?")) {
+      setItems((prev) => prev.filter((item) => item.id !== id));
     }
   };
 
   const handleSelect = async (item: FormationItem) => {
-     try {
-        const response = await apiClient.get(
-          `/api/team-strategy/get/formation`,
-          {
-            params: {
-              formationId: item.id,
-              teamId: Number(teamId),
-            },
-          }
-        );
+    try {
+      const response = await apiClient.get(`/api/team-strategy/get/formation`, {
+        params: {
+          formationId: item.id,
+          teamId: Number(teamId),
+        },
+      });
 
-        const data = response.data;
-        if (data && data.formationDetailResponseDtoList) {
-          const mappedCircles: CirclePosition[] = data.formationDetailResponseDtoList.map(
-            (detail: any) => ({
-              id: detail.id,
-              x: detail.x,
-              y: detail.y,
-              color: getColorByPosition(detail.detailPosition || ""),
-              detail_position: detail.detailPosition,
-              name: detail.playerName,
-            })
-          );
-          
-          onSave(mappedCircles, item.name, item.id);
-          onClose();
-        }
-     } catch (error) {
-         console.error("Failed to load details", error);
-         alert("포메이션 정보를 불러오는 데 실패했습니다.");
-     }
+      const data = response.data;
+      if (data && data.formationDetailResponseDtoList) {
+        const mappedCircles: CirclePosition[] =
+          data.formationDetailResponseDtoList.map((detail: any) => ({
+            id: detail.id,
+            x: detail.x,
+            y: detail.y,
+            color: getColorByPosition(detail.detailPosition || ""),
+            detail_position: detail.detailPosition,
+            name: detail.playerName,
+          }));
+
+        onSave(mappedCircles, item.name, item.id);
+        onClose();
+      }
+    } catch (error) {
+      console.error("Failed to load details", error);
+      alert("포메이션 정보를 불러오는 데 실패했습니다.");
+    }
   };
 
   return (
@@ -172,7 +187,7 @@ const FormationListModal: React.FC<FormationModal2Props> = ({
                       <ItemId>ID: {item.id}</ItemId>
                     </ItemContent>
                   </ItemLeft>
-                  
+
                   <DeleteButton onClick={(e) => handleDelete(e, item.id)}>
                     <IoTrashOutline />
                   </DeleteButton>
@@ -220,7 +235,7 @@ const Overlay = styled.div`
   align-items: center;
   padding: 20px;
   animation: ${fadeIn} 0.2s ease-out;
-  overflow: hidden; 
+  overflow: hidden;
 `;
 
 const ModalContainer = styled.div`
@@ -229,17 +244,17 @@ const ModalContainer = styled.div`
   background: #fff;
   border-radius: 28px;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
-  
+
   /* ⭐️ [핵심] Flex Layout으로 내부 영역 제어 */
   display: flex;
   flex-direction: column;
-  
+
   animation: ${popIn} 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  
+
   /* ⭐️ [핵심] 최대 높이를 화면의 80%로 제한 (모바일 주소창 고려 dvh 사용) */
-  max-height: 40vh; 
-  max-height: 40dvh; 
-  
+  max-height: 40vh;
+  max-height: 40dvh;
+
   margin: auto;
   position: relative;
 `;
@@ -300,7 +315,7 @@ const SearchWrapper = styled.div`
 
   &:focus-within {
     background: #fff;
-    border-color: #3b82f6;
+    border-color: var(--color-main);
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
   }
 `;
@@ -328,17 +343,19 @@ const Body = styled.div`
   min-height: 0; /* Flex 자식 스크롤 버그 방지 */
   overflow-y: auto; /* 내용 넘치면 스크롤 */
   padding: 0 24px 24px;
-  
+
   /* iOS 스크롤 부드럽게 */
   -webkit-overflow-scrolling: touch;
-  
+
   /* 스크롤바 숨김 */
   scrollbar-width: none;
-  &::-webkit-scrollbar { display: none; }
+  &::-webkit-scrollbar {
+    display: none;
+  }
 `;
 
 const List = styled.div`
-  padding-top:2px;
+  padding-top: 2px;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -357,7 +374,7 @@ const ListItem = styled.div`
   flex-shrink: 0; /* 리스트 아이템이 찌그러지지 않도록 */
 
   &:hover {
-    border-color: #3b82f6;
+    border-color: var(--color-main);
     background: #f0f9ff;
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(59, 130, 246, 0.08);
@@ -439,24 +456,27 @@ const Footer = styled.div`
   padding: 16px 24px 24px;
   border-top: 1px solid #f0f2f5;
   background: #fff;
-  flex-shrink: 0; /* 스크롤 시 줄어들지 않음 */
+  flex-shrink: 0;
   border-radius: 28px;
 `;
 
 const CancelButton = styled.button`
   width: 100%;
   padding: 14px;
-  border-radius: 16px;
-  border: 1px solid #e5e7eb;
-  background: #fff;
-  color: #4b5563;
+  border-radius: 14px;
+  border: none;
+  background: #f1f3f5;
+  color: #495057;
   font-size: 15px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
   transition: all 0.2s;
 
+  &:active {
+    transform: scale(0.98);
+  }
+
   &:hover {
-    background: #f9fafb;
-    border-color: #d1d5db;
+    background: #e9ecef;
   }
 `;
