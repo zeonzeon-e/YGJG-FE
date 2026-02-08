@@ -17,6 +17,8 @@ interface NoticeDetail {
   title: string;
   updatedAt?: string;
   writer: string;
+  isUrgent?: boolean;
+  essential?: boolean;
 }
 
 // --- Dev Mock Data ---
@@ -40,6 +42,7 @@ const DEV_MOCK_NOTICE_DETAIL: NoticeDetail = {
   writer: "박총무",
   imageUrl:
     "https://images.unsplash.com/photo-1574629810360-7efbbe195018?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+  essential: true,
 };
 
 const TeamNoticeDetailPage: React.FC = () => {
@@ -50,16 +53,24 @@ const TeamNoticeDetailPage: React.FC = () => {
   }>();
   const numericTeamId = Number(teamId);
 
-  const getRoleByTeamId = useUserStore((state) => state.getRoleByTeamId);
+  // useUserStore에서 팀 목록을 구독하고, 그 중에서 현재 팀 ID에 해당하는 역할을 찾습니다.
+  // 이렇게 하면 스토어의 teams 데이터가 업데이트될 때 컴포넌트가 리렌더링되어 올바른 권한을 체크할 수 있습니다.
+  const userRole = useUserStore((state) =>
+    state.teams.find((t) => t.teamId === numericTeamId)
+  );
+
   const [noticeDetail, setNoticeDetail] = useState<NoticeDetail | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   // 권한 체크
-  const userRole = teamId ? getRoleByTeamId(Number(teamId)) : undefined;
   const isManager =
-    userRole && ["MANAGER", "SUB_MANAGER"].includes(userRole.role);
+    userRole &&
+    ["ROLE_MANAGER", "ROLE_SUBMANAGER", "MANAGER", "SUB_MANAGER"].includes(
+      userRole.role
+    );
+   
   // 개발 모드에서는 항상 관리자 권한 부여 (테스트용)
   const isDevMode = getAccessToken()?.startsWith("dev-");
   const canEdit = isManager || isDevMode;
@@ -111,7 +122,7 @@ const TeamNoticeDetailPage: React.FC = () => {
   }, [teamId, noticeId, numericTeamId]);
 
   const handleRemove = () => setIsModalOpen(true);
-
+  console.log("canEdit && !isLoading && !error",canEdit && !isLoading && !error);
   const handleConfirmRemove = async () => {
     try {
       // 🔧 개발 모드 삭제 시뮬레이션
@@ -155,6 +166,9 @@ const TeamNoticeDetailPage: React.FC = () => {
         ) : noticeDetail ? (
           <>
             <TitleSection>
+              {(noticeDetail.essential || noticeDetail.isUrgent) && (
+                <Badge>필독</Badge>
+              )}
               <NoticeTitle>{noticeDetail.title}</NoticeTitle>
               <MetaInfo>
                 <MetaItem>
@@ -195,7 +209,12 @@ const TeamNoticeDetailPage: React.FC = () => {
         <BottomActionBar>
           <ActionButton
             onClick={() =>
-              navigate(`/team/${teamId}/notice/rewrite/${noticeId}`)
+              navigate(`/team/${teamId}/notice/rewrite/${noticeId}`, {
+                state: {
+                  id: noticeId,
+                  teamId: numericTeamId,
+                },
+              })
             }
           >
             <FaPen size={14} /> 수정
@@ -268,6 +287,17 @@ const ContentContainer = styled.div`
 
 const TitleSection = styled.div`
   margin-bottom: 20px;
+`;
+
+const Badge = styled.span`
+  display: inline-block;
+  background-color: var(--color-error);
+  color: white;
+  font-size: 11px;
+  font-weight: bold;
+  padding: 3px 8px;
+  border-radius: 4px;
+  margin-bottom: 8px;
 `;
 
 const NoticeTitle = styled.h2`

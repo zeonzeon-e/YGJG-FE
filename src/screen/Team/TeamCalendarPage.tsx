@@ -89,7 +89,10 @@ const TeamCalendarPage: React.FC = () => {
 
   const userRole = teamId ? getRoleByTeamId(Number(teamId)) : undefined;
   const isManager =
-    userRole && ["ROLE_MANAGER","MANAGER", "SUB_MANAGER"].includes(userRole.role);
+    userRole &&
+    ["ROLE_MANAGER", "ROLE_SUBMANAGER", "MANAGER", "SUB_MANAGER"].includes(
+      userRole.role
+    );
   const isDevMode = getAccessToken()?.startsWith("dev-");
 
   useEffect(() => {

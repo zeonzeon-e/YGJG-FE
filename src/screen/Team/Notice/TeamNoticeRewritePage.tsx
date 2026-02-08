@@ -5,19 +5,43 @@ import MainButton from "../../../components/Button/MainButton";
 import { FaBoxOpen } from "react-icons/fa6";
 import apiClient from "../../../api/apiClient";
 import { useLocation, useNavigate } from "react-router-dom";
+import { FaCheck } from "react-icons/fa6";
+import { useUserStore } from "../../../stores/userStore";
+import { getAccessToken } from "../../../utils/authUtils";
 
 const TeamNoticeRewritePage: React.FC = () => {
   const [title, setTitle] = useState<string>("");
   const [content, setContent] = useState<string>("");
+  const [essential, setEssential] = useState<boolean>(false);
   const [image, setImage] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
 
   const location = useLocation();
   const navigate = useNavigate();
+  const getRoleByTeamId = useUserStore((state) => state.getRoleByTeamId);
+
   const { teamId, id } = location.state || {
     id: 1,
     teamId: 1,
   };
+
+  // 권한 체크
+  useEffect(() => {
+    if (teamId) {
+      const userRole = getRoleByTeamId(Number(teamId));
+      const isManager =
+        userRole &&
+        ["ROLE_MANAGER", "ROLE_SUBMANAGER", "MANAGER", "SUB_MANAGER"].includes(
+          userRole.role
+        );
+      const isDevMode = getAccessToken()?.startsWith("dev-");
+
+      if (!isManager && !isDevMode) {
+        alert("매니저 권한이 없습니다.");
+        navigate(-1);
+      }
+    }
+  }, [teamId, getRoleByTeamId, navigate]);
 
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setTitle(e.target.value);
@@ -56,6 +80,7 @@ const TeamNoticeRewritePage: React.FC = () => {
           setTitle(response.data.title);
           setPreview(response.data.imageUrl);
           setContent(response.data.content);
+          setEssential(response.data.essential || false);
           return response.data;
         } catch (err) {
           console.error("데이터를 가져오는 중 에러가 발생했습니다.", err);
@@ -84,6 +109,7 @@ const TeamNoticeRewritePage: React.FC = () => {
             content,
             teamId,
             title, // 쿼리 파라미터로 전달
+            essential: essential,
           },
         }
       );
@@ -116,18 +142,28 @@ const TeamNoticeRewritePage: React.FC = () => {
             onChange={handleTitleChange}
             placeholder="제목을 입력해주세요"
           />
-          <FileInputWrapper>
+          
+          <ToolGroup>
             <FileLabel>
               <FileInput type="file" onChange={handleImageChange} />
-              <FaBoxOpen /> 사진 첨부하기
+              <FaBoxOpen /> 사진 첨부
             </FileLabel>
-            {preview && (
-              <PreviewWrapper>
-                <PreviewImage src={preview} alt="미리보기 이미지" />
-                <RemoveButton onClick={handleImageRemove}>삭제</RemoveButton>
-              </PreviewWrapper>
-            )}
-          </FileInputWrapper>
+
+            <EssentialToggle onClick={() => setEssential(!essential)} active={essential}>
+               <StyledCheckBox checked={essential}>
+                 <FaCheck />
+               </StyledCheckBox>
+               <span>필독 공지</span>
+            </EssentialToggle>
+          </ToolGroup>
+
+          {preview && (
+            <PreviewWrapper>
+              <PreviewImage src={preview} alt="미리보기 이미지" />
+              <RemoveButton onClick={handleImageRemove}>삭제</RemoveButton>
+            </PreviewWrapper>
+          )}
+
           <Label>내용</Label>
           <Textarea
             className="border-df shadow-df"
@@ -167,26 +203,78 @@ const Input = styled.input`
   font-size: 14px;
 `;
 
-const FileInputWrapper = styled.div`
+const ToolGroup = styled.div`
   display: flex;
-  flex-direction: column;
   gap: 10px;
+  margin-bottom: 5px;
+`;
+
+const EssentialToggle = styled.div<{ active: boolean }>`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  font-size: 14px;
+  border: 1px solid ${({ active }) => (active ? "var(--color-main)" : "#eee")};
+  border-radius: 5px;
+  cursor: pointer;
+  background-color: ${({ active }) => (active ? "#eef6f3" : "white")};
+  color: ${({ active }) => (active ? "var(--color-main)" : "#555")};
+  font-weight: 500;
+  transition: all 0.2s;
+
+  &:hover {
+    background-color: ${({ active }) => (active ? "#e8f2ee" : "#f9f9f9")};
+  }
+`;
+
+const HiddenCheckbox = styled.input.attrs({ type: "checkbox" })`
+  border: 0;
+  clip: rect(0 0 0 0);
+  clippath: inset(50%);
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+`;
+
+const StyledCheckBox = styled.div<{ checked: boolean }>`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  background-color: ${({ checked }) => (checked ? "var(--color-main)" : "#fff")};
+  border: 1px solid ${({ checked }) => (checked ? "var(--color-main)" : "#ccc")};
+  border-radius: 4px;
+  transition: all 0.2s;
+
+  svg {
+    visibility: ${({ checked }) => (checked ? "visible" : "hidden")};
+    color: white;
+    width: 10px;
+    height: 10px;
+  }
 `;
 
 const FileLabel = styled.label`
   display: flex;
   align-items: center;
   gap: 5px;
-  padding: 8px;
+  padding: 8px 12px;
   font-size: 14px;
-  border: 1px solid var(--color-sub);
+  border: 1px solid #eee;
   border-radius: 5px;
   cursor: pointer;
   text-align: center;
   background-color: white;
+  color: #555;
 
-  :hover {
-    background-color: #f0f8ff;
+  &:hover {
+    background-color: #f9f9f9;
   }
 `;
 

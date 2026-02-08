@@ -19,6 +19,7 @@ interface Notice {
   title: string;
   createAt: string;
   isUrgent?: boolean;
+  essential?: boolean;
   writer?: string;
 }
 
@@ -68,7 +69,10 @@ const TeamNoticePage: React.FC = () => {
 
   const userRole = teamId ? getRoleByTeamId(Number(teamId)) : undefined;
   const isManager =
-    userRole && ["MANAGER", "SUB_MANAGER"].includes(userRole.role);
+    userRole &&
+    ["ROLE_MANAGER", "ROLE_SUBMANAGER", "MANAGER", "SUB_MANAGER"].includes(
+      userRole.role
+    );
   const canWrite = isManager;
 
   useEffect(() => {
@@ -146,36 +150,39 @@ const TeamNoticePage: React.FC = () => {
           {isLoading ? (
             <LoadingState>공지사항을 불러오고 있습니다...</LoadingState>
           ) : filteredNotices.length > 0 ? (
-            filteredNotices.map((notice) => (
-              <NoticeCard
-                key={notice.id}
-                onClick={() => navigate(`/team/${teamId}/notice/${notice.id}`)}
-                isUrgent={!!notice.isUrgent}
-              >
-                <IconWrapper isUrgent={!!notice.isUrgent}>
-                  {notice.isUrgent ? (
-                    <HiMegaphone />
-                  ) : (
-                    <HiOutlineDocumentText />
-                  )}
-                </IconWrapper>
-                <TextContent>
-                  <NoticeTitleWrapper>
-                    {notice.isUrgent && <Badge>필독</Badge>}
-                    <NoticeTitle>{notice.title}</NoticeTitle>
-                  </NoticeTitleWrapper>
-                  <NoticeMeta>
-                    <DateText>{formatDate(notice.createAt)}</DateText>
-                    {notice.writer && (
-                      <WriterText>· {notice.writer}</WriterText>
+            filteredNotices.map((notice) => {
+              const isImportant = !!notice.isUrgent || !!notice.essential;
+              return (
+                <NoticeCard
+                  key={notice.id}
+                  onClick={() => navigate(`/team/${teamId}/notice/${notice.id}`)}
+                  isUrgent={isImportant}
+                >
+                  <IconWrapper isUrgent={isImportant}>
+                    {isImportant ? (
+                      <HiMegaphone />
+                    ) : (
+                      <HiOutlineDocumentText />
                     )}
-                  </NoticeMeta>
-                </TextContent>
-                <ChevronWrapper>
-                  <HiChevronRight />
-                </ChevronWrapper>
-              </NoticeCard>
-            ))
+                  </IconWrapper>
+                  <TextContent>
+                    <NoticeTitleWrapper>
+                      {isImportant && <Badge>필독</Badge>}
+                      <NoticeTitle>{notice.title}</NoticeTitle>
+                    </NoticeTitleWrapper>
+                    <NoticeMeta>
+                      <DateText>{formatDate(notice.createAt)}</DateText>
+                      {notice.writer && (
+                        <WriterText>· {notice.writer}</WriterText>
+                      )}
+                    </NoticeMeta>
+                  </TextContent>
+                  <ChevronWrapper>
+                    <HiChevronRight />
+                  </ChevronWrapper>
+                </NoticeCard>
+              );
+            })
           ) : (
             <EmptyState>
               <EmptyIcon>📭</EmptyIcon>

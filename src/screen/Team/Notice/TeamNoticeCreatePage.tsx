@@ -1,19 +1,42 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import Header2 from "../../../components/Header/Header2/Header2";
 import apiClient from "../../../api/apiClient";
 import { useNavigate, useParams } from "react-router-dom";
 import { getAccessToken } from "../../../utils/authUtils";
 import { HiPhoto, HiPaperAirplane, HiXMark } from "react-icons/hi2";
+import { FaCheck } from "react-icons/fa6";
+import { useUserStore } from "../../../stores/userStore";
 
 const TeamNoticeCreatePage: React.FC = () => {
   const navigate = useNavigate();
   const { teamId } = useParams<{ teamId: string }>();
+  const getRoleByTeamId = useUserStore((state) => state.getRoleByTeamId);
+
   const [title, setTitle] = useState<string>("");
   const [content, setContent] = useState<string>("");
+  const [essential, setEssential] = useState<boolean>(false);
   const [image, setImage] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  // 권한 체크
+  useEffect(() => {
+    if (teamId) {
+      const userRole = getRoleByTeamId(Number(teamId));
+      const isManager =
+        userRole &&
+        ["ROLE_MANAGER", "ROLE_SUBMANAGER", "MANAGER", "SUB_MANAGER"].includes(
+          userRole.role
+        );
+      const isDevMode = getAccessToken()?.startsWith("dev-");
+
+      if (!isManager && !isDevMode) {
+        alert("매니저 권한이 없습니다.");
+        navigate(-1);
+      }
+    }
+  }, [teamId, getRoleByTeamId, navigate]);
 
   // --- Handlers ---
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -55,11 +78,12 @@ const TeamNoticeCreatePage: React.FC = () => {
 
       const targetTeamId = teamId ? Number(teamId) : 1;
 
-      await apiClient.post("api/announcement/manager/create", formData, {
+      await apiClient.post("/api/announcement/manager/create", formData, {
         params: {
           title,
           content,
           teamId: targetTeamId,
+          essential: essential,
         },
         headers: {
           "Content-Type": "multipart/form-data",
@@ -107,16 +131,29 @@ const TeamNoticeCreatePage: React.FC = () => {
       </EditorContainer>
 
       <BottomBar>
-        <ToolButton variant="secondary" as="label">
-          <input
-            type="file"
-            hidden
-            accept="image/*"
-            onChange={handleImageChange}
-          />
-          <HiPhoto />
-          <span>사진 추가</span>
-        </ToolButton>
+        <ButtonGroup>
+          <ToolButton variant="secondary" as="label">
+            <input
+              type="file"
+              hidden
+              accept="image/*"
+              onChange={handleImageChange}
+            />
+            <HiPhoto />
+            <span>사진</span>
+          </ToolButton>
+
+          <ToolButton
+            variant="secondary"
+            onClick={() => setEssential(!essential)}
+            active={essential}
+          >
+            <StyledCheckBox checked={essential}>
+              <FaCheck />
+            </StyledCheckBox>
+            <span>필독</span>
+          </ToolButton>
+        </ButtonGroup>
 
         <SubmitButton
           onClick={handleSubmit}
@@ -172,6 +209,38 @@ const TitleInput = styled.input`
   }
   &:focus {
     outline: none;
+  }
+`;
+
+const HiddenCheckbox = styled.input.attrs({ type: "checkbox" })`
+  border: 0;
+  clip: rect(0 0 0 0);
+  clippath: inset(50%);
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+`;
+
+const StyledCheckBox = styled.div<{ checked: boolean }>`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  background-color: ${({ checked }) => (checked ? "var(--color-main)" : "#fff")};
+  border: 1px solid ${({ checked }) => (checked ? "var(--color-main)" : "#ccc")};
+  border-radius: 4px;
+  transition: all 0.2s;
+
+  svg {
+    visibility: ${({ checked }) => (checked ? "visible" : "hidden")};
+    color: white;
+    width: 10px;
+    height: 10px;
   }
 `;
 
@@ -254,22 +323,27 @@ const BottomBar = styled.div`
   box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.05);
 `;
 
-const ToolButton = styled.button<{ variant?: string }>`
-  background: #f8fafb;
-  color: #555;
-  border: none;
+const ButtonGroup = styled.div`
+  display: flex;
+  gap: 8px;
+`;
+
+const ToolButton = styled.button<{ variant?: string; active?: boolean }>`
+  background: ${({ active }) => (active ? "#eef6f3" : "#f8fafb")};
+  color: ${({ active }) => (active ? "var(--color-main)" : "#555")};
+  border: 1px solid ${({ active }) => (active ? "var(--color-main)" : "transparent")};
   border-radius: 20px;
-  padding: 10px 16px;
+  padding: 8px 14px;
   font-size: 14px;
   font-weight: 600;
   display: flex;
   align-items: center;
   gap: 6px;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: all 0.2s;
 
   &:hover {
-    background: #eef2f5;
+    background: ${({ active }) => (active ? "#e8f2ee" : "#eef2f5")};
   }
 
   svg {

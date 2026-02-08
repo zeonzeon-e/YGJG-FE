@@ -237,7 +237,7 @@ const MTeamMemberListPage: React.FC = () => {
                   <NameRow>
                     <Name>{player.name}</Name>
                     {player.role !== "ROLE_MEMBER" && (
-                      <RoleBadge role={player.role}>
+                      <RoleBadge $role={player.role}>
                         {getRoleLabel(player.role)}
                       </RoleBadge>
                     )}
@@ -401,19 +401,21 @@ const Name = styled.span`
   color: var(--color-dark2);
 `;
 
-const RoleBadge = styled.span<{ role: string }>`
+const RoleBadge = styled.span<{ $role: string }>`
   font-size: 11px;
   padding: 2px 6px;
   border-radius: 4px;
   font-weight: 600;
 
   ${(props) =>
-    props.role === "MANAGER" &&
+    (props.$role === "ROLE_MANAGER" || props.$role === "MANAGER") &&
     `
     background: #fff0f0; color: var(--color-error);
   `}
   ${(props) =>
-    props.role === "SUB_MANAGER" &&
+    (props.$role === "ROLE_SUBMANAGER" ||
+      props.$role === "SUB_MANAGER" ||
+      props.$role === "ROLE_SUB_MANAGER") &&
     `
     background: #f0f7ff; color: var(--color-info);
   `}
